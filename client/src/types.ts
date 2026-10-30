@@ -10,7 +10,16 @@ export interface Option {
   text: string;
   explanation?: string;
 }
-export interface Question {
+export interface CodeFixture {
+  files?: Record<string, string> | null;
+  request?: {
+    method: string;
+    path: string;
+    body?: Record<string, unknown>;
+  } | null;
+}
+export interface Question extends CodeFixture {
+  code?: string;
   id: string;
   kind: string;
   prompt: string;
@@ -19,7 +28,7 @@ export interface Question {
   misconception: string;
   sectionId: string;
 }
-export interface Example {
+export interface Example extends CodeFixture {
   id: string;
   title: string;
   prompt: string;
@@ -27,7 +36,7 @@ export interface Example {
   options: Option[];
   language: string;
 }
-export interface Exercise {
+export interface Exercise extends CodeFixture {
   id: string;
   level: string;
   title: string;
@@ -55,7 +64,22 @@ export interface Lesson {
   language: string;
   version: string;
   schema?: string;
-  sections: { id: string; title: string; core: string; deep: string }[];
+  environment?: string;
+  sourceNote?: string;
+  sourceOrder?: number;
+  definitions?: { term: string; meaning: string; example: string }[];
+  recap?: string[];
+  comparison?: { headers: string[]; rows: string[][] };
+  sections: {
+    id: string;
+    title: string;
+    core: string;
+    deep: string;
+    paragraphs?: string[];
+    bullets?: string[];
+    code?: string;
+    codeNote?: string;
+  }[];
   examples: Example[];
   questions: Question[];
   exercises: Exercise[];

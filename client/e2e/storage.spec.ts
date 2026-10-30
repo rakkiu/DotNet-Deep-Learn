@@ -55,14 +55,14 @@ test("corrupt local data can be backed up and explicitly restored without silent
     "corrupt data to recover",
   );
   await page.getByRole("button", { name: "Thay thế bằng bản sao lưu" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Hôm nay, bạn muốn hiểu gì?" }),
-  ).toBeVisible();
+  await expect(page.locator("h1")).toContainText("Học điều mới.");
 });
 test("storage quota failures keep drafts and previous saves, and retry works", async ({
   page,
 }) => {
   await page.goto("/#/lessons/sql-left-join/explain");
+  if (!(await page.getByLabel("Điều bạn muốn ghi nhớ").isVisible()))
+    await page.locator(".personal-notes > summary").click();
   await page.getByLabel("Điều bạn muốn ghi nhớ").fill("Bản đã lưu");
   await page.getByRole("button", { name: "Lưu ghi chú", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Đã lưu ghi chú");
@@ -77,6 +77,8 @@ test("storage quota failures keep drafts and previous saves, and retry works", a
       original.call(this, k, v);
     };
   }, key);
+  if (!(await page.getByLabel("Điều bạn muốn ghi nhớ").isVisible()))
+    await page.locator(".personal-notes > summary").click();
   await page.getByLabel("Điều bạn muốn ghi nhớ").fill("Bản nháp chưa lưu");
   await page.getByRole("button", { name: "Lưu ghi chú", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText(
@@ -106,6 +108,8 @@ test("export/import keeps history, rejects bad files and requires confirmation",
   const q = page.locator('[data-question="oop-q-concept"]');
   await q.locator(".choice").nth(1).click();
   await q.getByRole("button", { name: "Gửi câu trả lời", exact: true }).click();
+  if (!(await page.getByLabel("Điều bạn muốn ghi nhớ").isVisible()))
+    await page.locator(".personal-notes > summary").click();
   await page.getByLabel("Điều bạn muốn ghi nhớ").fill("Sao lưu ghi chú");
   await page.getByRole("button", { name: "Lưu ghi chú", exact: true }).click();
   await page.goto("/#/data");
@@ -159,6 +163,8 @@ test("learning works with network disabled after initial static assets load", as
   await q.locator(".choice").nth(1).click();
   await q.getByRole("button", { name: "Gửi câu trả lời", exact: true }).click();
   await expect(q.locator(".quiz-feedback")).toContainText("Chính xác");
+  if (!(await page.getByLabel("Điều bạn muốn ghi nhớ").isVisible()))
+    await page.locator(".personal-notes > summary").click();
   await page.getByLabel("Điều bạn muốn ghi nhớ").fill("Lưu khi không có mạng");
   await page.getByRole("button", { name: "Lưu ghi chú", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Đã lưu ghi chú");
@@ -176,8 +182,11 @@ test("browser profiles are isolated and two tabs keep separate edits", async ({
   await page.goto("/#/lessons/oop-polymorphism/explain");
   const other = await context.newPage();
   await other.goto("/#/lessons/sql-left-join/explain");
+  if (!(await page.getByLabel("Điều bạn muốn ghi nhớ").isVisible()))
+    await page.locator(".personal-notes > summary").click();
   await page.getByLabel("Điều bạn muốn ghi nhớ").fill("Ghi chú OOP ở tab một");
   await page.getByRole("button", { name: "Lưu ghi chú", exact: true }).click();
+  await other.locator(".personal-notes > summary").click();
   await other.getByLabel("Điều bạn muốn ghi nhớ").fill("Ghi chú SQL ở tab hai");
   await other.getByRole("button", { name: "Lưu ghi chú", exact: true }).click();
   await page.reload();

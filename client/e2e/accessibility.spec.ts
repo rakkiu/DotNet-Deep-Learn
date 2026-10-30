@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-test("WCAG A/AA on dashboard, lesson, examples and dark mode", async ({
+test("WCAG A/AA on library, Console/web lessons, exercises, backup and dark mode", async ({
   page,
 }) => {
   const violations: unknown[] = [];
@@ -8,6 +8,9 @@ test("WCAG A/AA on dashboard, lesson, examples and dark mode", async ({
     "/",
     "/lessons/oop-polymorphism/explain",
     "/lessons/sql-left-join/examples",
+    "/lessons/mvc-views/explain",
+    "/lessons/mvc-binding/quiz",
+    "/lessons/efcore-context/exercises",
     "/data",
   ]) {
     await page.goto("/#" + path);

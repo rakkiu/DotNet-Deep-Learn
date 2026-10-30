@@ -145,7 +145,9 @@ describe("local data, history and restore", () => {
       },
     ];
     s.attempts = [attempt(1, "a")];
-    expect(metrics(catalog.lessons[0], s)).toMatchObject({
+    expect(
+      metrics(catalog.lessons.find((l) => l.id === "oop-polymorphism")!, s),
+    ).toMatchObject({
       complete: false,
       read: true,
       correct: 1,

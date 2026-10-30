@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   Bookmark,
   Check,
   CheckCircle2,
@@ -11,9 +10,7 @@ import {
   Clock,
   Code2,
   Copy,
-  FileQuestion,
   Lightbulb,
-  ListChecks,
   Save,
   StickyNote,
   Target,
@@ -26,6 +23,7 @@ import { useStore } from "./store";
 import { predictExample } from "./content";
 import type {
   Attempt,
+  CodeFixture,
   Example,
   Exercise,
   Feedback,
@@ -34,13 +32,7 @@ import type {
   SectionKey,
 } from "./types";
 import { metrics } from "./types";
-import { topicName } from "./App";
-const tabs: { id: SectionKey; label: string; icon: typeof BookOpen }[] = [
-  { id: "explain", label: "Kiến thức", icon: BookOpen },
-  { id: "examples", label: "Ví dụ tương tác", icon: Code2 },
-  { id: "quiz", label: "Câu hỏi ôn tập", icon: FileQuestion },
-  { id: "exercises", label: "Bài tập thực hành", icon: ListChecks },
-];
+import { topicName } from "./topics";
 export function CodeBlock({
   code,
   language = "csharp",
@@ -66,7 +58,12 @@ export function CodeBlock({
       <div className="code-toolbar">
         <span>
           <Code2 size={14} />
-          {language === "sql" ? "SQL" : "C#"}
+          {{
+            sql: "SQL",
+            csharp: "C#",
+            html: "Razor / HTML",
+            shell: "Terminal",
+          }[language] ?? language}
         </span>
         <button onClick={copy} aria-label="Sao chép code">
           {copied ? <Check size={14} /> : <Copy size={14} />}{" "}
@@ -94,6 +91,8 @@ export function CodeBlock({
 }
 export function LessonPage() {
   const { lessonId, section = "explain" } = useParams();
+  const [params] = useSearchParams();
+  const quick = params.get("mode") === "review";
   const {
     catalog: { lessons },
     state,
@@ -101,297 +100,371 @@ export function LessonPage() {
     bookmark,
     notify,
   } = useStore();
-  const navigate = useNavigate();
   const lesson = lessons.find((l) => l.id === lessonId),
-    [busy, setBusy] = useState(false);
-  const initialized = useRef("");
-  const tab = tabs.find((t) => t.id === section);
+    [busy, setBusy] = useState(false),
+    initialized = useRef("");
   const progress = state.progress.find((p) => p.lessonId === lessonId);
   useEffect(() => {
-    if (lesson && tab && initialized.current !== lesson.id + "/" + section) {
+    if (
+      lesson &&
+      initialized.current !== lesson.id + "/" + section &&
+      ["explain", "examples", "quiz", "exercises"].includes(section)
+    ) {
       initialized.current = lesson.id + "/" + section;
-      saveProgress(lesson.id, tab.id, progress?.read ?? false).catch((e) =>
-        notify(e.message),
-      );
+      saveProgress(
+        lesson.id,
+        section as SectionKey,
+        progress?.read ?? false,
+      ).catch((e) => notify(e.message));
     }
   }, [lessonId, section]);
   if (!lesson)
     return (
       <div className="empty">
         <h1>Không tìm thấy bài học</h1>
-        <Link to="/lessons" className="btn primary">
-          Về danh sách bài học
+        <Link className="btn primary" to="/">
+          Về bài học
         </Link>
       </div>
     );
-  if (!tab) return <Navigate to={`/lessons/${lesson.id}/explain`} replace />;
+  if (!["explain", "examples", "quiz", "exercises"].includes(section))
+    return <Navigate to={"/lessons/" + lesson.id + "/explain"} replace />;
   const m = metrics(lesson, state),
     saved = state.bookmarks.some((b) => b.lessonId === lesson.id);
-  const changeTab = (id: SectionKey) => navigate(`/lessons/${lesson.id}/${id}`);
   return (
-    <>
-      <Link className="back-link" to="/lessons">
-        <ArrowLeft size={15} />
-        Khám phá bài học
-      </Link>
-      <header className="lesson-heading">
-        <div className="card-meta">
-          <span>{topicName(lesson.topicId)}</span>
-          <span>·</span>
-          {lesson.level}
-          <span>·</span>
-          <Clock size={14} />
-          {lesson.minutes} phút
-        </div>
-        <div className="title-row">
-          <h1>{lesson.title}</h1>
-          <button
-            className={`btn ${saved ? "is-bookmarked" : ""}`}
-            disabled={busy}
-            aria-pressed={saved}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await bookmark(lesson.id, !saved);
-              } catch (e) {
-                notify((e as Error).message);
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            <Bookmark size={17} fill={saved ? "currentColor" : "none"} />
-            {saved ? "Đã yêu thích" : "Yêu thích"}
-          </button>
-        </div>
-        <p>{lesson.description}</p>
-        <div className="version-note">{lesson.version}</div>
-      </header>
-      <nav className="lesson-tabs" aria-label="Các phần bài học">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => changeTab(t.id)}
-            aria-current={tab.id === t.id ? "page" : undefined}
-            className={tab.id === t.id ? "active" : ""}
-          >
-            <t.icon size={17} />
-            {t.label}
-            {t.id === "quiz" && <small>5</small>}
-            {t.id === "exercises" && <small>3</small>}
-          </button>
-        ))}
-      </nav>
-      {section === "explain" && (
-        <details className="mobile-toc">
-          <summary>Mục lục bài học</summary>
-          {lesson.sections.map((s) => (
-            <Link key={s.id} to={"#" + s.id}>
-              {s.title}
+    <div className="reader-layout">
+      <aside className="course-rail">
+        <Link className="back-link" to="/">
+          <ArrowLeft size={15} />
+          Tất cả bài học
+        </Link>
+        <span className="eyebrow">HỌC THEO CHỦ ĐỀ</span>
+        {lessons
+          .filter((l) => l.topicId === lesson.topicId)
+          .map((l) => (
+            <Link
+              className={l.id === lesson.id ? "current" : ""}
+              key={l.id}
+              to={"/lessons/" + l.id + "/explain"}
+            >
+              <span>{String(l.order).padStart(2, "0")}</span>
+              {l.shortTitle}
             </Link>
           ))}
-        </details>
-      )}
-      <div className="lesson-layout">
-        <div className="lesson-body" key={lesson.id + section}>
-          {section === "explain" ? (
-            <>
-              <div className="prerequisite-box">
-                <strong>Trước khi bắt đầu</strong>
+        <div className="rail-note">
+          Chưa hiểu thuật ngữ nào? Bắt đầu từ phần “Nền tảng trước khi đọc code”
+          trong bài.
+        </div>
+      </aside>
+      <article className="reader">
+        <div className="reader-breadcrumb">
+          {topicName(lesson.topicId)}
+          <ChevronDown size={13} />
+          Bài học
+        </div>
+        <header className="reader-heading">
+          <h1>{lesson.title}</h1>
+          <p>{lesson.description}</p>
+          <div className="reader-meta">
+            <span>
+              <Clock size={15} />
+              {lesson.minutes} phút
+            </span>
+            <span>{lesson.version}</span>
+            <button
+              className="icon-btn"
+              aria-label={saved ? "Đã yêu thích" : "Yêu thích"}
+              aria-pressed={saved}
+              onClick={async () => {
+                try {
+                  await bookmark(lesson.id, !saved);
+                } catch (e) {
+                  notify((e as Error).message);
+                }
+              }}
+            >
+              <Bookmark size={18} fill={saved ? "currentColor" : "none"} />
+            </button>
+          </div>
+        </header>
+        <nav className="reader-tabs" aria-label="Các phần bài học">
+          <Link
+            className={
+              section === "explain" || section === "examples" ? "active" : ""
+            }
+            to={"/lessons/" + lesson.id + "/explain"}
+          >
+            Học bài & ví dụ
+          </Link>
+          <Link
+            className={section === "quiz" ? "active" : ""}
+            to={"/lessons/" + lesson.id + "/quiz"}
+          >
+            Tự kiểm tra
+          </Link>
+          <Link
+            className={section === "exercises" ? "active" : ""}
+            to={"/lessons/" + lesson.id + "/exercises"}
+          >
+            Thực hành
+          </Link>
+        </nav>
+        {section === "explain" || section === "examples" ? (
+          <>
+            <div className="reading-mode">
+              <span>Bạn đang muốn</span>
+              <Link
+                className={!quick ? "selected" : ""}
+                to={"/lessons/" + lesson.id + "/explain"}
+              >
+                Học từ đầu
+              </Link>
+              <Link
+                className={quick ? "selected" : ""}
+                to={"/lessons/" + lesson.id + "/explain?mode=review"}
+              >
+                Ôn nhanh
+              </Link>
+            </div>
+            {quick ? (
+              <section className="recap-box">
+                <span className="eyebrow">NHỚ LẠI TRƯỚC KHI LÀM BÀI</span>
+                <h2>Những ý cần nắm</h2>
                 <ul>
-                  {lesson.prerequisites.map((p) => (
-                    <li key={p}>{p}</li>
+                  {(
+                    lesson.recap ?? [
+                      lesson.sections.find((s) => s.id === "summary")!.core,
+                    ]
+                  ).map((x) => (
+                    <li key={x}>{x}</li>
                   ))}
                 </ul>
-                <span className="pill">
-                  Cốt lõi luôn hiển thị · Mở “Đào sâu” khi cần
-                </span>
-              </div>
-              {lesson.sections.map((s, i) => (
-                <section className="knowledge-section" id={s.id} key={s.id}>
-                  <span className="section-number">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <h2>{s.title}</h2>
-                  <p>{s.core}</p>
-                  <details className="deep-dive">
-                    <summary>
-                      <LayersIcon /> Đào sâu <ChevronDown size={16} />
-                    </summary>
-                    <p>{s.deep}</p>
-                  </details>
-                </section>
-              ))}
-              <section className="sources">
-                <h3>Nguồn tham khảo</h3>
-                <p>
-                  Đã đọc và đối chiếu nội dung từ các bản nguồn chính thức dưới
-                  đây.
-                </p>
-                {lesson.sources.map((s) => (
-                  <a key={s.url} href={s.url} target="_blank" rel="noreferrer">
-                    {s.title} ↗
-                  </a>
-                ))}
-              </section>
-              <div className="read-panel">
-                <div>
-                  <CheckCircle2 size={23} />
-                  <span>
-                    <strong>
-                      {m.read
-                        ? "Bạn đã đánh dấu đọc phần kiến thức"
-                        : "Bạn đã đọc xong phần kiến thức?"}
-                    </strong>
-                    <small>
-                      Đánh dấu đọc không đồng nghĩa với đã thành thạo.
-                    </small>
-                  </span>
-                </div>
-                <button
-                  className="btn"
-                  disabled={busy}
-                  onClick={async () => {
-                    setBusy(true);
-                    try {
-                      await saveProgress(lesson.id, "explain", !m.read);
-                      notify(
-                        m.read
-                          ? "Đã bỏ đánh dấu đọc."
-                          : "Đã lưu trạng thái đọc.",
-                      );
-                    } catch (e) {
-                      notify((e as Error).message);
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
+                {lesson.comparison && <ResultTable {...lesson.comparison} />}
+                <Link
+                  className="text-link"
+                  to={"/lessons/" + lesson.id + "/quiz"}
                 >
-                  {m.read ? "Bỏ đánh dấu" : "Đánh dấu đã đọc"}
-                </button>
-              </div>
-              <button
-                className="btn primary next-section"
-                onClick={() => changeTab("examples")}
-              >
-                Tiếp theo: Dự đoán kết quả
-                <ArrowRight size={16} />
-              </button>
-            </>
-          ) : section === "examples" ? (
-            <>
+                  Kiểm tra lại kiến thức <ArrowRight size={16} />
+                </Link>
+              </section>
+            ) : (
+              <>
+                <section className="prerequisite-box">
+                  <h2>Trước khi bắt đầu</h2>
+                  <ul>
+                    {lesson.prerequisites.map((p) => (
+                      <li key={p}>{p}</li>
+                    ))}
+                  </ul>
+                  <p>{lesson.environment}</p>
+                </section>
+                {lesson.definitions && (
+                  <section className="definitions">
+                    <span className="eyebrow">ĐỪNG BỎ QUA BƯỚC NÀY</span>
+                    <h2>Nền tảng trước khi đọc code</h2>
+                    {lesson.definitions.map((d) => (
+                      <div key={d.term}>
+                        <h3>{d.term}</h3>
+                        <p>{d.meaning}</p>
+                        <p className="concrete-example">
+                          Ví dụ cụ thể: {d.example}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                <details className="mobile-toc">
+                  <summary>Mục lục bài học</summary>
+                  {lesson.sections.map((s) => (
+                    <Link key={s.id} to={"#" + s.id}>
+                      {s.title}
+                    </Link>
+                  ))}
+                  <Link to="#examples">Ví dụ từng bước</Link>
+                </details>
+                {lesson.sections.map((s, i) => (
+                  <section className="knowledge-section" id={s.id} key={s.id}>
+                    <span className="section-number">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <h2>{s.title}</h2>
+                    <p>{s.core}</p>
+                    {s.paragraphs?.map((p) => (
+                      <p key={p}>{p}</p>
+                    ))}
+                    {s.bullets && (
+                      <ul>
+                        {s.bullets.map((p) => (
+                          <li key={p}>{p}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {s.code && (
+                      <>
+                        <CodeBlock code={s.code} language={lesson.language} />
+                        {s.codeNote && (
+                          <p className="small-print">{s.codeNote}</p>
+                        )}
+                      </>
+                    )}
+                    {s.deep && (
+                      <details className="deep-dive">
+                        <summary>
+                          <Lightbulb size={16} />
+                          Đào sâu cơ chế
+                          <ChevronDown size={16} />
+                        </summary>
+                        <p>{s.deep}</p>
+                      </details>
+                    )}
+                  </section>
+                ))}
+              </>
+            )}
+            <section id="examples" className="examples-section">
               <div className="section-intro">
-                <span className="eyebrow">DỰ ĐOÁN TRƯỚC, GIẢI THÍCH SAU</span>
-                <h2>Đừng vội xem kết quả</h2>
+                <span className="eyebrow">CÙNG THEO DẤU MỘT CHƯƠNG TRÌNH</span>
+                <h2>Đọc code, dự đoán, rồi đối chiếu</h2>
                 <p>
-                  Đọc code, chọn dự đoán và gửi câu trả lời để mở kết quả kỳ
-                  vọng. Đây là kết quả minh họa; trình duyệt không thực thi C#
-                  hay SQL.
+                  So sánh dữ liệu và dòng code thay đổi giữa các ví dụ. Gửi dự
+                  đoán để xem kết quả kỳ vọng và giải thích từng bước. Ứng dụng
+                  không thực thi code của bạn.
                 </p>
               </div>
               {lesson.schema && <Schema code={lesson.schema} />}{" "}
               {lesson.examples.map((e) => (
                 <ExampleCard key={e.id} example={e} lessonId={lesson.id} />
               ))}
-              <button
-                className="btn primary next-section"
-                onClick={() => changeTab("quiz")}
-              >
-                Tiếp theo: Kiểm tra kiến thức
-                <ArrowRight size={16} />
-              </button>
-            </>
-          ) : section === "quiz" ? (
-            <>
-              <div className="section-intro">
-                <span className="eyebrow">GIẢI THÍCH ĐƯỢC “VÌ SAO”</span>
-                <h2>5 câu hỏi, 5 góc nhìn</h2>
-                <p>
-                  Mỗi câu kiểm tra một cách hiểu khác nhau. Câu trả lời sai sẽ
-                  vào trang ôn tập; lần làm lại luôn được lưu riêng.
-                </p>
+            </section>
+            <section className="read-panel">
+              <div>
+                <CheckCircle2 size={22} />
+                <span>
+                  <strong>
+                    {m.read
+                      ? "Đã đánh dấu đọc"
+                      : "Đã đọc và theo dõi được ví dụ?"}
+                  </strong>
+                  <small>Đánh dấu đọc không có nghĩa là thành thạo.</small>
+                </span>
               </div>
-              {lesson.questions.map((q, i) => (
-                <QuizCard key={q.id} lesson={lesson} question={q} index={i} />
-              ))}
               <button
-                className="btn primary next-section"
-                onClick={() => changeTab("exercises")}
+                className="btn"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    await saveProgress(lesson.id, "explain", !m.read);
+                    notify("Đã lưu trạng thái đọc.");
+                  } catch (e) {
+                    notify((e as Error).message);
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
               >
-                Tiếp theo: Tự tay áp dụng
-                <ArrowRight size={16} />
+                {m.read ? "Bỏ đánh dấu" : "Đánh dấu đã đọc"}
               </button>
-            </>
-          ) : (
-            <>
-              <div className="section-intro">
-                <span className="eyebrow">TỪ HIỂU ĐẾN LÀM</span>
-                <h2>Bài tập thực hành</h2>
-                <p>
-                  Bài tập được <strong>tự đánh giá</strong>. Hệ thống lưu bài
-                  làm và checklist, không thực thi code hay tự khẳng định lời
-                  giải đúng.
-                </p>
-              </div>
-              {lesson.schema && <Schema code={lesson.schema} />}{" "}
-              {lesson.exercises.map((e) => (
-                <ExerciseCard key={e.id} lesson={lesson} exercise={e} />
+            </section>
+            <Link
+              className="btn primary next-section"
+              to={"/lessons/" + lesson.id + "/quiz"}
+            >
+              Tiếp theo: Tự kiểm tra
+              <ArrowRight size={16} />
+            </Link>
+            <details className="sources">
+              <summary>Nguồn bài học và tài liệu đối chiếu</summary>
+              <p>{lesson.sourceNote}</p>
+              {lesson.sources.map((s) => (
+                <a key={s.url} href={s.url} target="_blank" rel="noreferrer">
+                  {s.title} ↗
+                </a>
               ))}
+            </details>
+          </>
+        ) : section === "quiz" ? (
+          <>
+            <div className="section-intro">
+              <h2>Tự kiểm tra khả năng giải thích</h2>
+              <p>
+                Chọn một đáp án rồi xem vì sao đúng hoặc sai. Lần làm lại luôn
+                được lưu riêng; câu sai xuất hiện trong mục Ôn lại.
+              </p>
+            </div>
+            {lesson.questions.map((q, i) => (
+              <QuizCard key={q.id} lesson={lesson} question={q} index={i} />
+            ))}
+            <Link
+              className="btn primary"
+              to={"/lessons/" + lesson.id + "/exercises"}
+            >
+              Tự tay áp dụng <ArrowRight size={16} />
+            </Link>
+          </>
+        ) : (
+          <>
+            <div className="section-intro">
+              <h2>Viết lời giải của chính bạn</h2>
+              <p>
+                Từ hoàn thiện một dòng đến giải quyết một yêu cầu. Bài tập được
+                tự đánh giá; mở đáp án hoặc nhập code không được tính là đã làm
+                đúng.
+              </p>
+            </div>
+            {lesson.schema && <Schema code={lesson.schema} />}{" "}
+            {lesson.exercises.map((e) => (
+              <ExerciseCard key={e.id} lesson={lesson} exercise={e} />
+            ))}
+          </>
+        )}
+        <nav className="lesson-neighbors" aria-label="Chuyển bài">
+          {lessons
+            .filter((l) => Math.abs(l.order - lesson.order) === 1)
+            .map((l) => (
+              <Link key={l.id} to={"/lessons/" + l.id + "/explain"}>
+                {l.order < lesson.order ? "← Bài trước: " : "Bài tiếp: "}
+                {l.shortTitle}
+              </Link>
+            ))}
+        </nav>
+        <details className="personal-notes">
+          <summary>
+            <StickyNote size={17} />
+            Ghi chú của tôi
+          </summary>
+          <Notes key={lesson.id} lesson={lesson} />
+        </details>
+      </article>
+    </div>
+  );
+}
+function FixtureDetails({ fixture }: { fixture: CodeFixture }) {
+  return (
+    <>
+      {fixture.files &&
+        Object.entries(fixture.files).map(([name, code]) => (
+          <div className="fixture-file" key={name}>
+            <h4>File kèm theo: {name}</h4>
+            <CodeBlock code={code} language="html" />
+          </div>
+        ))}
+      {fixture.request && (
+        <div className="request-fixture">
+          <h4>Request dùng cho bài này</h4>
+          <code>
+            {fixture.request.method} http://localhost:5090{fixture.request.path}
+          </code>
+          {fixture.request.body && (
+            <>
+              <p>Content-Type: application/json</p>
+              <pre>{JSON.stringify(fixture.request.body, null, 2)}</pre>
             </>
           )}
         </div>
-        <aside className="lesson-aside">
-          <div className="toc-card">
-            <span className="eyebrow">TRONG BÀI HỌC NÀY</span>
-            {section === "explain" ? (
-              lesson.sections.map((s, i) => (
-                <Link to={"#" + s.id} key={s.id}>
-                  <span>{i + 1}</span>
-                  {s.title}
-                </Link>
-              ))
-            ) : (
-              <>
-                <p className="muted">
-                  {section === "examples"
-                    ? "Hai ví dụ, chỉ một chi tiết thay đổi."
-                    : section === "quiz"
-                      ? "Trả lời từng câu trước khi xem giải thích."
-                      : "Hoàn thiện → sửa lỗi → vận dụng."}
-                </p>
-                {tabs.map((t) => (
-                  <button
-                    key={t.id}
-                    className={tab.id === t.id ? "active" : ""}
-                    onClick={() => changeTab(t.id)}
-                  >
-                    <t.icon size={15} />
-                    {t.label}
-                  </button>
-                ))}
-              </>
-            )}
-            <div className="toc-progress">
-              <span>
-                Hoạt động trong lộ trình <strong>{m.percent}%</strong>
-              </span>
-              <div className="progress-track">
-                <i style={{ width: m.percent + "%" }} />
-              </div>
-              <small>
-                {m.read ? "Đã đọc" : "Chưa đánh dấu đọc"} · {m.correct}/5 câu
-                đúng · {m.assessed}/3 bài tự đánh giá
-              </small>
-            </div>
-          </div>
-          <Notes key={lesson.id} lesson={lesson} />
-        </aside>
-      </div>
+      )}
     </>
   );
-}
-function LayersIcon() {
-  return <span aria-hidden="true">◇</span>;
 }
 function Schema({ code }: { code: string }) {
   return (
@@ -511,6 +584,7 @@ function ExampleCard({
       <h3>{e.title}</h3>
       <p>{e.prompt}</p>
       <CodeBlock code={e.code} language={e.language} />
+      <FixtureDetails fixture={e} />
       <ChoiceGroup
         name={e.id}
         options={e.options}
@@ -661,6 +735,8 @@ export function QuizCard({
         </Link>
       )}
       <h3>{q.prompt}</h3>
+      {q.code && <CodeBlock code={q.code} language={lesson.language} />}
+      <FixtureDetails fixture={q} />
       <ChoiceGroup
         name={q.id}
         options={q.options}
@@ -813,6 +889,7 @@ function ExerciseCard({
       </div>
       <h3>{e.title}</h3>
       <p>{e.prompt}</p>
+      <FixtureDetails fixture={e} />
       <dl className="exercise-spec">
         <dt>Dữ liệu đầu vào</dt>
         <dd>{e.input}</dd>

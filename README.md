@@ -50,13 +50,11 @@ Khi được yêu cầu link, chọn đúng tài khoản/team và project mong m
 
 ## Nội dung và các luồng học
 
-Giữ đủ 7 chủ đề, trong đó 3 bài hoàn chỉnh:
+Ứng dụng có **43 bài học**: 41 mục biên soạn từ tài liệu người dùng cung cấp, thêm 2 bài đào sâu LINQ/SQL. Lộ trình đi từ biến, mảng và method đến OOP, LINQ, thiết kế, MVC, EF Core, DI/cache, thread/async, TCP/HTTP và HttpClient.
 
-1. OOP: override / new, kiểu tham chiếu / kiểu runtime, virtual dispatch.
-2. LINQ to Objects: deferred execution / ToList / duyệt nhiều lần, phân biệt IQueryable và EF Core.
-3. SQL: LEFT JOIN, ON / WHERE và NULL, có schema, dữ liệu mẫu và bảng kết quả xác định bằng ORDER BY.
+Giao diện chính chỉ có **Bài học** và **Ôn lại**. Mỗi bài có chế độ **Học từ đầu / Ôn nhanh**, định nghĩa kèm ví dụ cụ thể, hướng dẫn môi trường chạy, cơ chế, giới hạn, **2 ví dụ dự đoán, 5 câu hỏi và 3 bài tập**. Tổng cộng 86 ví dụ, 215 câu hỏi và 129 bài tập; tìm kiếm không dấu và lọc theo chủ đề/bài đã lưu. Ghi chú, yêu thích, lịch sử quiz, ôn câu sai và bài làm được lưu tại trình duyệt.
 
-Mỗi bài có kiến thức cốt lõi và đào sâu, **2 ví dụ dự đoán, 5 câu hỏi và 3 bài tập**. Giữ tìm kiếm không dấu, bộ lọc, phần học gần nhất, yêu thích, ghi chú, lịch sử quiz, ôn câu sai, tự đánh giá bài tập, tiến độ, light/dark mode, desktop/mobile, bàn phím và các trạng thái lỗi.
+Nguồn chính là DOCX đã được đọc, mở rộng và hiệu chỉnh bằng tài liệu Microsoft. Các video được liên kết theo thứ tự người dùng gửi, chưa được xem trực tiếp trong môi trường này. Xem [ghi chú biên soạn và hiệu chỉnh](docs/curriculum.md).
 
 - Phải gửi dự đoán/câu trả lời trước khi UI mở kết quả và giải thích.
 - Mỗi lựa chọn quiz có lời giải riêng; câu sai vào danh sách ôn. Làm đúng gỡ câu cần ôn nhưng không xóa lần sai trước đó.
@@ -64,7 +62,7 @@ Mỗi bài có kiến thức cốt lõi và đào sâu, **2 ví dụ dự đoán
 - Bài tập được **tự đánh giá**: nhập lời giải, lưu, mở gợi ý từng cấp và đối chiếu đáp án/checklist. Mở đáp án không xác nhận code đúng.
 - Hoàn thành lộ trình = đã đánh dấu đọc + đúng gần nhất toàn bộ quiz + tự đánh giá toàn bộ bài tập; không gắn nhãn thành thạo.
 
-.NET Framework là dòng runtime cũ dành cho Windows; .NET Core là tên dòng đa nền tảng 1.x–3.1; từ .NET 5, dòng hiện đại gọi là .NET. Các bài C# ở đây đã được kiểm chứng với **.NET 10**. Tên ASP.NET Core và EF Core vẫn giữ chữ Core; ứng dụng client hiện tại không sử dụng chúng để chạy.
+.NET Framework là dòng dành cho Windows, với hỗ trợ 4.8.1 gắn theo Windows tương ứng; .NET Core là tên dòng đa nền tảng 1.x–3.1; từ .NET 5, dòng hiện đại gọi là .NET. Các bài C# ở đây đã được kiểm chứng với **.NET 10**. Tên ASP.NET Core và EF Core vẫn giữ chữ Core; ứng dụng client hiện tại không sử dụng chúng để chạy.
 
 ## Dữ liệu cá nhân và sao lưu
 
@@ -108,7 +106,7 @@ Công cụ đọc SQLite ở chế độ read-only, xuất định dạng backup
 
 Thêm bài bằng cách sửa JSON, không cần thêm component. Chọn topic ID có sẵn, lesson `order`, version, prerequisites, sections có `core`/`deep`, ví dụ có `output`/`steps`/`comparison`, quiz có `correctOptionId` và giải thích từng option, bài tập và sources. `sectionId` của quiz phải khớp mục bài. Giữ ID khi sửa diễn đạt; nếu đổi nghĩa câu hỏi, dùng ID mới để không làm lịch sử cũ mâu thuẫn. Chưa có migration tự động cho trường hợp xóa/đổi ID trong dữ liệu đã lưu; xuất sao lưu trước khi thay đổi cấu trúc nội dung.
 
-Nguồn Microsoft chính thức nằm trong mỗi bài. Các ví dụ C#/SQL và lời giải tham khảo đã được kiểm chứng thực thi. Giữ thuật ngữ/ngữ cảnh khi mở rộng nội dung; một số nhãn UI của bản đầu vẫn thể hiện 5 câu / 3 bài tập.
+Nguồn Microsoft chính thức nằm trong mỗi bài. Các ví dụ C#/SQL và lời giải tham khảo đã được kiểm chứng thực thi. Giữ thuật ngữ/ngữ cảnh khi mở rộng nội dung. `environment` mô tả cách chạy; ví dụ web có `request` và có thể có `files`; lời giải mới có `expectedOutput` và `verificationKind` để công cụ biên soạn kiểm chứng.
 
 ## Kiểm thử
 
@@ -126,7 +124,7 @@ npm run test:e2e     # Playwright desktop/mobile với static preview, không ba
 
 E2E cần Chromium. Nếu đã có: `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e`. Nếu chưa: `npx playwright install chromium` (cần network tới domain tải browser). Cloud hiện tại dùng Chromium hệ thống; mọi request `/api/` trong các test luồng học bị chặn và test yêu cầu không phát sinh request API.
 
-`verification/verify_examples.py` là công cụ **tùy chọn** cho người biên soạn nội dung, không nằm trong setup/check bắt buộc. Nó cần Python và .NET SDK 10 để chạy 10 đoạn C# và 5 truy vấn SQLite tham khảo. Không chạy code học viên. Nội dung bài học không thay đổi trong lần chuyển kiến trúc này.
+`verification/verify_examples.py` là công cụ **tùy chọn** cho người biên soạn nội dung, không nằm trong setup/check bắt buộc. Nó cần Python, .NET SDK 10, truy cập NuGet để restore EF SQLite và loopback socket cho ví dụ web. Chạy `python3 verification/verify_examples.py` từ repo root; có thể đặt `DOTNET_CMD=/đường/dẫn/dotnet`. Nó chạy các ví dụ/lời giải đã xuất bản, kiểm tra output và status HTTP, lưu báo cáo JSON; không chạy code học viên.
 
 Kết quả kiểm chứng hiện tại và giới hạn: [docs/validation.md](docs/validation.md).
 
