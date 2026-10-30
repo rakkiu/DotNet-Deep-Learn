@@ -4,7 +4,7 @@ Website học và ôn tập C#/.NET bằng tiếng Việt, **xử lý hoàn toà
 
 ## Chạy local
 
-Yêu cầu Node.js **22.12+**, npm (đã kiểm chứng bằng Node 24.19.0 / npm 11.9.0):
+Yêu cầu Node.js **24 LTS**, npm (đã kiểm chứng bằng Node 24.19.0 / npm 11.9.0):
 
 ```bash
 ./scripts/setup.sh
@@ -34,6 +34,19 @@ npm run preview -- --port 5080
 Đưa **toàn bộ nội dung `client/dist/`** lên static hosting như GitHub Pages, Cloudflare Pages, Netlify hoặc một HTTP file server. Không deploy `legacy/` hay tệp sao lưu cá nhân. Không cần .NET, cấu hình API, secret hoặc database trên hosting.
 
 Ứng dụng dùng **HashRouter** (`/#/lessons/...`) và Vite `base: './'`, nên hỗ trợ refresh đường dẫn và triển khai trong thư mục con mà không cần rewrite SPA. Ví dụ: `https://example.com/DotNet-Deep-Learn/#/lessons/linq-deferred/quiz`. Cần phục vụ qua HTTP(S), không mở `index.html` trực tiếp bằng `file://`.
+
+## Vercel
+
+Import repository `rakkiu/DotNet-Deep-Learn`, chọn nhánh `main` và **Root Directory = `client`**. Chọn Node.js **24.x**. `client/vercel.json` đã lưu framework Vite, install command `npm ci --include=dev`, build command `npm run build` và output `dist`; không cần biến môi trường, backend hay rewrite cho HashRouter.
+
+Nếu dùng Vercel CLI đã đăng nhập, chạy từ thư mục `client`:
+
+```bash
+vercel link
+vercel deploy --prod
+```
+
+Khi được yêu cầu link, chọn đúng tài khoản/team và project mong muốn. `.vercel/` được gitignore; không đưa tệp xác thực hoặc bản sao lưu cá nhân vào deployment. Trạng thái build local thành công không đồng nghĩa đã có deployment Vercel; cần xác nhận deployment Ready và kiểm tra URL thực tế sau khi deploy. Chuyển từ localhost sang domain Vercel tạo origin khác, nên cần export/import JSON nếu muốn mang tiến độ cũ sang.
 
 ## Nội dung và các luồng học
 
