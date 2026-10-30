@@ -1,0 +1,14 @@
+node_modules/
+dist/
+bin/
+obj/
+*.db
+*.db-shm
+*.db-wal
+playwright-report/
+test-results/
+.env
+.tools/
+*.tsbuildinfo
+__pycache__/
+legacy-data/

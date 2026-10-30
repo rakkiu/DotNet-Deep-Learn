@@ -1,0 +1,1085 @@
+{
+  "topics": [
+    {
+      "id": "csharp",
+      "title": "C# nền tảng",
+      "description": "Kiểu dữ liệu, bộ nhớ và ngôn ngữ",
+      "icon": "Braces",
+      "order": 1
+    },
+    {
+      "id": "oop",
+      "title": "Lập trình hướng đối tượng",
+      "description": "Đối tượng, kế thừa và đa hình",
+      "icon": "Boxes",
+      "order": 2
+    },
+    {
+      "id": "linq",
+      "title": "LINQ",
+      "description": "Truy vấn dữ liệu có chủ đích",
+      "icon": "Workflow",
+      "order": 3
+    },
+    {
+      "id": "sql",
+      "title": "Database & SQL",
+      "description": "Tư duy dữ liệu và truy vấn",
+      "icon": "Database",
+      "order": 4
+    },
+    {
+      "id": "efcore",
+      "title": "Entity Framework Core",
+      "description": "Từ đối tượng đến cơ sở dữ liệu",
+      "icon": "Layers",
+      "order": 5
+    },
+    {
+      "id": "aspnet",
+      "title": "ASP.NET Core / Web API",
+      "description": "Xây dựng API với .NET hiện đại",
+      "icon": "Globe",
+      "order": 6
+    },
+    {
+      "id": "solid",
+      "title": "SOLID & kiến trúc",
+      "description": "Thiết kế phần mềm dễ thay đổi",
+      "icon": "Component",
+      "order": 7
+    }
+  ],
+  "lessons": [
+    {
+      "id": "oop-polymorphism",
+      "topicId": "oop",
+      "order": 1,
+      "title": "Đa hình: override khác gì với new?",
+      "shortTitle": "Đa hình trong C#",
+      "description": "Cùng một lời gọi, vì sao kết quả khác nhau? Hiểu cách C# chọn phương thức qua kiểu tham chiếu và đối tượng thực tế.",
+      "tags": [
+        "OOP",
+        "C#",
+        "virtual / override"
+      ],
+      "level": "Cốt lõi",
+      "minutes": 25,
+      "prerequisites": [
+        "Biết khai báo class và tạo đối tượng",
+        "Hiểu kế thừa và biến tham chiếu"
+      ],
+      "language": "csharp",
+      "version": "C# trên .NET hiện đại; ví dụ kiểm chứng với .NET 10.",
+      "sections": [
+        {
+          "id": "goals",
+          "title": "Mục tiêu & kiến thức trước bài",
+          "core": "Sau bài này, bạn có thể dự đoán phương thức nào được gọi khi một biến kiểu cha trỏ tới đối tượng con; giải thích sự khác nhau giữa ghi đè (override) và che giấu thành viên (member hiding). Bạn cần biết class, kế thừa và phép gán tham chiếu.",
+          "deep": "Kiểu tĩnh của biểu thức và kiểu runtime của đối tượng trả lời hai câu hỏi khác nhau. Kiểu tĩnh quyết định thành viên nào có thể được gọi; nếu thành viên đó là virtual, kiểu runtime quyết định bản ghi đè nào được thực thi."
+        },
+        {
+          "id": "problem",
+          "title": "Từ vấn đề thực tế đến đa hình",
+          "core": "Một hệ thống thông báo có Email và SMS. Cách đầu tiên là kiểm tra loại thông báo bằng if/else ở mọi nơi. Khi thêm loại mới, bạn phải tìm và sửa nhiều nhánh. Thay vào đó, lớp cha khai báo hành vi Send bằng virtual hoặc abstract; mỗi lớp con override hành vi riêng. Mã gọi chỉ cần biết kiểu cha.",
+          "deep": "Đa hình thay thế nhánh kiểm tra kiểu bằng một giao ước hành vi. Tuy nhiên, nó chỉ hữu ích khi các đối tượng thực sự có thể thay thế nhau theo giao ước đó. Nếu các loại không có quan hệ “là một”, ghép đối tượng hoặc dùng interface có thể phù hợp hơn."
+        },
+        {
+          "id": "mechanism",
+          "title": "Hai kiểu, hai vai trò",
+          "core": "Với Animal pet = new Dog(), kiểu tham chiếu là Animal, kiểu đối tượng thực tế là Dog. Animal.Speak là virtual và Dog.Speak là override: pet.Speak() gọi Dog.Speak. Nếu Dog dùng new để che Speak, lời gọi qua Animal vẫn dùng thành viên của Animal. new không biến phương thức thành một bản override.",
+          "deep": "Việc chọn thành viên bắt đầu từ kiểu tĩnh. Sau đó, virtual dispatch (điều phối ảo) chọn bản override trong cùng chuỗi virtual dựa trên đối tượng runtime. new tạo thành viên riêng, không thay thế slot virtual của lớp cha. Nếu lớp con khai báo new virtual, nó bắt đầu một chuỗi virtual khác. Ép kiểu sang Dog thay đổi cách tra cứu thành viên, không thay đổi đối tượng."
+        },
+        {
+          "id": "usage",
+          "title": "Khi nào nên dùng?",
+          "core": "Dùng override khi lớp con cần chuyên biệt hóa hành vi mà bên gọi qua kiểu cha vẫn phải nhận được. Dùng new khi chủ ý cung cấp một thành viên khác tên trùng với thành viên kế thừa, thường trong tình huống tương thích API. Tránh dùng new để “sửa” một phương thức không virtual rồi kỳ vọng đa hình.",
+          "deep": "Không thể override phương thức static, non-virtual hoặc sealed override. Phương thức gốc phải là virtual, abstract hoặc override. Đổi public thành private khi override cũng không hợp lệ. Tránh gọi virtual từ constructor: phần triển khai lớp con có thể chạy trước khi trạng thái lớp con được khởi tạo đầy đủ."
+        },
+        {
+          "id": "pitfalls",
+          "title": "Dễ nhầm, giới hạn & đánh đổi",
+          "core": "new trong khai báo thành viên là che giấu; new Dog() là tạo đối tượng. Bỏ từ khóa new khi che một thành viên phù hợp thường tạo cảnh báo biên dịch, không tự biến thành override. Overload là nhiều chữ ký khác nhau; override là chuyên biệt hóa cùng giao ước virtual.",
+          "deep": "Đa hình giúp mở rộng nhưng khiến hành vi phụ thuộc runtime, cần đọc cả giao ước và bản ghi đè. Interface cũng hỗ trợ đa hình nhưng cách triển khai interface không nên suy diễn chỉ từ ví dụ member hiding này. Ép kiểu downcast có thể thất bại nếu đối tượng thực tế không thuộc kiểu con."
+        },
+        {
+          "id": "summary",
+          "title": "Điều cần nhớ",
+          "core": "Hãy xác định kiểu tham chiếu, xác định thành viên được chọn, rồi kiểm tra chuỗi virtual/override. override giữ đa hình qua kiểu cha; new che thành viên theo kiểu truy cập. Đừng đoán chỉ từ từ khóa new ở vế tạo đối tượng.",
+          "deep": "Tự kiểm tra: nếu chỉ đổi Animal pet thành Dog pet mà kết quả đổi, đó có thể là dấu hiệu bạn đang quan sát member hiding. Hãy kiểm tra khai báo virtual/override thay vì kết luận rằng mọi lời gọi đều dùng kiểu runtime."
+        }
+      ],
+      "examples": [
+        {
+          "id": "oop-override",
+          "title": "01 · Giữ cùng một giao ước",
+          "prompt": "Biến pet có kiểu Animal, đối tượng được tạo là Dog. Dòng nào sẽ được in?",
+          "code": "Animal pet = new Dog();\npet.Speak();\n\nclass Animal\n{\n    public virtual void Speak() => Console.WriteLine(\"Animal\");\n}\nclass Dog : Animal\n{\n    public override void Speak() => Console.WriteLine(\"Dog\");\n}",
+          "options": [
+            {
+              "id": "a",
+              "text": "Animal"
+            },
+            {
+              "id": "b",
+              "text": "Dog"
+            },
+            {
+              "id": "c",
+              "text": "Lỗi biên dịch"
+            }
+          ],
+          "correctOptionId": "b",
+          "output": "Dog",
+          "steps": [
+            "Kiểu tĩnh Animal cho phép truy cập Speak.",
+            "Animal.Speak là virtual.",
+            "Đối tượng runtime là Dog; Dog override cùng thành viên nên in Dog."
+          ],
+          "comparison": "Ở ví dụ 02, chỉ thay override bằng new. Đối tượng vẫn là Dog nhưng lời gọi qua Animal sẽ đổi kết quả.",
+          "language": "csharp",
+          "table": null
+        },
+        {
+          "id": "oop-hiding",
+          "title": "02 · Chỉ đổi override thành new",
+          "prompt": "Cả hai biến cùng trỏ tới một Dog. Hãy dự đoán hai dòng theo đúng thứ tự.",
+          "code": "Dog dog = new Dog();\nAnimal pet = dog;\npet.Speak();\ndog.Speak();\n\nclass Animal\n{\n    public virtual void Speak() => Console.WriteLine(\"Animal\");\n}\nclass Dog : Animal\n{\n    public new void Speak() => Console.WriteLine(\"Dog\");\n}",
+          "options": [
+            {
+              "id": "a",
+              "text": "Dog rồi Dog"
+            },
+            {
+              "id": "b",
+              "text": "Animal rồi Animal"
+            },
+            {
+              "id": "c",
+              "text": "Animal rồi Dog"
+            }
+          ],
+          "correctOptionId": "c",
+          "output": "Animal\nDog",
+          "steps": [
+            "pet có kiểu Animal: chọn Animal.Speak.",
+            "Dog.Speak dùng new, không override chuỗi virtual của Animal: in Animal.",
+            "dog có kiểu Dog: tra cứu chọn thành viên che giấu Dog.Speak và in Dog."
+          ],
+          "comparison": "Nếu đổi new thành override, cả hai lời gọi đều in Dog. Kiểu đối tượng không đổi; quan hệ giữa các thành viên mới là khác biệt.",
+          "language": "csharp",
+          "table": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "oop-q-concept",
+          "kind": "Hiểu khái niệm",
+          "prompt": "Animal a = new Dog(); Kiểu tham chiếu và kiểu đối tượng thực tế lần lượt là gì?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Animal và Dog",
+              "explanation": "Đúng: biến khai báo Animal, đối tượng được tạo là Dog."
+            },
+            {
+              "id": "b",
+              "text": "Dog và Animal",
+              "explanation": "Bạn đang đảo vai trò của khai báo và khởi tạo."
+            },
+            {
+              "id": "c",
+              "text": "Dog và Dog",
+              "explanation": "Vế new không thay đổi kiểu khai báo của biến."
+            }
+          ],
+          "correctOptionId": "a",
+          "explanation": "Kiểu tĩnh nằm ở khai báo; kiểu runtime thuộc đối tượng.",
+          "tag": "Kiểu tĩnh / runtime",
+          "misconception": "new quyết định cả kiểu của biến",
+          "sectionId": "mechanism"
+        },
+        {
+          "id": "oop-q-predict",
+          "kind": "Dự đoán",
+          "prompt": "Animal.Speak là virtual, Dog.Speak là override. Animal a = new Dog(); a.Speak() gọi đâu?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Animal.Speak",
+              "explanation": "virtual cho phép chọn bản override theo runtime."
+            },
+            {
+              "id": "b",
+              "text": "Dog.Speak",
+              "explanation": "Dog override đúng thành viên virtual mà Animal tham chiếu."
+            },
+            {
+              "id": "c",
+              "text": "Không biên dịch",
+              "explanation": "Gán đối tượng con vào biến kiểu cha là hợp lệ."
+            }
+          ],
+          "correctOptionId": "b",
+          "explanation": "Chuỗi virtual đưa lời gọi tới Dog.Speak.",
+          "tag": "Virtual dispatch",
+          "misconception": "Kiểu biến luôn quyết định phần triển khai",
+          "sectionId": "mechanism"
+        },
+        {
+          "id": "oop-q-cause",
+          "kind": "Giải thích nguyên nhân",
+          "prompt": "Vì sao new Speak trong Dog không thay thế Speak qua biến Animal?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Vì Dog chưa được tạo",
+              "explanation": "Đối tượng vẫn là Dog, vấn đề nằm ở khai báo thành viên."
+            },
+            {
+              "id": "b",
+              "text": "Vì new tạo thành viên che giấu riêng",
+              "explanation": "Đúng: nó không tham gia bản ghi đè của Animal.Speak."
+            },
+            {
+              "id": "c",
+              "text": "Vì virtual chỉ dùng với interface",
+              "explanation": "Class cũng có virtual; interface không phải điều kiện bắt buộc."
+            }
+          ],
+          "correctOptionId": "b",
+          "explanation": "Tra cứu qua Animal chọn chuỗi virtual gốc; thành viên new không override chuỗi đó.",
+          "tag": "Member hiding",
+          "misconception": "new và override tương đương",
+          "sectionId": "mechanism"
+        },
+        {
+          "id": "oop-q-distinguish",
+          "kind": "Phân biệt",
+          "prompt": "Cặp mô tả nào đúng?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Overload đổi danh sách tham số; override chuyên biệt hóa thành viên virtual",
+              "explanation": "Đúng: overload và override giải quyết hai vấn đề khác nhau."
+            },
+            {
+              "id": "b",
+              "text": "Override luôn phải đổi tên phương thức",
+              "explanation": "Override giữ tên và chữ ký tương thích của thành viên gốc."
+            },
+            {
+              "id": "c",
+              "text": "new biến phương thức static thành virtual",
+              "explanation": "new không thay đổi static thành điều phối ảo."
+            }
+          ],
+          "correctOptionId": "a",
+          "explanation": "Overload được phân giải theo chữ ký; override thuộc chuỗi virtual.",
+          "tag": "Overload / override",
+          "misconception": "Cùng tên nghĩa là cùng cơ chế",
+          "sectionId": "pitfalls"
+        },
+        {
+          "id": "oop-q-apply",
+          "kind": "Áp dụng",
+          "prompt": "Thêm PushNotification vào List<Notification>; mỗi phần tử phải gửi theo cách riêng. Bạn chọn gì?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Notification.Send non-virtual, các lớp con dùng new",
+              "explanation": "Gọi qua Notification sẽ không nhận hành vi che giấu như mong muốn."
+            },
+            {
+              "id": "b",
+              "text": "Kiểm tra tên lớp bằng chuỗi ở mọi nơi",
+              "explanation": "Cách này dễ lỗi và phải sửa nhiều nhánh khi mở rộng."
+            },
+            {
+              "id": "c",
+              "text": "Notification.Send abstract hoặc virtual; lớp con override",
+              "explanation": "Đúng: mã gọi qua kiểu cha nhận được hành vi lớp con."
+            }
+          ],
+          "correctOptionId": "c",
+          "explanation": "Giao ước chung và override phù hợp với yêu cầu thay thế đối tượng.",
+          "tag": "Thiết kế hành vi",
+          "misconception": "Che giấu là cách mở rộng đa hình",
+          "sectionId": "usage"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "oop-e-fill",
+          "level": "01 · Hoàn thiện",
+          "title": "Một lời gọi, đúng hành vi",
+          "prompt": "Điền từ khóa cho hai phương thức để đoạn gọi qua Animal in Dog.",
+          "input": "Animal a = new Dog(); a.Speak();",
+          "expected": "In đúng một dòng Dog.",
+          "starter": "class Animal { public /* ? */ void Speak() => Console.WriteLine(\"Animal\"); }\nclass Dog : Animal { public /* ? */ void Speak() => Console.WriteLine(\"Dog\"); }",
+          "hints": [
+            "Lớp cha phải cho phép ghi đè.",
+            "Dùng virtual ở lớp cha và override ở lớp con."
+          ],
+          "solution": "class Animal { public virtual void Speak() => Console.WriteLine(\"Animal\"); }\nclass Dog : Animal { public override void Speak() => Console.WriteLine(\"Dog\"); }",
+          "explanation": "Cả hai khai báo thuộc cùng chuỗi virtual; runtime chọn Dog.Speak.",
+          "checklist": [
+            "Lớp cha có virtual",
+            "Lớp con dùng override",
+            "Giải thích được vai trò của kiểu Animal"
+          ],
+          "alternative": "Có thể dùng abstract ở lớp Animal trừu tượng nếu không có hành vi mặc định; khi đó mọi lớp con cụ thể phải triển khai."
+        },
+        {
+          "id": "oop-e-debug",
+          "level": "02 · Tìm lỗi",
+          "title": "Lỗi nằm ở đâu?",
+          "prompt": "Đồng nghiệp dùng new và cho rằng phép gán kiểu cha làm mất đối tượng Dog. Sửa code và giải thích chẩn đoán sai.",
+          "input": "Animal a = new Dog(); a.Speak();",
+          "expected": "In Dog và giải thích đối tượng vẫn là Dog.",
+          "starter": "class Animal { public virtual void Speak() => Console.WriteLine(\"Animal\"); }\nclass Dog : Animal { public new void Speak() => Console.WriteLine(\"Dog\"); }",
+          "hints": [
+            "Gán tham chiếu không cắt đối tượng thành phần Animal.",
+            "Đổi new thành override; không cần ép kiểu ở bên gọi."
+          ],
+          "solution": "class Animal { public virtual void Speak() => Console.WriteLine(\"Animal\"); }\nclass Dog : Animal { public override void Speak() => Console.WriteLine(\"Dog\"); }\n// a vẫn trỏ tới Dog; new trước đây chỉ che thành viên.",
+          "explanation": "Lỗi là quan hệ giữa hai thành viên, không phải kiểu runtime bị mất.",
+          "checklist": [
+            "Sửa đúng từ khóa",
+            "Không dùng ép kiểu để né vấn đề",
+            "Phân biệt được đối tượng và tham chiếu"
+          ],
+          "alternative": "Ép (Dog)a để gọi thành viên che giấu có thể hoạt động ở đây nhưng buộc bên gọi biết kiểu con, làm giảm tính thay thế."
+        },
+        {
+          "id": "oop-e-design",
+          "level": "03 · Vận dụng",
+          "title": "Thiết kế kênh thông báo",
+          "prompt": "Viết Notification và hai lớp EmailNotification, SmsNotification. Duyệt một danh sách kiểu cha và gọi Send. Giải thích chọn override hay new.",
+          "input": "Hai đối tượng: EmailNotification, SmsNotification.",
+          "expected": "Lần lượt in Email, SMS. Thêm kênh mới không cần sửa vòng lặp.",
+          "starter": "// Khai báo kiểu và vòng lặp của bạn\n",
+          "hints": [
+            "Xác định giao ước Send chung.",
+            "Lớp abstract có thể khai báo public abstract void Send()."
+          ],
+          "solution": "Notification[] channels = [new EmailNotification(), new SmsNotification()];\nforeach (var channel in channels) channel.Send();\nabstract class Notification { public abstract void Send(); }\nclass EmailNotification : Notification { public override void Send() => Console.WriteLine(\"Email\"); }\nclass SmsNotification : Notification { public override void Send() => Console.WriteLine(\"SMS\"); }",
+          "explanation": "abstract bắt buộc lớp con cung cấp hành vi; override duy trì đa hình khi duyệt Notification.",
+          "checklist": [
+            "Vòng lặp chỉ biết kiểu Notification",
+            "Hai lớp con override Send",
+            "Nêu được vì sao new không phù hợp"
+          ],
+          "alternative": "Interface INotification loại bỏ nhu cầu kế thừa một lớp chung, phù hợp khi các lớp đã có lớp cha khác."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn · override (đã đối chiếu bản nguồn chính thức)",
+          "url": "https://github.com/dotnet/docs/blob/main/docs/csharp/language-reference/keywords/override.md"
+        },
+        {
+          "title": "Microsoft Learn · new modifier",
+          "url": "https://github.com/dotnet/docs/blob/main/docs/csharp/language-reference/keywords/new-modifier.md"
+        }
+      ]
+    },
+    {
+      "id": "linq-deferred",
+      "topicId": "linq",
+      "order": 2,
+      "title": "Deferred execution: khi nào truy vấn thực sự chạy?",
+      "shortTitle": "Thời điểm thực thi LINQ",
+      "description": "Một truy vấn không phải một bản sao dữ liệu. Theo dấu thời điểm duyệt, ToList và những lần thực thi lặp lại.",
+      "tags": [
+        "LINQ",
+        "IEnumerable",
+        "ToList"
+      ],
+      "level": "Trung cấp",
+      "minutes": 30,
+      "prerequisites": [
+        "Biết List<T> và foreach",
+        "Đọc được biểu thức lambda"
+      ],
+      "language": "csharp",
+      "version": "LINQ to Objects, IEnumerable<T>, .NET 10. IQueryable được so sánh riêng.",
+      "sections": [
+        {
+          "id": "goals",
+          "title": "Mục tiêu & kiến thức trước bài",
+          "core": "Bạn sẽ phân biệt tạo truy vấn với duyệt truy vấn, dự đoán kết quả khi nguồn thay đổi và quyết định lúc nào cần ToList. Cần hiểu List<T>, foreach và lambda x => x > 1. Bài này tập trung vào LINQ to Objects, truy vấn trên các đối tượng .NET.",
+          "deep": "IEnumerable<T> là giao ước cho phép lấy bộ duyệt, không cam kết dữ liệu đã được tính hay đã nằm trọn trong bộ nhớ. Đừng xem mọi IEnumerable là một List đã dựng sẵn."
+        },
+        {
+          "id": "problem",
+          "title": "Vì sao cần trì hoãn?",
+          "core": "Bạn cần lọc hàng nghìn bản ghi rồi chỉ lấy vài kết quả đầu. Nếu mỗi bước tạo ngay một danh sách, bạn tốn bộ nhớ cho các kết quả trung gian. Where tạo một mô tả phép lọc; khi foreach yêu cầu từng phần tử, phép lọc mới được áp dụng. Đó là deferred execution — thực thi trì hoãn.",
+          "deep": "Các toán tử streaming như Where có thể nhả từng phần tử trong khi duyệt. Không phải mọi toán tử deferred đều streaming: OrderBy cần đọc và sắp xếp nguồn trước khi nhả phần tử đầu. Trì hoãn nói về thời điểm bắt đầu, streaming nói về cách xử lý khi đã bắt đầu."
+        },
+        {
+          "id": "mechanism",
+          "title": "Theo dấu một lần duyệt",
+          "core": "var q = numbers.Where(x => x > 1) chưa chạy predicate trên các phần tử. foreach hoặc ToList bắt đầu duyệt q. Nếu numbers được thêm phần tử trước lần duyệt, q có thể nhìn thấy phần tử mới. ToList duyệt ngay và tạo danh sách kết quả tại thời điểm gọi.",
+          "deep": "Mỗi lần duyệt một truy vấn Where trên List sẽ chạy lại predicate. Any có thể dừng ở phần tử khớp đầu tiên; Count thường cần đếm toàn bộ kết quả, dù có tối ưu cho một số nguồn. Ngoại lệ trong predicate thường xuất hiện khi duyệt, không phải tại dòng khai báo q. Sửa cấu trúc List trong lúc đang duyệt có thể gây InvalidOperationException."
+        },
+        {
+          "id": "usage",
+          "title": "Dùng truy vấn hay lưu kết quả?",
+          "core": "Giữ truy vấn trì hoãn khi muốn xử lý từng phần tử và tránh danh sách trung gian. Dùng ToList khi cần một snapshot của các phần tử đã chọn, cần duyệt lại mà không tính lại truy vấn, hoặc muốn chốt thời điểm truy cập nguồn. Đánh đổi là chi phí duyệt ngay và bộ nhớ cho danh sách.",
+          "deep": "Snapshot từ ToList là một danh sách mới, không phải bản sao sâu. Nếu phần tử là đối tượng tham chiếu, sửa thuộc tính đối tượng có thể thấy qua cả hai danh sách. ToList trên nguồn vô hạn sẽ không hoàn thành. Với nguồn có tài nguyên hữu hạn, phải bảo đảm tài nguyên còn sống khi duyệt."
+        },
+        {
+          "id": "pitfalls",
+          "title": "IQueryable và những ngộ nhận",
+          "core": "Các ví dụ ở đây dùng Enumerable trên List trong bộ nhớ. IQueryable thường lưu cây biểu thức để provider như EF Core dịch thành SQL. Việc truy vấn được chạy ở đâu phụ thuộc provider và các toán tử; không thể nói “mọi LINQ đều chạy trong bộ nhớ”.",
+          "deep": "Với EF Core, ToListAsync thường gửi truy vấn tới database và materialize kết quả. Duyệt lại IQueryable có thể tạo truy vấn database mới. AsEnumerable chuyển các toán tử tiếp theo sang Enumerable nhưng bản thân nó không materialize dữ liệu. ToList không tự làm truy vấn hiệu quả; materialize quá sớm có thể tải quá nhiều dòng."
+        },
+        {
+          "id": "summary",
+          "title": "Điều cần nhớ",
+          "core": "Tạo truy vấn khác với duyệt truy vấn. Where trì hoãn; foreach và ToList bắt đầu duyệt; ToList lưu một danh sách kết quả. Duyệt nhiều lần có thể tính lại nhiều lần. Luôn xác định nguồn và provider trước khi nói truy vấn chạy ở đâu.",
+          "deep": "Khi debug, đánh dấu ba mốc: tạo nguồn, tạo truy vấn, yêu cầu kết quả. Tìm mọi lần duyệt tiềm ẩn, kể cả trong debugger hoặc một hàm nhận IEnumerable. Chọn materialize vì yêu cầu nhất quán và chi phí cụ thể, không theo thói quen."
+        }
+      ],
+      "examples": [
+        {
+          "id": "linq-late",
+          "title": "01 · Nguồn đổi trước khi duyệt",
+          "prompt": "Thêm 3 vào nguồn sau khi khai báo q nhưng trước khi in. Kết quả là gì?",
+          "code": "var numbers = new List<int> { 1, 2 };\nvar q = numbers.Where(x => x > 1);\nnumbers.Add(3);\nConsole.WriteLine(string.Join(\", \", q));",
+          "options": [
+            {
+              "id": "a",
+              "text": "2"
+            },
+            {
+              "id": "b",
+              "text": "2, 3"
+            },
+            {
+              "id": "c",
+              "text": "1, 2, 3"
+            }
+          ],
+          "correctOptionId": "b",
+          "output": "2, 3",
+          "steps": [
+            "Where tạo truy vấn, chưa lọc các phần tử.",
+            "Add(3) thay đổi List trước lúc duyệt.",
+            "string.Join duyệt q; predicate giữ lại 2 và 3."
+          ],
+          "comparison": "Thêm ToList ngay sau Where sẽ chốt danh sách trước Add: kết quả chỉ còn 2.",
+          "language": "csharp",
+          "table": null
+        },
+        {
+          "id": "linq-snapshot",
+          "title": "02 · Chốt thời điểm bằng ToList",
+          "prompt": "Chỉ thêm ToList ở dòng thứ hai. Truy vấn có thấy 3 không?",
+          "code": "var numbers = new List<int> { 1, 2 };\nvar q = numbers.Where(x => x > 1).ToList();\nnumbers.Add(3);\nConsole.WriteLine(string.Join(\", \", q));",
+          "options": [
+            {
+              "id": "a",
+              "text": "2"
+            },
+            {
+              "id": "b",
+              "text": "2, 3"
+            },
+            {
+              "id": "c",
+              "text": "Không có kết quả"
+            }
+          ],
+          "correctOptionId": "a",
+          "output": "2",
+          "steps": [
+            "ToList duyệt Where ngay khi nguồn còn [1, 2].",
+            "q bây giờ là List<int> mới chỉ chứa 2.",
+            "Thêm 3 vào numbers không thêm 3 vào q; string.Join duyệt danh sách đã materialize."
+          ],
+          "comparison": "Nếu bỏ ToList và duyệt q hai lần, predicate chạy lại ở mỗi lần duyệt. Nếu thêm 4 giữa hai lần, lần sau còn thấy 4.",
+          "language": "csharp",
+          "table": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "linq-q-concept",
+          "kind": "Hiểu khái niệm",
+          "prompt": "Trong LINQ to Objects, numbers.Where(predicate) thường làm gì ngay khi gọi?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Lọc và lưu mọi phần tử vào List",
+              "explanation": "Where không materialize danh sách kết quả."
+            },
+            {
+              "id": "b",
+              "text": "Tạo một truy vấn có thể được duyệt sau",
+              "explanation": "Đúng: predicate được áp dụng khi duyệt."
+            },
+            {
+              "id": "c",
+              "text": "Gửi SQL lên database",
+              "explanation": "Nguồn List và Enumerable.Where ở đây không phải provider SQL."
+            }
+          ],
+          "correctOptionId": "b",
+          "explanation": "Where trì hoãn công việc duyệt nguồn.",
+          "tag": "Deferred execution",
+          "misconception": "Khai báo truy vấn nghĩa là đã tính kết quả",
+          "sectionId": "mechanism"
+        },
+        {
+          "id": "linq-q-predict",
+          "kind": "Dự đoán",
+          "prompt": "q = list.Where(x => x > 1); list ban đầu [1,2]. Thêm 3 rồi duyệt q được gì?",
+          "options": [
+            {
+              "id": "a",
+              "text": "2",
+              "explanation": "Chỉ đúng nếu đã materialize trước khi thêm."
+            },
+            {
+              "id": "b",
+              "text": "2 và 3",
+              "explanation": "Đúng: nguồn đổi trước lúc duyệt."
+            },
+            {
+              "id": "c",
+              "text": "1, 2 và 3",
+              "explanation": "Predicate loại bỏ 1."
+            }
+          ],
+          "correctOptionId": "b",
+          "explanation": "Đây là nguồn List được đọc ở thời điểm duyệt.",
+          "tag": "Thời điểm duyệt",
+          "misconception": "Truy vấn là snapshot",
+          "sectionId": "mechanism"
+        },
+        {
+          "id": "linq-q-cause",
+          "kind": "Giải thích nguyên nhân",
+          "prompt": "Vì sao Count() rồi foreach trên cùng truy vấn Where có thể gọi predicate hai lần cho một phần tử?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Mỗi lần duyệt thực thi lại truy vấn",
+              "explanation": "Đúng: truy vấn trì hoãn không tự cache kết quả."
+            },
+            {
+              "id": "b",
+              "text": "C# luôn gọi lambda hai lần",
+              "explanation": "Số lần gọi phụ thuộc các lần duyệt và toán tử."
+            },
+            {
+              "id": "c",
+              "text": "Count biến truy vấn thành List",
+              "explanation": "Count trả số lượng, không lưu danh sách cho foreach."
+            }
+          ],
+          "correctOptionId": "a",
+          "explanation": "Trên nguồn List với Where, cả hai thao tác duyệt lại nguồn; đừng đặt side effect trong predicate.",
+          "tag": "Multiple enumeration",
+          "misconception": "LINQ tự cache lần duyệt đầu",
+          "sectionId": "mechanism"
+        },
+        {
+          "id": "linq-q-distinguish",
+          "kind": "Phân biệt",
+          "prompt": "Phát biểu nào chính xác?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Mọi LINQ đều chạy trong RAM",
+              "explanation": "IQueryable có thể được provider dịch thành SQL."
+            },
+            {
+              "id": "b",
+              "text": "AsEnumerable luôn tải toàn bộ dữ liệu ngay",
+              "explanation": "AsEnumerable không tự materialize."
+            },
+            {
+              "id": "c",
+              "text": "IQueryable có thể được EF Core dịch; ToList materialize kết quả",
+              "explanation": "Đúng; cần xét provider và truy vấn cụ thể."
+            }
+          ],
+          "correctOptionId": "c",
+          "explanation": "LINQ to Objects và IQueryable có cơ chế khác nhau.",
+          "tag": "Enumerable / Queryable",
+          "misconception": "Mọi LINQ có cùng nơi thực thi",
+          "sectionId": "pitfalls"
+        },
+        {
+          "id": "linq-q-apply",
+          "kind": "Áp dụng",
+          "prompt": "Bạn cần duyệt ba lần một phép lọc tốn chi phí và muốn cố định các phần tử đã chọn. Chọn gì?",
+          "options": [
+            {
+              "id": "a",
+              "text": "ToList một lần rồi duyệt danh sách",
+              "explanation": "Đúng nếu bộ nhớ đủ và nguồn hữu hạn."
+            },
+            {
+              "id": "b",
+              "text": "Gọi Where lại ở mỗi vòng",
+              "explanation": "Bạn tính lại truy vấn và có thể thấy nguồn thay đổi."
+            },
+            {
+              "id": "c",
+              "text": "Chỉ đổi var thành IEnumerable",
+              "explanation": "Kiểu khai báo không làm cache kết quả."
+            }
+          ],
+          "correctOptionId": "a",
+          "explanation": "ToList đổi chi phí tính lại thành chi phí bộ nhớ và một lần duyệt ngay.",
+          "tag": "Materialization",
+          "misconception": "Đổi kiểu biến tạo cache",
+          "sectionId": "usage"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "linq-e-fill",
+          "level": "01 · Hoàn thiện",
+          "title": "Lưu ảnh chụp kết quả",
+          "prompt": "Chốt kết quả các số chẵn trước khi nguồn được thêm 4.",
+          "input": "numbers ban đầu [1, 2, 3]; sau đó Add(4).",
+          "expected": "In 2, không in 4.",
+          "starter": "var numbers = new List<int> { 1, 2, 3 };\nvar even = numbers.Where(x => x % 2 == 0) /* ? */;\nnumbers.Add(4);\nConsole.WriteLine(string.Join(\", \", even));",
+          "hints": [
+            "Cần duyệt ngay ở dòng khai báo even.",
+            "Materialize bằng ToList()."
+          ],
+          "solution": "var numbers = new List<int> { 1, 2, 3 };\nvar even = numbers.Where(x => x % 2 == 0).ToList();\nnumbers.Add(4);\nConsole.WriteLine(string.Join(\", \", even));",
+          "explanation": "ToList tạo danh sách chỉ có 2 tại thời điểm trước Add.",
+          "checklist": [
+            "ToList ở trước Add",
+            "Dự đoán đúng output 2",
+            "Giải thích chi phí bộ nhớ"
+          ],
+          "alternative": "ToArray cũng chốt kết quả; mảng có kích thước cố định, List dễ thêm bớt."
+        },
+        {
+          "id": "linq-e-debug",
+          "level": "02 · Tìm lỗi",
+          "title": "Một truy vấn, hai lần tính",
+          "prompt": "Sửa đoạn code để predicate có side effect không chạy lại khi in kết quả. Giải thích vì sao phiên bản cũ in calls = 6.",
+          "input": "numbers = [1, 2, 3].",
+          "expected": "In count 2, rồi 2, 3, rồi calls = 3.",
+          "starter": "int calls = 0;\nvar q = new[] { 1, 2, 3 }.Where(x => { calls++; return x > 1; });\nConsole.WriteLine(q.Count());\nConsole.WriteLine(string.Join(\", \", q));\nConsole.WriteLine($\"calls = {calls}\");",
+          "hints": [
+            "Count và string.Join đều duyệt q.",
+            "Gọi ToList sau Where trước khi Count."
+          ],
+          "solution": "int calls = 0;\nvar q = new[] { 1, 2, 3 }.Where(x => { calls++; return x > 1; }).ToList();\nConsole.WriteLine(q.Count);\nConsole.WriteLine(string.Join(\", \", q));\nConsole.WriteLine($\"calls = {calls}\");",
+          "explanation": "Predicate chạy 3 lần trong ToList. Count của List và lần duyệt danh sách sau không gọi lại predicate.",
+          "checklist": [
+            "Chỉ materialize một lần",
+            "Giải thích được con số 6 và 3",
+            "Nêu lý do nên tránh side effect trong predicate"
+          ],
+          "alternative": "Có thể dùng một vòng foreach để vừa đếm vừa xử lý mà không tạo danh sách, nếu chỉ cần một lần duyệt."
+        },
+        {
+          "id": "linq-e-design",
+          "level": "03 · Vận dụng",
+          "title": "Lọc dữ liệu cho báo cáo",
+          "prompt": "Từ danh sách giá, tạo kết quả giá >= 100 và in tổng cùng danh sách hai lần. Nguồn có thể đổi sau khi tạo báo cáo. Giải thích lựa chọn.",
+          "input": "prices = [50, 100, 150], thêm 200 sau khi tạo snapshot.",
+          "expected": "Tổng 250; hai lần in đều 100, 150.",
+          "starter": "var prices = new List<int> { 50, 100, 150 };\n// Tạo snapshot, thay đổi nguồn, xuất báo cáo.",
+          "hints": [
+            "Đặt ToList trước khi thay đổi nguồn.",
+            "Tính tổng từ snapshot thay vì từ truy vấn gốc."
+          ],
+          "solution": "var prices = new List<int> { 50, 100, 150 };\nvar snapshot = prices.Where(x => x >= 100).ToList();\nprices.Add(200);\nConsole.WriteLine(snapshot.Sum());\nConsole.WriteLine(string.Join(\", \", snapshot));\nConsole.WriteLine(string.Join(\", \", snapshot));",
+          "explanation": "Snapshot cố định tập số nguyên được chọn. Các phép tổng và in dùng cùng dữ liệu, đánh đổi bộ nhớ để tránh duyệt nguồn lại.",
+          "checklist": [
+            "Lọc đúng điều kiện >=",
+            "Tổng và hai lần in cùng snapshot",
+            "Nêu giới hạn snapshot nông khi phần tử là đối tượng"
+          ],
+          "alternative": "Nếu báo cáo chỉ xuất một lần và không cần snapshot, streaming giảm bộ nhớ. Với database cần cân nhắc lọc trên server trước ToListAsync."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn · Deferred execution and lazy evaluation",
+          "url": "https://github.com/dotnet/docs/blob/main/docs/standard/linq/deferred-execution-lazy-evaluation.md"
+        },
+        {
+          "title": "Microsoft Learn · Intermediate materialization (ToList)",
+          "url": "https://github.com/dotnet/docs/blob/main/docs/standard/linq/intermediate-materialization.md"
+        },
+        {
+          "title": "Microsoft Learn · Efficient querying — buffering / streaming và AsEnumerable",
+          "url": "https://github.com/dotnet/EntityFramework.Docs/blob/main/entity-framework/core/performance/efficient-querying.md"
+        }
+      ]
+    },
+    {
+      "id": "sql-left-join",
+      "topicId": "sql",
+      "order": 3,
+      "title": "LEFT JOIN: điều kiện trong ON và WHERE",
+      "shortTitle": "Hiểu đúng LEFT JOIN",
+      "description": "Giữ lại dòng nào, lọc bỏ dòng nào? Quan sát dữ liệu qua từng bước JOIN, NULL và điều kiện lọc.",
+      "tags": [
+        "SQL",
+        "LEFT JOIN",
+        "NULL"
+      ],
+      "level": "Trung cấp",
+      "minutes": 30,
+      "prerequisites": [
+        "Biết SELECT, FROM và WHERE",
+        "Hiểu khóa chính và khóa ngoại"
+      ],
+      "language": "sql",
+      "version": "SQL quan hệ; ví dụ dùng cú pháp chung, thực thi bằng SQLite. Tài liệu Microsoft SQL Server dùng để đối chiếu ngữ nghĩa JOIN.",
+      "schema": "CREATE TABLE Customers (Id INTEGER PRIMARY KEY, Name TEXT NOT NULL);\nCREATE TABLE Orders (Id INTEGER PRIMARY KEY, CustomerId INTEGER NOT NULL, Status TEXT NOT NULL);\nINSERT INTO Customers VALUES (1, 'An'), (2, 'Bình'), (3, 'Chi');\nINSERT INTO Orders VALUES (101, 1, 'Paid'), (102, 2, 'Pending');",
+      "sections": [
+        {
+          "id": "goals",
+          "title": "Mục tiêu & kiến thức trước bài",
+          "core": "Bạn sẽ dự đoán được các dòng được giữ sau LEFT JOIN và giải thích vì sao chuyển điều kiện từ ON xuống WHERE làm mất khách hàng. Cần biết SELECT, WHERE và quan hệ một–nhiều. Dữ liệu bài học có An với đơn Paid, Bình với đơn Pending và Chi chưa có đơn.",
+          "deep": "Điều quan trọng là phân biệt điều kiện ghép cặp với điều kiện lọc kết quả. Ta dùng thứ tự xử lý logic để suy luận kết quả; bộ tối ưu có thể chọn kế hoạch vật lý khác miễn bảo toàn ngữ nghĩa."
+        },
+        {
+          "id": "problem",
+          "title": "Một báo cáo dễ bị thiếu người",
+          "core": "Yêu cầu: liệt kê mọi khách hàng, kèm đơn đã thanh toán nếu có. Dùng INNER JOIN ban đầu sẽ mất người chưa có đơn. LEFT JOIN giữ tất cả khách bên trái, nhưng thêm WHERE o.Status = 'Paid' lại làm mất những người không có đơn Paid. Cần đặt điều kiện chọn đơn hợp lệ trong ON.",
+          "deep": "Bình có đơn Pending khác với Chi không có đơn. Nếu ghép tất cả đơn trước rồi lọc Paid, Bình đã khớp Pending nên không được tự sinh thêm một dòng NULL để cứu lại khi WHERE loại dòng đó. Phân biệt hai trường hợp này giúp tránh cách sửa OR IS NULL sai."
+        },
+        {
+          "id": "mechanism",
+          "title": "Ghép cặp trước, lọc sau",
+          "core": "LEFT JOIN xét điều kiện ON để tạo cặp dòng. Với mỗi khách không có dòng bên phải thỏa ON, nó tạo một dòng với các cột bên phải là NULL. Sau đó WHERE chỉ giữ những dòng mà điều kiện là TRUE. NULL = 'Paid' cho UNKNOWN, không phải TRUE, nên dòng ấy bị loại.",
+          "deep": "NULL biểu diễn thiếu hoặc chưa biết giá trị. Dùng IS NULL thay cho = NULL để kiểm tra. Khi thêm o.Status = 'Paid' trong ON, đơn Pending của Bình không đủ điều kiện khớp; Bình được giữ với OrderId NULL. Đặt cùng điều kiện trong WHERE sẽ loại cả Bình và Chi. Điều này phụ thuộc điều kiện cụ thể; không phải mọi WHERE sau LEFT JOIN đều biến nó thành INNER JOIN."
+        },
+        {
+          "id": "usage",
+          "title": "Đặt điều kiện đúng mục tiêu",
+          "core": "Muốn giữ mọi khách nhưng chỉ gắn đơn Paid: đặt điều kiện Status trong ON. Muốn chỉ những dòng đã có đơn Paid: dùng WHERE tương ứng hoặc INNER JOIN để thể hiện rõ ý định. Điều kiện lọc khách như c.Id > 1 trong WHERE là hợp lý khi yêu cầu chỉ lấy nhóm khách đó.",
+          "deep": "ON có thể chứa điều kiện của cả hai bảng. Một điều kiện chỉ trên bảng trái đặt trong ON không loại dòng trái; nó chỉ ngăn khớp và có thể tạo dòng NULL. Điều kiện ấy trong WHERE mới loại khách không thỏa. Đặt điều kiện theo ý nghĩa, không theo mẹo “mọi filter đều vào ON”."
+        },
+        {
+          "id": "pitfalls",
+          "title": "NULL, dòng trùng & cách đếm",
+          "core": "LEFT JOIN không bảo đảm một dòng cho mỗi khách. Nếu An có hai đơn Paid, kết quả có hai dòng An. COUNT(*) đếm cả dòng NULL mở rộng; COUNT(o.Id) chỉ đếm Id không NULL, nên phù hợp để đếm số đơn khi Id là khóa NOT NULL.",
+          "deep": "Thêm WHERE o.Status = 'Paid' OR o.Id IS NULL không tương đương với lọc Paid trong ON: Bình đã khớp Pending và không có dòng NULL mở rộng, nên vẫn bị mất. Nếu yêu cầu mỗi khách một dòng, cân nhắc GROUP BY và tổng hợp, hoặc EXISTS khi chỉ cần kiểm tra tồn tại. ORDER BY là điều kiện cần để khẳng định thứ tự kết quả."
+        },
+        {
+          "id": "summary",
+          "title": "Điều cần nhớ",
+          "core": "ON xác định dòng nào được ghép. LEFT JOIN bổ sung NULL cho dòng trái không khớp. WHERE lọc kết quả logic sau đó. Hãy thử cả người có đơn Paid, chỉ có đơn Pending và không có đơn trước khi kết luận truy vấn đúng.",
+          "deep": "Tự vẽ bảng trung gian trước WHERE. Nếu câu trả lời dựa trên “giữ mọi dòng trái bất kể WHERE”, hãy kiểm tra lại. LEFT JOIN giữ dòng ở bước JOIN, không miễn trừ các dòng đó khỏi bộ lọc sau này."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sql-on",
+          "title": "01 · Chọn đơn trong ON",
+          "prompt": "Dùng schema và dữ liệu bên dưới. Có bao nhiêu khách xuất hiện trong kết quả?",
+          "code": "SELECT c.Name, o.Id AS OrderId\nFROM Customers AS c\nLEFT JOIN Orders AS o\n  ON c.Id = o.CustomerId AND o.Status = 'Paid'\nORDER BY c.Id, o.Id;",
+          "options": [
+            {
+              "id": "a",
+              "text": "Chỉ An"
+            },
+            {
+              "id": "b",
+              "text": "An và Chi"
+            },
+            {
+              "id": "c",
+              "text": "Cả An, Bình và Chi"
+            }
+          ],
+          "correctOptionId": "c",
+          "output": "3 dòng: An / 101; Bình / NULL; Chi / NULL",
+          "steps": [
+            "An khớp đơn 101 vì khóa đúng và Status = Paid.",
+            "Bình chỉ có Pending nên không có đơn thỏa ON; bổ sung dòng bên phải NULL.",
+            "Chi không có đơn nên cũng nhận NULL. ORDER BY c.Id đặt An, Bình, Chi theo đúng thứ tự."
+          ],
+          "comparison": "Chuyển Status xuống WHERE ở ví dụ 02 sẽ loại dòng của Bình và Chi.",
+          "language": "sql",
+          "table": {
+            "headers": [
+              "Name",
+              "OrderId"
+            ],
+            "rows": [
+              [
+                "An",
+                "101"
+              ],
+              [
+                "Bình",
+                "NULL"
+              ],
+              [
+                "Chi",
+                "NULL"
+              ]
+            ]
+          }
+        },
+        {
+          "id": "sql-where",
+          "title": "02 · Lọc kết quả trong WHERE",
+          "prompt": "Chỉ đổi vị trí của Status. Dòng nào còn lại sau WHERE?",
+          "code": "SELECT c.Name, o.Id AS OrderId\nFROM Customers AS c\nLEFT JOIN Orders AS o ON c.Id = o.CustomerId\nWHERE o.Status = 'Paid'\nORDER BY c.Id, o.Id;",
+          "options": [
+            {
+              "id": "a",
+              "text": "Chỉ An / 101"
+            },
+            {
+              "id": "b",
+              "text": "An / 101 và Chi / NULL"
+            },
+            {
+              "id": "c",
+              "text": "Cả ba khách"
+            }
+          ],
+          "correctOptionId": "a",
+          "output": "1 dòng: An / 101",
+          "steps": [
+            "JOIN trước tiên tạo An/101, Bình/102 và Chi/NULL.",
+            "WHERE giữ An vì Paid = Paid là TRUE.",
+            "Pending = Paid là FALSE, NULL = Paid là UNKNOWN; Bình và Chi đều bị loại."
+          ],
+          "comparison": "WHERE Status = Paid OR o.Id IS NULL sẽ giữ An và Chi nhưng vẫn mất Bình; không thay thế được điều kiện trong ON.",
+          "language": "sql",
+          "table": {
+            "headers": [
+              "Name",
+              "OrderId"
+            ],
+            "rows": [
+              [
+                "An",
+                "101"
+              ]
+            ]
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "sql-q-concept",
+          "kind": "Hiểu khái niệm",
+          "prompt": "LEFT JOIN làm gì với dòng bên trái không có dòng bên phải thỏa ON?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Tự tạo một dòng bên phải có các cột NULL",
+              "explanation": "Đúng: đó là dòng mở rộng NULL trong kết quả JOIN, không phải INSERT vào bảng."
+            },
+            {
+              "id": "b",
+              "text": "Luôn loại dòng bên trái",
+              "explanation": "Đó là hành vi của INNER JOIN trong trường hợp không khớp."
+            },
+            {
+              "id": "c",
+              "text": "Ghi thêm một dòng thật vào Orders",
+              "explanation": "JOIN chỉ tạo kết quả truy vấn, không thêm dữ liệu bảng."
+            }
+          ],
+          "correctOptionId": "a",
+          "explanation": "Dòng trái được giữ ở bước JOIN, các cột bên phải là NULL.",
+          "tag": "Outer join",
+          "misconception": "JOIN sửa dữ liệu gốc",
+          "sectionId": "mechanism"
+        },
+        {
+          "id": "sql-q-predict",
+          "kind": "Dự đoán",
+          "prompt": "Với dữ liệu mẫu, lọc o.Status = 'Paid' trong ON giữ những khách nào?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Chỉ An",
+              "explanation": "Bạn đang áp dụng điều kiện như WHERE sau JOIN."
+            },
+            {
+              "id": "b",
+              "text": "An, Bình và Chi",
+              "explanation": "Đúng: cả ba dòng trái được giữ; Bình và Chi nhận NULL."
+            },
+            {
+              "id": "c",
+              "text": "Chỉ An và Chi",
+              "explanation": "Bình không khớp Paid vẫn được giữ bởi LEFT JOIN."
+            }
+          ],
+          "correctOptionId": "b",
+          "explanation": "Điều kiện trong ON chỉ quyết định đơn nào được gắn cho khách.",
+          "tag": "ON predicate",
+          "misconception": "Khách có đơn Pending bị mất dù lọc trong ON",
+          "sectionId": "mechanism"
+        },
+        {
+          "id": "sql-q-cause",
+          "kind": "Giải thích nguyên nhân",
+          "prompt": "Tại sao WHERE o.Status = 'Paid' loại Chi?",
+          "options": [
+            {
+              "id": "a",
+              "text": "NULL bằng chuỗi rỗng",
+              "explanation": "NULL không phải chuỗi rỗng."
+            },
+            {
+              "id": "b",
+              "text": "LEFT JOIN tự biến dữ liệu của Chi thành Pending",
+              "explanation": "Không có thao tác biến đổi trạng thái như vậy."
+            },
+            {
+              "id": "c",
+              "text": "So sánh NULL với Paid là UNKNOWN; WHERE chỉ giữ TRUE",
+              "explanation": "Đúng: UNKNOWN không qua điều kiện WHERE."
+            }
+          ],
+          "correctOptionId": "c",
+          "explanation": "Logic ba giá trị giải thích tác động của NULL trong bộ lọc.",
+          "tag": "NULL / UNKNOWN",
+          "misconception": "NULL so sánh như giá trị thông thường",
+          "sectionId": "mechanism"
+        },
+        {
+          "id": "sql-q-distinguish",
+          "kind": "Phân biệt",
+          "prompt": "WHERE o.Status = 'Paid' OR o.Id IS NULL có giữ Bình chỉ có đơn Pending không?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Có, vì LEFT JOIN luôn giữ Bình",
+              "explanation": "Bình khớp Pending rồi bị WHERE loại."
+            },
+            {
+              "id": "b",
+              "text": "Không; Bình đã có dòng khớp Pending, không có dòng NULL bổ sung",
+              "explanation": "Đúng: NULL chỉ được bổ sung nếu không có dòng nào thỏa ON."
+            },
+            {
+              "id": "c",
+              "text": "Có, vì Pending được xem là NULL",
+              "explanation": "Pending là chuỗi giá trị, không phải NULL."
+            }
+          ],
+          "correctOptionId": "b",
+          "explanation": "Cách sửa bằng OR IS NULL không tương đương với lọc Paid ngay trong ON.",
+          "tag": "ON / WHERE",
+          "misconception": "OR IS NULL luôn khôi phục mọi khách",
+          "sectionId": "pitfalls"
+        },
+        {
+          "id": "sql-q-apply",
+          "kind": "Áp dụng",
+          "prompt": "Cần đếm đơn Paid cho mọi khách, kể cả 0. Chọn cấu trúc nào?",
+          "options": [
+            {
+              "id": "a",
+              "text": "LEFT JOIN với Paid trong ON, GROUP BY khách, COUNT(o.Id)",
+              "explanation": "Đúng khi o.Id NOT NULL: đếm đơn, không đếm dòng NULL mở rộng."
+            },
+            {
+              "id": "b",
+              "text": "LEFT JOIN rồi WHERE Paid, COUNT(*)",
+              "explanation": "Khách không có Paid bị loại, không cho nhóm 0."
+            },
+            {
+              "id": "c",
+              "text": "LEFT JOIN với Paid trong ON, COUNT(*) cho số đơn",
+              "explanation": "COUNT(*) sẽ đếm 1 cả khi chỉ có dòng NULL mở rộng."
+            }
+          ],
+          "correctOptionId": "a",
+          "explanation": "Điều kiện trong ON giữ nhóm khách; COUNT khóa bên phải loại NULL khi đếm.",
+          "tag": "Aggregation",
+          "misconception": "COUNT(*) và COUNT(o.Id) giống nhau ở outer join",
+          "sectionId": "pitfalls"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "sql-e-fill",
+          "level": "01 · Hoàn thiện",
+          "title": "Không bỏ sót khách hàng",
+          "prompt": "Hoàn thiện điều kiện để hiển thị mọi khách cùng đơn Paid nếu có.",
+          "input": "Dùng schema và dữ liệu chung của bài.",
+          "expected": "An / 101; Bình / NULL; Chi / NULL.",
+          "starter": "SELECT c.Name, o.Id AS OrderId\nFROM Customers c\nLEFT JOIN Orders o ON /* điều kiện */\nORDER BY c.Id, o.Id;",
+          "hints": [
+            "Lọc đơn hợp lệ trong ON.",
+            "Kết hợp khóa với o.Status = 'Paid'."
+          ],
+          "solution": "SELECT c.Name, o.Id AS OrderId\nFROM Customers AS c\nLEFT JOIN Orders AS o\n  ON c.Id = o.CustomerId AND o.Status = 'Paid'\nORDER BY c.Id, o.Id;",
+          "explanation": "Bình và Chi không khớp đơn Paid nên được bổ sung NULL.",
+          "checklist": [
+            "Ghép đúng khóa",
+            "Paid ở ON",
+            "Giữ đủ ba khách và thứ tự xác định"
+          ],
+          "alternative": "Có thể LEFT JOIN một derived table đã lọc Paid; rõ ý khi bảng phải cần biến đổi thêm, nhưng dài hơn."
+        },
+        {
+          "id": "sql-e-debug",
+          "level": "02 · Tìm lỗi",
+          "title": "Bẫy OR IS NULL",
+          "prompt": "Truy vấn sau vẫn mất Bình. Sửa truy vấn và giải thích vì sao OR không cứu Bình.",
+          "input": "Dùng dữ liệu chung; Bình có đơn 102 Pending.",
+          "expected": "Mọi khách được giữ, đơn không Paid không hiển thị.",
+          "starter": "SELECT c.Name, o.Id AS OrderId\nFROM Customers c\nLEFT JOIN Orders o ON c.Id = o.CustomerId\nWHERE o.Status = 'Paid' OR o.Id IS NULL\nORDER BY c.Id, o.Id;",
+          "hints": [
+            "Tạo bảng trung gian trước WHERE.",
+            "Bình có o.Id = 102; cả hai vế OR đều không TRUE."
+          ],
+          "solution": "SELECT c.Name, o.Id AS OrderId\nFROM Customers AS c\nLEFT JOIN Orders AS o\n  ON c.Id = o.CustomerId AND o.Status = 'Paid'\nORDER BY c.Id, o.Id;",
+          "explanation": "Chuyển điều kiện Paid vào ON và bỏ WHERE. Bình không còn đơn khớp, nên nhận dòng NULL mở rộng.",
+          "checklist": [
+            "Giải thích dòng Bình/102",
+            "Bỏ OR IS NULL sai mục tiêu",
+            "Dự đoán đủ 3 dòng"
+          ],
+          "alternative": "Nếu mục tiêu chỉ là khách không có bất kỳ đơn nào, LEFT JOIN rồi WHERE o.Id IS NULL là một bài toán anti-join khác."
+        },
+        {
+          "id": "sql-e-design",
+          "level": "03 · Vận dụng",
+          "title": "Đếm cả những số 0",
+          "prompt": "Viết báo cáo tên khách và số đơn Paid, mỗi khách một dòng, theo Id khách. Giải thích chọn COUNT nào.",
+          "input": "Schema chung, thêm (103, 1, 'Paid') vào Orders.",
+          "expected": "An / 2; Bình / 0; Chi / 0.",
+          "starter": "SELECT /* tên khách, số đơn */\nFROM Customers c\n/* Viết tiếp */",
+          "hints": [
+            "LEFT JOIN với trạng thái trong ON trước.",
+            "GROUP BY c.Id, c.Name và COUNT(o.Id)."
+          ],
+          "solution": "SELECT c.Name, COUNT(o.Id) AS PaidCount\nFROM Customers c\nLEFT JOIN Orders o\n  ON c.Id = o.CustomerId AND o.Status = 'Paid'\nGROUP BY c.Id, c.Name\nORDER BY c.Id;",
+          "explanation": "COUNT(o.Id) không đếm NULL. Hai đơn Paid của An tạo hai dòng trước GROUP BY; Bình và Chi có một dòng NULL nhưng số đơn là 0.",
+          "checklist": [
+            "Mỗi khách đúng một dòng",
+            "An có 2, Bình và Chi có 0",
+            "Giải thích COUNT(*) sẽ sai cho nhóm không đơn"
+          ],
+          "alternative": "Có thể tổng hợp đơn Paid theo CustomerId trước rồi LEFT JOIN và COALESCE về 0. Cách đó phù hợp khi cần giảm số dòng trung gian."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn · FROM / JOIN (bản nguồn chính thức SQL Server)",
+          "url": "https://github.com/MicrosoftDocs/sql-docs/blob/live/docs/t-sql/queries/from-transact-sql.md"
+        }
+      ]
+    }
+  ]
+}
