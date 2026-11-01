@@ -1,7 +1,7 @@
 {
   "id": "unit-testing",
   "title": "Unit test — kiểm tra một hành vi độc lập",
-  "description": "Unit test là code tự động kiểm tra một đơn vị hành vi nhỏ theo đầu vào và kết quả mong đợi. xUnit, NUnit và MSTest là các test framework phổ biến trong .NET. Đây là kiến thức về phát triển phần mềm tr…",
+  "description": "Unit test là code tự động kiểm tra một đơn vị hành vi nhỏ theo đầu vào và kết quả mong đợi. xUnit, NUnit và MSTest là các test framework phổ biến trong .NET. Đây là kiến thức về phát triển phần mềm trong bài giảng, không phải chức năng giao bài tập hay trắc nghiệm của website.",
   "category": "architecture",
   "kind": "Kỹ thuật và công cụ kiểm thử",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Unit test là code tự động kiểm tra một đơn vị hành vi nhỏ theo đầu vào và kết quả mong đợi. xUnit, NUnit và MSTest là các test framework phổ biến trong .NET. Đây là kiến thức về phát triển phần mềm trong bài giảng, không phải chức năng giao bài tập hay trắc nghiệm của website."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -40,7 +40,7 @@
       "paragraphs": [
         "Không mock mọi class nội bộ chỉ để kiểm tra thứ tự gọi thay vì hành vi. Không test ngẫu nhiên phụ thuộc đồng hồ hoặc mạng ngoài nếu không kiểm soát được. Không coi coverage cao là bằng chứng đầy đủ, và không viết test chỉ để giữ nguyên bug."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -82,31 +82,87 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Arrange chuẩn bị, Act gọi hành vi, Assert xác minh kết quả. Fact cho ca không tham số; Theory/InlineData tạo nhiều ca; Assert.Throws kiểm tra lỗi đồng bộ, test async trả Task và dùng Assert.ThrowsAsync. Ví dụ dưới dùng xUnit v2 2.9.3 với runner công bố, không trộn API v3.",
+        "Production project chứa Account; test project chỉ tham chiếu nó. Không đặt lại hàm nghiệp vụ private trong test rồi tưởng đã kiểm tra implementation thật. dotnet test --filter FullyQualifiedName~Deposit chạy nhóm test được chọn."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Stub trả dữ liệu, fake cung cấp implementation đơn giản, mock thường xác minh interaction; chọn output assertion khi đó là contract chính. Dùng TimeProvider kiểm soát thời gian thay DateTime.Now/Sleep để ổn định test. Shared static state và chạy song song có thể làm test phụ thuộc thứ tự. Coverage chỉ cho biết code đã đi qua, không chứng minh assertion đủ tốt; unit không thay integration provider/query translation hay browser E2E."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new xunit -n TheoryTests\ncd TheoryTests\n# Tạo TotalTests.cs bằng code bên dưới\ndotnet test",
-        "code": "using Xunit;\n\npublic class TotalTests\n{\n    [Fact]\n    public void Add_TwoPositiveNumbers_ReturnsSum()\n    {\n        int actual = Add(2, 3);\n        Assert.Equal(5, actual);\n    }\n\n    private static int Add(int a, int b) => a + b;\n}",
-        "file": "TotalTests.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Test pass khi Add(2, 3) trả về 5; đây là kết quả của test runner, không phải Console.WriteLine.",
-        "steps": [
-          "[Fact] đánh dấu test không nhận tham số theo xUnit template.",
-          "Assert.Equal so sánh giá trị kỳ vọng 5 với kết quả thực. Nếu khác nhau, runner báo fail."
-        ],
-        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Assertion mở đầu trong một test class",
+          "kind": "compile-only",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet build Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"xunit\" Version=\"2.9.3\" />\n  </ItemGroup>\n</Project>",
+            "TotalTests.cs": "using Xunit;\n\npublic class TotalTests\n{\n    [Fact]\n    public void Add_TwoPositiveNumbers_ReturnsSum()\n    {\n        int actual = Add(2, 3);\n        Assert.Equal(5, actual);\n    }\n\n    private static int Add(int a, int b) => a + b;\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Test pass khi Add(2, 3) trả về 5; đây là kết quả của test runner, không phải Console.WriteLine.",
+          "explanation": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới. [Fact] đánh dấu test không nhận tham số theo xUnit template. Assert.Equal so sánh giá trị kỳ vọng 5 với kết quả thực. Nếu khác nhau, runner báo fail.",
+          "requests": [],
+          "verification": "compiled"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "production-tests",
+          "title": "Account trong production project và các ca biên",
+          "kind": "test",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet test Tests/Tests.csproj\ndotnet test Tests/Tests.csproj --filter FullyQualifiedName~Deposit",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "",
+            "Domain/Domain.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n</Project>",
+            "Domain/Account.cs": "public class Account\n{\n public int Balance {get;private set;}\n public Account(int balance)\n {if(balance<0)throw new ArgumentOutOfRangeException(nameof(balance));Balance=balance;}\n public bool Deposit(int amount)\n {if(amount<=0)return false;Balance=checked(Balance+amount);return true;}\n}",
+            "Tests/Tests.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup><ItemGroup><ProjectReference Include=\"../Domain/Domain.csproj\"/><PackageReference Include=\"Microsoft.NET.Test.Sdk\" Version=\"17.14.1\"/><PackageReference Include=\"xunit\" Version=\"2.9.3\"/><PackageReference Include=\"xunit.runner.visualstudio\" Version=\"3.1.5\"/></ItemGroup></Project>",
+            "Tests/AccountTests.cs": "using Xunit;\npublic class AccountTests {\n [Theory][InlineData(0,false)][InlineData(5,true)] public void Deposit(int amount,bool accepted){var a=new Account(0);Assert.Equal(accepted,a.Deposit(amount));Assert.Equal(accepted?amount:0,a.Balance);}\n [Fact] public void RejectsNegative()=>Assert.Throws<ArgumentOutOfRangeException>(()=>new Account(-1));\n [Fact] public async Task DependencyFailure(){Func<Task> source=()=>Task.FromException(new InvalidOperationException(\"offline\"));await Assert.ThrowsAsync<InvalidOperationException>(source);}\n}"
+          },
+          "expected": "4 ca pass: hai Theory cases và hai Fact. Khi bỏ kiểm tra số dư âm, ca RejectsNegative phải fail.",
+          "explanation": "Test tham chiếu source production thật; không có gọi Internet. Bộ kiểm chứng chạy test bình thường và mutation bỏ guard để xác nhận test bắt lỗi.",
+          "verification": "test-verified",
+          "entryProject": "Tests/Tests.csproj",
+          "mutation": {
+            "file": "Domain/Account.cs",
+            "remove": "if(balance<0)throw new ArgumentOutOfRangeException(nameof(balance));"
+          }
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryTests/\n├── TheoryTests.csproj    # test SDK và xUnit packages\n├── TotalTests.cs         # test theo hành vi\n└── obj/, bin/            # output sinh tự động",
-        "note": "Với app thật, đặt source trong src/ và test trong tests/ theo quy mô. Test project tham chiếu production project; không nhúng test vào runtime UI."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -117,15 +173,67 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Vì sao test project phải tham chiếu production code?",
+          "answer": "Để assertion kiểm tra implementation được app dùng thật.",
+          "explanation": "Bản sao hàm trong test có thể đúng trong khi production sai.",
+          "misconception": "Test private Add trong test đủ xác nhận toàn app.",
+          "followUp": "ProjectReference trỏ file nào trong ví dụ?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Theory/InlineData khác Fact ở đâu?",
+          "answer": "Theory chạy một quy tắc với nhiều bộ input; Fact là một ca không tham số.",
+          "explanation": "Chúng vẫn cần expected/actual có ý nghĩa.",
+          "misconception": "Theory không có assertion.",
+          "followUp": "Input biên nào của Account quan trọng?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Async test nên trả gì?",
+          "answer": "Task để runner chờ và quan sát lỗi.",
+          "explanation": "async void không đưa hoàn tất/lỗi theo contract Task.",
+          "misconception": "Runner tự biết mọi background task.",
+          "followUp": "Assert.ThrowsAsync cần await thế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Fake repository có chứng minh query SQL Server đúng không?",
+          "answer": "Không; nó bỏ qua provider, SQL translation và database constraints.",
+          "explanation": "Cần integration test engine phù hợp cho ranh giới đó.",
+          "misconception": "Fake nhanh nên thay mọi test database.",
+          "followUp": "SQLite in-memory kiểm tra được và không được điều gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Test pass có chứng minh test bắt được bug quan trọng?",
+          "answer": "Chưa; mutation bỏ guard âm nên làm ca tương ứng fail.",
+          "explanation": "Kiểm tra một thay đổi sai chủ đích giúp đánh giá assertion.",
+          "misconception": "Coverage 100% tự chứng minh đúng.",
+          "followUp": "TimeProvider giúp loại bỏ nondeterminism nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "learn.microsoft.com — unit testing best practices",
-          "url": "https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices"
+          "title": "Bắt đầu xUnit v2 và cấu hình runner",
+          "url": "https://xunit.net/docs/getting-started/v2/getting-started"
         },
         {
-          "title": "xunit.net — getting started",
-          "url": "https://xunit.net/docs/getting-started/v2/getting-started"
+          "title": "Thực hành unit test .NET",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/c%23",
@@ -133,5 +241,30 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A18",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Test code production qua ProjectReference với input hợp lệ, biên và lỗi.",
+    "Phân biệt test double, mức kiểm thử và nguồn nondeterminism."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": [
+    "aspnet-integration-testing"
+  ]
 }

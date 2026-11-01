@@ -1,7 +1,7 @@
 {
   "id": "http-response",
   "title": "HTTP response và streaming body",
-  "description": "Response HTTP biểu diễn kết quả bằng status, headers và body theo quy tắc giao thức. Body có thể là HTML, JSON, ảnh hoặc dữ liệu nhị phân; không phải luôn là string. IResponseBodyWriter trong bài là a…",
+  "description": "Response HTTP biểu diễn kết quả bằng status, headers và body theo quy tắc giao thức. Body có thể là HTML, JSON, ảnh hoặc dữ liệu nhị phân; không phải luôn là string. IResponseBodyWriter trong bài là abstraction tách cách ghi body khỏi cách điều phối request.",
   "category": "network",
   "kind": "Thành phần giao thức / thiết kế I/O",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Response HTTP biểu diễn kết quả bằng status, headers và body theo quy tắc giao thức. Body có thể là HTML, JSON, ảnh hoặc dữ liệu nhị phân; không phải luôn là string. IResponseBodyWriter trong bài là abstraction tách cách ghi body khỏi cách điều phối request."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Fixture tạo response đơn giản cho GET thành công, chưa xử lý HEAD, chunking hay status không có body. Tách IResponseBodyWriter không tự bảo đảm hết lỗi OutOfMemory; implementation phải thực sự stream và giới hạn buffering.",
         "Null Object có thể đại diện body rỗng để giảm nhánh null, nhưng không tự chứng minh hiệu năng. Content-Length phải khớp byte thực sự được gửi; gzip hay encoding khác có thể làm số byte khác."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "IResponseBodyWriter bên dưới là interface tự định nghĩa cho bài học, không phải tên API bắt buộc của ASP.NET Core. Text encode UTF-8, file mở stream rồi CopyToAsync, empty không ghi gì. String response cũ chỉ minh họa length/framing, không tự là streaming.",
+        "HEAD không gửi body; 1xx, 204, 304 có quy tắc body riêng. Content-Length không thể được mô tả tuyệt đối là số byte body đang gửi trong mọi response: HEAD có thể mô tả representation tương ứng GET; 204 có ràng buộc khác. Với app thật để framework quản lý framing/compression theo status/method."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Client chậm tạo backpressure; await ghi/copy thay vì buffer vô hạn, truyền token tới cả đọc/ghi. Sau response bắt đầu không đổi status/header tùy ý; có thể dùng OnStarting trước thời điểm gửi headers. Nếu nén/encoding đổi representation thì length phải phù hợp. Writer abstraction không tự bảo đảm OOM được loại trừ, implementation phải thực sự stream và có quota."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "using System.Text;\nstring body = \"Chào\";\nint length = Encoding.UTF8.GetByteCount(body);\nstring response = \"HTTP/1.1 200 OK\\r\\n\" +\n    \"Content-Type: text/plain; charset=utf-8\\r\\n\" +\n    $\"Content-Length: {length}\\r\\n\\r\\n\" + body;\nConsole.WriteLine(length);\nConsole.WriteLine(response.Replace(\"\\r\", \"\\\\r\").Replace(\"\\n\", \"\\\\n\"));",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "5\nHTTP/1.1 200 OK\\r\\nContent-Type: text/plain; charset=utf-8\\r\\nContent-Length: 5\\r\\n\\r\\nChào",
-        "steps": [
-          "Encode Chào bằng UTF-8 cần 5 byte.",
-          "Ghi status line, hai header và dòng CRLF trống trước body.",
-          "Dòng in thứ hai hiển thị ký tự \\r\\n dạng nhìn thấy để kiểm tra framing."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Text;\nstring body = \"Chào\";\nint length = Encoding.UTF8.GetByteCount(body);\nstring response = \"HTTP/1.1 200 OK\\r\\n\" +\n    \"Content-Type: text/plain; charset=utf-8\\r\\n\" +\n    $\"Content-Length: {length}\\r\\n\\r\\n\" + body;\nConsole.WriteLine(length);\nConsole.WriteLine(response.Replace(\"\\r\", \"\\\\r\").Replace(\"\\n\", \"\\\\n\"));",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "5\nHTTP/1.1 200 OK\\r\\nContent-Type: text/plain; charset=utf-8\\r\\nContent-Length: 5\\r\\n\\r\\nChào",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Encode Chào bằng UTF-8 cần 5 byte. Ghi status line, hai header và dòng CRLF trống trước body. Dòng in thứ hai hiển thị ký tự \\r\\n dạng nhìn thấy để kiểm tra framing.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "stream-body-writers",
+          "title": "Text, file, empty, HEAD và hủy",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Text;\nstring file=Path.Combine(Path.GetTempPath(),Guid.NewGuid()+\".bin\");await File.WriteAllBytesAsync(file,new byte[10000]);\ntry{using var text=new MemoryStream();await Send(\"GET\",200,new TextBody(\"Chào\"),text,CancellationToken.None);Console.WriteLine(\"text:\"+text.Length);\nusing var output=new MemoryStream();await Send(\"GET\",200,new FileBody(file),output,CancellationToken.None);Console.WriteLine(\"file:\"+output.Length);\nusing var head=new MemoryStream();await Send(\"HEAD\",200,new TextBody(\"Chào\"),head,CancellationToken.None);Console.WriteLine(\"head:\"+head.Length);\nusing var empty=new MemoryStream();await Send(\"GET\",204,new EmptyBody(),empty,CancellationToken.None);Console.WriteLine(\"empty:\"+empty.Length);\nusing var cancel=new CancellationTokenSource();cancel.Cancel();try{await new FileBody(file).WriteAsync(output,cancel.Token);}catch(OperationCanceledException){Console.WriteLine(\"canceled\");}}finally{File.Delete(file);}\nstatic async Task Send(string method,int status,IResponseBodyWriter writer,Stream output,CancellationToken t){if(method==\"HEAD\"||status<200||status is 204 or 304)return;await writer.WriteAsync(output,t);}\ninterface IResponseBodyWriter{Task WriteAsync(Stream output,CancellationToken t);}\nclass TextBody(string text):IResponseBodyWriter{public Task WriteAsync(Stream output,CancellationToken t)=>output.WriteAsync(Encoding.UTF8.GetBytes(text),t).AsTask();}\nclass FileBody(string file):IResponseBodyWriter{public async Task WriteAsync(Stream output,CancellationToken t){await using var source=File.OpenRead(file);await source.CopyToAsync(output,t);}}\nclass EmptyBody:IResponseBodyWriter{public Task WriteAsync(Stream output,CancellationToken t)=>Task.CompletedTask;}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "text:5\nfile:10000\nhead:0\nempty:0\ncanceled",
+          "explanation": "Mẫu body-writer in-memory không phát HTTP headers thật. Nó chứng minh stream/cancel/no-body policy cho các trường hợp hỗ trợ; file temp chỉ thuộc demo.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "LearningServer/\n├── Program.cs             # tạo host và đăng ký DI\n├── Worker.cs              # accept loop và shutdown\n├── WebServerOptions.cs    # địa chỉ, port, giới hạn\n├── appsettings.json       # cấu hình local\n├── Protocol/              # request/response model, reader, writer\n├── Middleware/            # handler trong pipeline\n└── wwwroot/               # chỉ tài nguyên được phép phục vụ",
-        "note": "Bố cục mô tả server tổng hợp trong bài giảng; đoạn Hello World bên dưới chỉ cô lập phần giao thức để đọc cơ chế, chưa triển khai toàn bộ server. Với sản phẩm thực tế dùng server framework phù hợp thay parser mẫu."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,18 +169,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Chào có string.Length 4 nhưng UTF-8 bao nhiêu byte?",
+          "answer": "5 trong encoding UTF-8 của ví dụ.",
+          "explanation": "Số UTF-16 code unit khác byte length.",
+          "misconception": "Content-Length luôn bằng string.Length.",
+          "followUp": "Emoji còn tạo khác biệt nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Interface body writer có tự bảo đảm streaming không?",
+          "answer": "Không, implementation phải đọc/ghi từng khối.",
+          "explanation": "Một writer vẫn có thể ReadAllBytes nếu viết sai.",
+          "misconception": "Chỉ cần interface là hết OOM.",
+          "followUp": "CopyToAsync còn cần giới hạn nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "HEAD có gửi text body như GET không?",
+          "answer": "Không, chỉ metadata theo semantics thích hợp.",
+          "explanation": "Content-Length ở HEAD có thể mô tả representation GET dù không gửi body.",
+          "misconception": "Length luôn bằng byte body đã gửi cho mọi method.",
+          "followUp": "204/304 có quy tắc gì cần tra riêng?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Đổi status sau khi response bắt đầu có an toàn không?",
+          "answer": "Không được tùy ý; headers có thể đã gửi.",
+          "explanation": "Cần quyết định trước hoặc callback OnStarting đúng thời điểm.",
+          "misconception": "Response object luôn có thể sửa tới khi Dispose.",
+          "followUp": "Lỗi giữa streaming nên được xử lý theo contract nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Client chậm cần tăng buffer vô hạn không?",
+          "answer": "Không, giữ backpressure qua await và quota.",
+          "explanation": "Giới hạn tài nguyên là phần của thiết kế phục vụ nhiều client.",
+          "misconception": "RAM dư thì có thể buffer mọi file.",
+          "followUp": "Cancellation cần truyền tới nguồn và đích ra sao?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "IETF — rfc9110.html",
+          "title": "Microsoft Learn · RFC 9110",
           "url": "https://www.rfc-editor.org/rfc/rfc9110.html#name-content-length"
         },
         {
-          "title": "IETF — rfc9112.html",
+          "title": "Microsoft Learn · RFC 9112",
           "url": "https://www.rfc-editor.org/rfc/rfc9112.html#name-message-body"
         },
         {
-          "title": "middleware",
+          "title": "ASP.NET Core middleware",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-10.0"
         }
       ],
@@ -143,5 +241,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A45",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Ghi body qua abstraction streaming thật.",
+    "Phân biệt byte count representation và quy tắc HEAD/no-body status."
+  ],
+  "prerequisiteIds": [
+    "dotnet-streams",
+    "async-await"
+  ],
+  "relatedIds": []
 }

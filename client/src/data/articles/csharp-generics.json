@@ -1,7 +1,7 @@
 {
   "id": "csharp-generics",
   "title": "Generic, ràng buộc kiểu và boxing",
-  "description": "Generic cho phép một type hoặc method nhận tham số kiểu, như List<T> hay Swap<T>. Khi dùng List<int>, int là một phần của hợp đồng được compiler kiểm tra. Generic không có nghĩa một collection trộn tù…",
+  "description": "Generic cho phép một type hoặc method nhận tham số kiểu, như List<T> hay Swap<T>. Khi dùng List<int>, int là một phần của hợp đồng được compiler kiểm tra. Generic không có nghĩa một collection trộn tùy ý mọi loại dữ liệu.",
   "category": "architecture",
   "kind": "Tính năng hệ thống kiểu",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Generic cho phép một type hoặc method nhận tham số kiểu, như List<T> hay Swap<T>. Khi dùng List<int>, int là một phần của hợp đồng được compiler kiểm tra. Generic không có nghĩa một collection trộn tùy ý mọi loại dữ liệu."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Không khẳng định mọi code generic đều không boxing: nếu implementation ép T sang object thì vẫn có thể boxing. where T : class không tự cấm null trong mọi tình huống runtime. new() là ràng buộc về constructor công khai không tham số, không bảo đảm nghiệp vụ hợp lệ.",
         "Generic giúp tái sử dụng và kiểm tra kiểu tốt hơn collection object, nhưng một API với quá nhiều type parameter/constraint có thể khó đọc. Không thêm generic khi chỉ hỗ trợ một kiểu cụ thể có ý nghĩa nghiệp vụ rõ ràng."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,96 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Generic type/method nhận type parameter; inference suy luận từ argument nhưng không thay mọi constraint. default(T) phụ thuộc kiểu đóng. class/class? ràng buộc reference theo nullability, struct loại nullable value type, notnull yêu cầu kiểu không nullable theo phân tích; unmanaged yêu cầu kiểu không chứa managed reference. Base/interface constraints mở các member đó; new() cần constructor public không tham số và có quy tắc kết hợp, phải đặt sau các constraint thích hợp.",
+        "List<object> lưu int bằng boxing; List<int> thường không cần boxing khi lưu phần tử nhưng cast T sang object vẫn có thể boxing. object boxed=10 chỉ unbox trực tiếp thành int; (long)(int)boxed thực hiện unbox rồi numeric conversion. Nullable<int> không có giá trị boxing thành null; có giá trị boxing theo underlying int."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "List<T> invariant. IEnumerable<out T> cho reference covariance từ string tới object; Action<in T> nhận object dùng được nơi cần Action<string>. Không có conversion tương tự từ IEnumerable<int> sang IEnumerable<object> vì variance reference không thay boxing từng phần tử. Struct qua interface có thể boxing; constraint giúp một số constrained calls nhưng không hứa layout/JIT specialization cố định mọi runtime."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "var values = new List<int> { 2, 4 };\nvalues.Add(6);\nConsole.WriteLine(values.Sum());\nConsole.WriteLine(Identity(5));\n\nstatic T Identity<T>(T value) => value;",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "12\n5",
-        "steps": [
-          "List<int> nhận các số nguyên cùng kiểu.",
-          "Thêm 6 tạo dãy 2,4,6; Sum bằng 12.",
-          "Identity nhận 5 và trả đúng giá trị đó, kiểu T được suy ra là int."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var values = new List<int> { 2, 4 };\nvalues.Add(6);\nConsole.WriteLine(values.Sum());\nConsole.WriteLine(Identity(5));\n\nstatic T Identity<T>(T value) => value;",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "12\n5",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. List<int> nhận các số nguyên cùng kiểu. Thêm 6 tạo dãy 2,4,6; Sum bằng 12. Identity nhận 5 và trả đúng giá trị đó, kiểu T được suy ra là int.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "constraints-variance",
+          "title": "Constraint, boxing và delegate variance",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "Console.WriteLine(Max(2,5));\nobject boxed=10;try{_=(long)boxed;}catch(InvalidCastException){Console.WriteLine(\"unbox sai\");}\nConsole.WriteLine((long)(int)boxed);\nIEnumerable<string> names=new[]{\"An\"};IEnumerable<object> objects=names;Console.WriteLine(objects.First());\nAction<object> any=o=>Console.WriteLine(o);Action<string> text=any;text(\"Bình\");\nint? absent=null,present=3;Console.WriteLine((object?)absent is null);Console.WriteLine(((object)present).GetType().Name);\nstatic T Max<T>(T a,T b) where T:IComparable<T> => a.CompareTo(b)>=0?a:b;",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "5\nunbox sai\n10\nAn\nBình\nTrue\nInt32",
+          "explanation": "Constraint IComparable<T> cho phép CompareTo; reference variance không là numeric conversion.",
+          "verification": "ran"
+        },
+        {
+          "id": "constraint-error",
+          "title": "Không đáp ứng constraint",
+          "kind": "compile-error",
+          "label": "Cố ý lỗi biên dịch",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "_ = Max(new Plain(),new Plain());\nstatic T Max<T>(T a,T b) where T:IComparable<T> => a.CompareTo(b)>=0?a:b;\nclass Plain {}"
+          },
+          "expected": "CS0311",
+          "explanation": "Plain không implement IComparable<Plain>; cung cấp comparer hoặc contract đúng.",
+          "verification": "expected-diagnostic",
+          "diagnostic": "CS0311"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +186,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "where T:IComparable<T> cho phép gì?",
+          "answer": "Gọi CompareTo trên giá trị T theo contract.",
+          "explanation": "Compiler biết member khả dụng trước khi type đóng cụ thể được dùng.",
+          "misconception": "Constraint chỉ là comment cho IDE.",
+          "followUp": "Có thể truyền comparer thay constraint khi nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "List<int> và List<object> lưu 10 khác gì?",
+          "answer": "List<object> cần chuyển int sang object, thường boxing.",
+          "explanation": "Generic không tự loại mọi cast/boxing trong thân code.",
+          "misconception": "Cứ có generic là không allocation.",
+          "followUp": "Cast một T value type sang object còn xảy ra gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Unbox int sang long trực tiếp có được không?",
+          "answer": "Không, trước hết phải unbox đúng int rồi numeric convert.",
+          "explanation": "Box giữ kiểu thực Int32.",
+          "misconception": "Cùng là số thì unbox nào cũng được.",
+          "followUp": "Nullable<int> rỗng boxing thành gì?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "IEnumerable<int> gán IEnumerable<object> như string được không?",
+          "answer": "Không qua reference variance.",
+          "explanation": "Variance ở đây áp dụng conversion reference, không boxing từng element.",
+          "misconception": "int cũng là object nên conversion giống hệt.",
+          "followUp": "Cast<object>() thay semantics và chi phí ra sao?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Action<object> có dùng làm Action<string> được không?",
+          "answer": "Có, handler nhận mọi object cũng nhận được string.",
+          "explanation": "Đó là contravariance ở tham số delegate phù hợp.",
+          "misconception": "List có cùng mọi conversion như delegate.",
+          "followUp": "Vì sao chiều ngược lại không an toàn?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "generics",
+          "title": "Generic types and methods",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics"
         },
         {
-          "title": "constraints on type parameters",
+          "title": "Constraints on type parameters (C# Programming Guide)",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/constraints-on-type-parameters"
         }
       ],
@@ -139,5 +254,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A21",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Dùng constraint để gọi thao tác được bảo đảm.",
+    "Phân biệt boxing, numeric conversion và variance."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": []
 }

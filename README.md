@@ -1,99 +1,60 @@
 # DotNet Deep Learn — thư viện lý thuyết
 
-Ứng dụng đọc lý thuyết C#/.NET bằng tiếng Việt, xây lại theo **41 phần trong `tech_thầy_đã_dạy.docx`**. Có **47 bài**, chia 6 chủ đề. C#, IDE, unit test, factory, decorator và SQL được tách riêng để phân biệt đúng bản chất.
+Ứng dụng đọc C#/.NET bằng tiếng Việt: **47 bài từ 41 phần bài giảng + 12 bài mở rộng phỏng vấn**, chia 6 chủ đề. Bài mới có nhãn **Mở rộng để ôn phỏng vấn**, không gán số phần thầy đã dạy. Website cung cấp lý thuyết, ví dụ và đáp án để đọc đối chiếu; không có trắc nghiệm, chấm điểm, nộp bài hay tiến độ.
 
-Đã bỏ trắc nghiệm, dự đoán đáp án, bài tập, chấm điểm, nộp bài, tiến độ và màn hình sao lưu. Ví dụ có code, kết quả và giải thích sẵn; website không thực thi C# của người đọc.
+Mỗi bài gốc giữ 11 mục và anchor cũ, thêm phần junior, middle, ví dụ mở rộng và hỏi đáp. Bài mới có 7 mục theo nhu cầu. Tổng cộng **124 ví dụ và 295 câu hỏi**: mỗi bài 3 câu junior, 2 câu middle với đáp án, giải thích, hiểu nhầm và hỏi tiếp. Không quảng cáo bảo đảm đỗ phỏng vấn.
 
-## Mỗi bài có 11 mục
+Hai lộ trình **Học nền tảng** và **Ôn phỏng vấn** dùng cùng kho 59 bài; có tiền đề, đầu ra quan sát được và nhãn thứ tự bài trước/sau. Tìm kiếm toàn văn không dấu gồm cả code/đáp án; có lọc chủ đề/nguồn, theme sáng/tối, tăng chữ, mục lục, copy code, dark mode, mobile và bản in. Thời gian đọc tính từ lượng văn bản và code, không cố định.
 
-1. Đây là công nghệ gì: ngôn ngữ, nền tảng, framework, database, thư viện, công cụ hay kỹ thuật.
-2. Vấn đề giải quyết và cách làm trước đó.
-3. Lợi ích, bối cảnh sử dụng và đánh đổi.
-4. Khi nào không nên dùng, giới hạn và nhầm lẫn.
-5. Cơ chế hoạt động bên dưới.
-6. Khái niệm cốt lõi kèm định nghĩa và ví dụ.
-7. Tương tác với thành phần khác và bảo mật.
-8. Hello World: khởi tạo, file, code, kết quả và giải thích.
-9. Bố cục thư mục, file cấu hình; phân biệt quy ước và yêu cầu bắt buộc.
-10. Debug và log lỗi theo từng kiến thức.
-11. Tài liệu chính thức và cộng đồng.
+## Chạy website
 
-Có tìm kiếm toàn bộ nội dung không dấu, lọc chủ đề, trang đối chiếu bài giảng, mục lục từng bài, deep link đến mục, tăng cỡ chữ, theme sáng/tối và bố cục điện thoại. `Ctrl+K` đưa focus vào tìm kiếm chung; nhập từ khóa rồi Enter. Có CSS cho việc in bài bằng trình duyệt.
+Node **24.x**; từ thư mục `client`:
 
-## Chạy local
-
-Cần Node.js **24.x** và npm. Website không cần .NET, backend, database hay tài khoản.
-
-```sh
-cd client
-npm ci
-npm run dev -- --port 5080
-```
-
-Mở `http://localhost:5080/`. Môi trường Bash có thể dùng `./scripts/setup.sh` rồi `./scripts/dev.sh`.
-
-Xem bản build tĩnh:
-
-```sh
-cd client
-npm run build
-npm run preview -- --port 5080
-```
-
-Vite dùng native config loader với Node 24. UI dùng React/TypeScript, Lucide và Prism; font tiếng Việt được bundle local.
-
-## Kiểm tra
-
-```sh
-cd client
+```shell
+npm ci --include=dev
+npm run dev
 npm test
 npm run build
-npx playwright install chromium
+npm run preview -- --host 127.0.0.1 --port 5080
+```
+
+Build tạo ZIP project mẫu từ `examples/` trước khi đóng gói `client/dist/`. Không thêm package để tạo ZIP. Website không thực thi C# trong browser.
+
+```shell
+# Tại client; cần Playwright Chromium hoặc Chrome đã cài
+npm run test:e2e
+# PowerShell nếu dùng Chrome hệ thống và preview đang mở:
+$env:PLAYWRIGHT_CHROMIUM_EXECUTABLE="C:/Program Files/Google/Chrome/Application/chrome.exe"
+$env:PLAYWRIGHT_BASE_URL="http://localhost:5080"
 npm run test:e2e
 ```
 
-Có thể đặt `PLAYWRIGHT_CHROMIUM_EXECUTABLE` thành đường dẫn Chrome/Chromium sẵn có thay bước tải browser. PowerShell:
+## Kiểm chứng .NET và tài liệu
 
-```powershell
-$env:PLAYWRIGHT_CHROMIUM_EXECUTABLE = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
-npm run test:e2e
+SDK **10.0.403** (`global.json`), `net10.0`, C# 14; runtime/ASP.NET Core/EF Core/dotnet-ef **10.0.14**. xUnit v2 **2.9.3**, runner **3.1.5**, Test SDK **17.14.1**. Mỗi bài ghi ngày rà soát và bối cảnh phiên bản. Xem [README các lab](examples/README.md) trước khi chạy.
+
+```shell
+# Từ gốc repository; cần SDK và nguồn NuGet hoạt động
+node scripts/verify-upgrade.mjs
+node scripts/verify-upgrade-labs.mjs
+node scripts/audit-upgrade-sources.mjs
+node scripts/sync-upgrade-verification.mjs
 ```
 
-Kiểm tra phạm vi 41 phần/47 bài/11 mục, không có payload chấm bài, tìm kiếm, mọi deep link, đường dẫn cũ, mục lục, cỡ chữ/theme, lỗi storage, bố cục mobile và accessibility sáng/tối.
+`DDL_DOTNET` chọn executable SDK riêng; `THEORY_NUGET_SOURCE` chọn feed local nếu cần; `NUGET_PACKAGES`/`DOTNET_CLI_HOME` có thể trỏ thư mục do bạn sở hữu. Mặc định fixtures và cache nằm trong `.tools/` được ignore. Các ví dụ lỗi biên dịch có project riêng và diagnostic dự kiến; bộ test có ProjectReference và mutation bỏ guard. Lab dùng dữ liệu giả, loopback và database temp/copy riêng; không dùng database cá nhân.
 
-Có checker cho các ví dụ C# (cần .NET 10 SDK và NuGet, chỉ dành cho người phát triển):
+- [Ma trận A01–A47/N01–N12 và đối chiếu từng yêu cầu](docs/upgrade-coverage.md).
+- [Kiểm chứng giao diện, phiên bản, triển khai và giới hạn](docs/upgrade-validation.md).
+- [Kết quả 124 ví dụ](docs/upgrade-example-results.json), [lab/HTTP/SQL/migration/publish](docs/upgrade-lab-results.json), [130 URL nguồn](docs/upgrade-sources.json).
 
-```sh
-node scripts/verify-theory-examples.mjs
-```
+Kết quả SQLite không chứng minh semantics SQL Server. Chưa chạy Docker, self-contained mọi RID hay live vulnerability advisory audit. Hai mẫu mở đầu chỉ được build, không được gọi là đã chạy. Identity dùng ephemeral keys cho lab local, chưa là cấu hình production.
 
-Checker tạo project dưới `.tools/`, build ví dụ C#, chạy các ví dụ console độc lập và ghi kết quả thực vào `docs/example-verification.json`. Ví dụ web chỉ được build; SQL/terminal có trạng thái riêng. Luồng migration cần áp dụng vào database local theo hướng dẫn để kiểm chứng đầy đủ. Không coi kiểm tra compiler là kiểm chứng mọi hành vi production.
+## Biên soạn và URL
 
-## Source và biên soạn
+`client/src/data/theory.json` giữ mục lục/mapping 41 phần; `client/src/data/articles/*.json` là nguồn từng bài. `theory.ts` định nghĩa schema/tìm kiếm/thời gian đọc/lộ trình; `Content.tsx` hiển thị code/HTTP/bảng/sơ đồ/disclosure; `Paths.tsx` chứa lộ trình và hướng dẫn project/debug chung. Giữ ID bài gốc, các anchor cũ và ghi rõ origin, sourceParts, tiền đề, phiên bản, nguồn và trạng thái kiểm chứng khi sửa nội dung.
 
-```text
-client/src/App.tsx           # thư viện, reader, nguồn, điều hướng
-client/src/theory.ts         # schema/types và tìm kiếm
-client/src/data/theory.json  # mục lục và mapping 41 phần
-client/src/data/articles/    # mỗi bài lý thuyết là một JSON riêng
-client/src/styles.css       # responsive, dark mode, print
-client/src/theory.test.ts    # phạm vi và tìm kiếm
-client/e2e/theory.spec.ts    # kiểm tra trình duyệt
-docs/theory-coverage.md      # đối chiếu tài liệu thầy
-```
-
-Khi thêm/sửa bài, giữ đủ 11 section IDs và ghi rõ `sourceParts`, `category`, loại công nghệ, nguồn. Không chuyển yêu cầu thực hành trong bản ghi thành chức năng giao bài trên website.
-
-Phạm vi dựa trên bản ghi người dùng cung cấp; không tuyên bố đã xem trực tiếp video. Phần giải thích được mở rộng, có liên kết Microsoft, SQLite, xUnit và IETF. Trang **Theo bài giảng** đối chiếu từng phần. Không lưu file DOCX hay bản ghi đầy đủ trong repo.
-
-Bản ghi có bối cảnh .NET 8; ví dụ mới dùng .NET 10. Những khác biệt như `System.Threading.Lock`, .NET Framework/Core/Standard, Task/Thread và JIT/AOT được giải thích rõ. Mốc package phục vụ tái hiện; khi làm dự án thật cần cập nhật bản vá được hỗ trợ và giữ provider/tool cùng major tương thích. Kết quả kiểm tra nằm trong `docs/validation.md`.
-
-## Dữ liệu cũ và đường dẫn
-
-Đọc bài không phụ thuộc localStorage. Chỉ theme dùng khóa `ddl-reading-theme`. Không dùng lại hay tự xóa khóa `dotnet-deep-learn:state:v1` của app cũ, kể cả khi nó hỏng. Các URL `/lessons/:id/:section` chuyển tới bài lý thuyết khi ID còn tồn tại; review/progress/data/bookmarks chuyển về thư viện.
+Phạm vi bài giảng dựa trên DOCX người dùng cung cấp, không tuyên bố đã xem trực tiếp video. Không commit bản ghi hoặc file DOCX. Chỉ theme dùng localStorage; đọc bài vẫn hoạt động khi storage bị chặn hoặc dữ liệu app cũ hỏng. Không tự xóa dữ liệu cũ. URL `/lessons/:id/:section` chuyển tới reader khi ID hợp lệ.
 
 ## Static hosting / Vercel
 
-Đưa **toàn bộ `client/dist/`** lên static hosting sau build. HashRouter và `base: './'` hỗ trợ thư mục con, không cần SPA rewrite. Phục vụ qua HTTP(S), không mở `index.html` bằng `file://`.
-
-Vercel: Root Directory **`client`**, Node **24.x**. `client/vercel.json` đặt install `npm ci --include=dev`, build `npm run build`, output `dist`. Không cần biến môi trường/backend/database. Build/preview local và PR không đồng nghĩa production đã triển khai.
+Đưa toàn bộ `client/dist/` lên static hosting sau build. HashRouter và `base: './'` hỗ trợ thư mục con, không cần SPA rewrite. Phục vụ qua HTTP(S). Vercel dùng Root Directory **client**, Node **24.x**; `client/vercel.json` giữ install/build/output. Không cần backend/database cho website đọc. Trạng thái GitHub/preview/production được ghi đúng phạm vi trong báo cáo; local publish của lab không phải production deployment của website.

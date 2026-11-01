@@ -1,7 +1,7 @@
 {
   "id": "mvc-binding",
   "title": "Model binding và validation: hai bước khác nhau",
-  "description": "Model binding chuyển dữ liệu request thành tham số/object C#. Validation kiểm tra dữ liệu đã nhận có thỏa quy tắc như Required, Range hay quy tắc nghiệp vụ hay không. Hai bước này khác nhau; bind thàn…",
+  "description": "Model binding chuyển dữ liệu request thành tham số/object C#. Validation kiểm tra dữ liệu đã nhận có thỏa quy tắc như Required, Range hay quy tắc nghiệp vụ hay không. Hai bước này khác nhau; bind thành công không có nghĩa dữ liệu hợp lệ hoặc người dùng có quyền sửa.",
   "category": "web",
   "kind": "Cơ chế nhận và kiểm tra dữ liệu",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Model binding chuyển dữ liệu request thành tham số/object C#. Validation kiểm tra dữ liệu đã nhận có thỏa quy tắc như Required, Range hay quy tắc nghiệp vụ hay không. Hai bước này khác nhau; bind thành công không có nghĩa dữ liệu hợp lệ hoặc người dùng có quyền sửa."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Ví dụ chủ ý không dùng [ApiController] để quan sát ModelState trực tiếp. Với [ApiController], lỗi model thường tạo response 400 tự động trước khi vào action. Model binding không tự xác thực danh tính hay ngăn overposting.",
         "Form thông thường dùng name và [FromForm]; Razor Tag Helpers sinh tên field và thông báo lỗi. Form dùng cookie đăng nhập cần thiết kế chống CSRF. Validation phía client giúp trải nghiệm, server vẫn phải kiểm tra."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,39 +86,145 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "FromRoute, FromQuery, FromForm chỉ nguồn value binding; FromBody thường dùng input formatter theo Content-Type; FromServices lấy dependency từ DI. Body reader/formatter có giới hạn, không đọc cùng body nhiều lần tùy ý. ApiController có thể tự trả 400 trước action khi model invalid; mẫu /signup kiểm tra thủ công rồi ValidationProblem.",
+        "int thiếu có thể thành 0; Required trên int không nullable không chứng minh field đã được gửi. SignupInput dùng int? Age cùng Required/Range để phân biệt thiếu và giá trị hợp lệ. DTO chỉ nhận Name/Age, không nhận IsAdmin hay OwnerId từ caller. JSON sai kiểu khác Range không đạt; server vẫn kiểm tra nghiệp vụ/unique/ownership riêng."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Content-Type chọn formatter còn Accept yêu cầu response; sai media type có thể 415. Form input name không khớp có thể thành missing value và ModelState lỗi. Antiforgery bảo vệ flow cookie phù hợp, không thay phân quyền; unique constraint ở DB bảo vệ race mà validation trước ghi không ngăn hoàn toàn. Không tắt invalid-model filter toàn cục chỉ để một request được qua."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new web -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs, tạo thêm các file được ghi bên dưới\ndotnet run --urls http://localhost:5090",
-        "code": "using Microsoft.AspNetCore.Mvc;\nusing System.ComponentModel.DataAnnotations;\nvar builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddControllers();\nvar app = builder.Build();\napp.MapControllers();\napp.Run();\npublic class SignupInput\n{\n    [Range(18, 120)]\n    public int Age { get; set; }\n}\n[Route(\"signup\")]\npublic class SignupController : ControllerBase\n{\n    [HttpPost]\n    public string Post([FromBody] SignupInput input)\n        => ModelState.IsValid ? \"Hợp lệ\" : \"Không hợp lệ\";\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Không hợp lệ",
-        "steps": [
-          "Client gửi POST /signup với Content-Type application/json.",
-          "JSON được đọc thành SignupInput có Age 17.",
-          "Range phát hiện 17 < 18; ModelState.IsValid là false."
-        ],
-        "request": {
-          "method": "POST",
-          "path": "/signup",
-          "body": {
-            "age": 17
-          }
-        },
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "web",
+          "label": "Ứng dụng ASP.NET Core local",
+          "input": "Gửi request đúng method/URL/body bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj -- --urls http://127.0.0.1:5090",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using Microsoft.AspNetCore.Mvc;\nusing System.ComponentModel.DataAnnotations;\nvar builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddControllers();\nvar app = builder.Build();\napp.MapControllers();\napp.Run();\npublic class SignupInput\n{\n    [Range(18, 120)]\n    public int Age { get; set; }\n}\n[Route(\"signup\")]\npublic class SignupController : ControllerBase\n{\n    [HttpPost]\n    public IActionResult Post([FromBody] SignupInput input)\n    { if(!ModelState.IsValid)return ValidationProblem(ModelState); return Ok(new { message = \"Hợp lệ\" }); }\n}"
+          },
+          "expected": "HTTP 400 application/problem+json, errors.Age giải thích Range.",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Client gửi POST /signup với Content-Type application/json. JSON được đọc thành SignupInput có Age 17. Range phát hiện 17 < 18; ModelState.IsValid là false.",
+          "requests": [
+            {
+              "method": "POST",
+              "path": "/signup",
+              "status": 400,
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "age": 17
+              }
+            }
+          ],
+          "verification": "http-verified"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "binding-errors",
+          "title": "Đối chiếu manual ModelState và ApiController",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/WebLab/WebLab.csproj -- --urls http://127.0.0.1:5090",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "POST",
+              "path": "/signup",
+              "status": 400,
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "name": "An",
+                "age": 17
+              }
+            },
+            {
+              "method": "POST",
+              "path": "/api/students",
+              "status": 400,
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "name": "An",
+                "age": "abc"
+              }
+            },
+            {
+              "method": "POST",
+              "path": "/api/students",
+              "status": 400,
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "name": "An"
+              }
+            },
+            {
+              "method": "POST",
+              "path": "/api/students",
+              "status": 415,
+              "headers": {
+                "Content-Type": "text/plain"
+              },
+              "body": "name=An&age=20"
+            },
+            {
+              "method": "POST",
+              "path": "/signup",
+              "status": 200,
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "name": "An",
+                "age": 20
+              }
+            }
+          ],
+          "expected": "Invalid trả application/problem+json với status 400 và errors; ApiController có thể short-circuit trước action. Valid /signup trả 200 {\"message\":\"Hợp lệ\"}.",
+          "explanation": "Dùng HTTP status thể hiện thất bại thay string lỗi dưới 200. Form có token và PRG nằm ở WebLab StudentsController.",
+          "verification": "lab-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "WebApp/\n├── WebApp.csproj\n├── Program.cs            # host, services, pipeline, routes\n├── appsettings.json      # cấu hình theo môi trường\n├── Controllers/          # action nhận request\n├── Models/               # input model / view model\n├── Views/                # Razor .cshtml (nếu dùng MVC)\n│   └── Shared/_Layout.cshtml\n├── wwwroot/              # CSS, JS và tài nguyên công khai\n└── Properties/launchSettings.json # chạy local",
-        "note": "Đây là quy ước MVC. API thuần có thể không có Views; Minimal API có thể bắt đầu từ Program.cs. Khi chia class ra file, thêm namespace/using nhất quán. Không đặt cấu hình nhạy cảm dưới wwwroot."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -129,14 +235,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Bind thành object có đồng nghĩa valid không?",
+          "answer": "Không, conversion và validation là các bước khác nhau.",
+          "explanation": "Age=17 có thể bind int thành công nhưng Range thất bại.",
+          "misconception": "Không exception thì dữ liệu hợp lệ.",
+          "followUp": "ModelState giữ những nhóm lỗi nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Required trên int có chứng minh field được gửi không?",
+          "answer": "Không, thiếu có thể thành default 0.",
+          "explanation": "Dùng nullable DTO và validation phù hợp nếu cần phân biệt missing.",
+          "misconception": "Required làm int có thể null.",
+          "followUp": "int? Age thiếu và Age=0 khác nhau ra sao?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Invalid API nên trả string lỗi với 200 không?",
+          "answer": "Không cho hợp đồng production này; dùng 400 ValidationProblem.",
+          "explanation": "Client cần status và error structure để xử lý đúng.",
+          "misconception": "Text có chữ lỗi là đủ dù status thành công.",
+          "followUp": "ApiController có thể bỏ qua action khi nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "DTO chỉ nhận Name/Age giúp giảm rủi ro gì?",
+          "answer": "Overposting các field như IsAdmin/OwnerId.",
+          "explanation": "Server phải quyết định field nhạy cảm và kiểm tra quyền riêng.",
+          "misconception": "Validation tự loại bỏ mọi property nguy hiểm trên entity.",
+          "followUp": "Ownership cần kiểm tra ở đâu?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Validate unique trước SaveChanges có đủ chống hai insert đồng thời?",
+          "answer": "Không, vẫn cần unique constraint và xử lý lỗi theo hợp đồng.",
+          "explanation": "Hai request có thể cùng vượt bước kiểm tra trước ghi.",
+          "misconception": "ModelState là transaction database.",
+          "followUp": "Content-Type sai và input sai Range khác status thế nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "model binding",
+          "title": "Model Binding in ASP.NET Core",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/model-binding?view=aspnetcore-10.0"
         },
         {
-          "title": "validation",
+          "title": "Model validation in ASP.NET Core MVC and Razor Pages",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation?view=aspnetcore-10.0"
         }
       ],
@@ -145,5 +303,29 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A27",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đọc đúng ModelState và response 400 theo cấu hình API.",
+    "Tách thiếu field, sai kiểu, validation và quyền nghiệp vụ."
+  ],
+  "prerequisiteIds": [
+    "http-request-line",
+    "dependency-injection",
+    "async-await"
+  ],
+  "relatedIds": []
 }

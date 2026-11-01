@@ -1,7 +1,7 @@
 {
   "id": "csharp-exceptions",
   "title": "Exception: bắt đúng lỗi, dọn đúng tài nguyên",
-  "description": "Exception là cơ chế biểu diễn việc một thao tác không thể hoàn thành theo hợp đồng. Ngoại lệ là object có type, message, stack trace và có thể có inner exception. try/catch/finally điều khiển cách tru…",
+  "description": "Exception là cơ chế biểu diễn việc một thao tác không thể hoàn thành theo hợp đồng. Ngoại lệ là object có type, message, stack trace và có thể có inner exception. try/catch/finally điều khiển cách truyền lỗi và dọn tài nguyên; đây là phần của C#/.NET.",
   "category": "foundation",
   "kind": "Cơ chế xử lý lỗi",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Exception là cơ chế biểu diễn việc một thao tác không thể hoàn thành theo hợp đồng. Ngoại lệ là object có type, message, stack trace và có thể có inner exception. try/catch/finally điều khiển cách truyền lỗi và dọn tài nguyên; đây là phần của C#/.NET."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Khái niệm và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Dùng throw; trong catch khi cần ném lại mà giữ thông tin nguồn lỗi. finally không bảo đảm chạy khi tiến trình bị cưỡng bức kết thúc, FailFast hay mất điện. Ngoại lệ bên trong Task thường làm Task fault và phải được quan sát bằng await.",
         "TryParse phù hợp dữ liệu người dùng có thể sai thường xuyên. Exception phù hợp lỗi mà phương thức không hoàn thành được theo hợp đồng. Đừng catch Exception rồi im lặng trả dữ liệu mặc định vì sẽ che giấu bug và nguyên nhân ban đầu."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,34 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "using declaration dispose ở cuối scope; nhiều tài nguyên được dọn theo thứ tự ngược khai báo. finally hỗ trợ dọn khi stack được tháo theo cơ chế thông thường, không bảo đảm sau FailFast, kill process hoặc mất điện. Exception filter when được đánh giá để chọn handler; custom exception chỉ thêm khi hợp đồng cần loại lỗi riêng.",
+        "throw; giữ stack gốc khi ném lại; throw ex; đổi điểm stack được quan sát. Khi bọc thành exception khác, giữ ex làm InnerException. Không catch Exception rồi trả giá trị mặc định như thể thao tác thành công; định nghĩa lỗi nào caller có thể xử lý được."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Lỗi input thường dùng Try/validation; lỗi nghiệp vụ có thể dùng Result theo hợp đồng; hạ tầng thất bại cần giữ exception và context chẩn đoán. OperationCanceledException với token của công việc là đường hủy dự kiến, không tự là lỗi hệ thống cần log Error. Log một lần ở boundary có trách nhiệm; API trả ProblemDetails đã lược chi tiết. await using dùng DisposeAsync khi API thực sự có dọn bất đồng bộ; người sở hữu tài nguyên quyết định vòng đời."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "try\n{\n    int n = int.Parse(\"abc\");\n    Console.WriteLine(n);\n}\ncatch (FormatException)\n{\n    Console.WriteLine(\"Sai định dạng\");\n}\nfinally\n{\n    Console.WriteLine(\"Đã dọn dẹp\");\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Sai định dạng\nĐã dọn dẹp",
-        "steps": [
-          "Parse không thể chuyển abc thành int nên ném FormatException.",
-          "Lệnh in n bị bỏ qua.",
-          "catch phù hợp in thông báo lỗi.",
-          "finally chạy khi rời khối theo đường này và in Đã dọn dẹp."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "try\n{\n    int n = int.Parse(\"abc\");\n    Console.WriteLine(n);\n}\ncatch (FormatException)\n{\n    Console.WriteLine(\"Sai định dạng\");\n}\nfinally\n{\n    Console.WriteLine(\"Đã dọn dẹp\");\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Sai định dạng\nĐã dọn dẹp",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Parse không thể chuyển abc thành int nên ném FormatException. Lệnh in n bị bỏ qua. catch phù hợp in thông báo lỗi. finally chạy khi rời khối theo đường này và in Đã dọn dẹp.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "dispose-paths",
+          "title": "Một resource thật theo hợp đồng IDisposable",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "foreach(string mode in new[]{\"ok\",\"error\",\"cancel\"})\n{\n    try\n    {\n        using var first=new Resource(mode+\":first\");\n        using var second=new Resource(mode+\":second\");\n        if(mode==\"error\")throw new InvalidOperationException(\"demo\");\n        if(mode==\"cancel\")throw new OperationCanceledException();\n        Console.WriteLine(\"ok:work\");\n    }\n    catch(OperationCanceledException){Console.WriteLine(\"canceled\");}\n    catch(InvalidOperationException){Console.WriteLine(\"failed\");}\n}\nclass Resource(string name):IDisposable\n{ public void Dispose()=>Console.WriteLine(\"dispose \"+name); }",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "ok:work\ndispose ok:second\ndispose ok:first\ndispose error:second\ndispose error:first\nfailed\ndispose cancel:second\ndispose cancel:first\ncanceled",
+          "explanation": "using sinh cấu trúc dọn cuối scope; cả hai đường lỗi/hủy đều dọn ngược thứ tự trước khi catch bên ngoài xử lý.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -124,11 +169,67 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "using declaration dọn tại dòng sau khai báo ngay không?",
+          "answer": "Không, cuối scope chứa declaration.",
+          "explanation": "Lifetime phụ thuộc scope chứ không dựa lần sử dụng cuối theo trực giác.",
+          "misconception": "using gọi GC ngay tại chỗ.",
+          "followUp": "Hai resource được dispose theo thứ tự nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "throw; khác throw ex; ở đâu?",
+          "answer": "Ném lại bằng throw giữ nguồn stack thích hợp.",
+          "explanation": "throw ex làm thay đổi điểm stack, gây khó tìm dòng gốc.",
+          "misconception": "Cả hai giữ stack hoàn toàn như nhau.",
+          "followUp": "Bọc exception mới nên giữ gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "finally có chạy sau kill process không?",
+          "answer": "Không có bảo đảm.",
+          "explanation": "finally phụ thuộc cơ chế thực thi còn hoạt động để tháo stack.",
+          "misconception": "Cuối cùng luôn là tuyệt đối mọi tình huống.",
+          "followUp": "Tài nguyên quan trọng cần cơ chế bền vững nào ngoài finally?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Token đã hủy có nên log Error như outage không?",
+          "answer": "Tùy policy; hủy được yêu cầu thường là đường bình thường.",
+          "explanation": "Cần phân biệt token của caller với thất bại hạ tầng.",
+          "misconception": "Mọi exception đều là lỗi server cần báo động.",
+          "followUp": "Nếu thao tác con tự timeout thì policy khác thế nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Ai nên catch lỗi database để trả ProblemDetails?",
+          "answer": "Boundary web chuyển lỗi theo hợp đồng và log chi tiết phù hợp.",
+          "explanation": "Tầng thấp chỉ catch khi bổ sung xử lý hoặc ngữ cảnh hữu ích, không log lặp khắp nơi.",
+          "misconception": "Mỗi method phải catch mọi Exception.",
+          "followUp": "Thông tin nào không được lộ trong response?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "exceptions",
+          "title": "Exceptions and Exception Handling",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/exceptions/"
+        },
+        {
+          "title": "Tài liệu API .NET theo phiên bản mục tiêu",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/c%23",
@@ -136,5 +237,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A08",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Quan sát Dispose khi thành công, lỗi và hủy.",
+    "Chọn ranh giới catch/log và bảo toàn nguyên nhân gốc."
+  ],
+  "prerequisiteIds": [
+    "csharp-language",
+    "csharp-types"
+  ],
+  "relatedIds": []
 }

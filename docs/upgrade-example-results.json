@@ -1,0 +1,839 @@
+{
+  "reviewedAt": "2026-11-01",
+  "sdk": "10.0.403",
+  "runtime": "10.0.14",
+  "results": [
+    {
+      "key": "aspnet-authorization/authorization-http",
+      "hash": "b44009dcf5f6cf78c8c9bb79d786a31fcb947320043a90abd7b3fe5d7d2330b9",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "aspnet-authorization/first",
+      "hash": "682cc341402d3a754a0e605cb3959602160d36c25f26cb3d35d19e472a336b6c",
+      "status": "ran",
+      "observed": "True"
+    },
+    {
+      "key": "aspnet-configuration-observability/options-validation",
+      "hash": "fbd4a17d85d5fab65739fd5e9377014845297d8358124e5810edfe5338885b0f",
+      "status": "ran",
+      "observed": "startup rejected"
+    },
+    {
+      "key": "aspnet-configuration-observability/trace-and-options",
+      "hash": "0172de8aa8dd94a6ec2d18c54c06d78bed9c820212d6b99f000095b05766477d",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "aspnet-first-app/first",
+      "hash": "6eaa013f7515162e6d570826a081eeaf8a160e5b36e811798ab7c1ea9ad2eeb9",
+      "status": "http-verified",
+      "observed": "[{\"method\":\"GET\",\"path\":\"/\",\"status\":200,\"body\":\"Xin chào An\"}]"
+    },
+    {
+      "key": "aspnet-first-app/web-cycle",
+      "hash": "31b3978cefccf5d10e12ec3f1e2f5e04600fef8eca572b87d3f3b918794c0eb0",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "aspnet-identity-api-security/identity-flows",
+      "hash": "c2371f36645c62da0f7a4034559cae8b6c3fc54eb692760cbd0aa5e010d3b346",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "aspnet-identity-api-security/security-boundaries",
+      "hash": "2186b2b2d5117878eb3be3ae13af167d51a3524cd602e57af51b2f09839aa2bd",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "aspnet-integration-testing/test-boundary-filter",
+      "hash": "777a0cc924edff4ae209febed7d5218f92ff3b0d49ee7c6ac7028bed6c0ee098",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "Filtered auth and Razor tests independently"
+      }
+    },
+    {
+      "key": "aspnet-integration-testing/web-factory-tests",
+      "hash": "219c4b201c271d3ef2e438e753b8f29b0dd7bc6995c3e78bbb8218a79e4b84cb",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "aspnet-middleware/first",
+      "hash": "9ec1b88bd8b992c1df05c480ac396440263ca2517ddfeb788c6c29eb3fd5218f",
+      "status": "http-verified",
+      "observed": "[{\"method\":\"GET\",\"path\":\"/hello\",\"status\":200,\"body\":\"Xin chào\"}]"
+    },
+    {
+      "key": "aspnet-middleware/pipeline-static",
+      "hash": "6ca9dc9ec5f70ab6d848c388f27a28ed0f2fdc9af7871ef89da55bbe6f4613a7",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "aspnet-web-api-design/conditional-get",
+      "hash": "6500d9d245b900484f69c82d6ea788170d955173b88eebeb02f16800489c6f09",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "aspnet-web-api-design/rest-crud",
+      "hash": "12cb46b146915272222767eebc071d3c18a11f597370680280e3b97e2a1bbf93",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "async-await/async-io-cleanup",
+      "hash": "355bffcdeb6d56d62efd01ab393c6262238e50df3a608b44596c97a5c0440e7e",
+      "status": "ran",
+      "observed": "Chào\ncanceled\ndisposed\nobserved\nbefore,after"
+    },
+    {
+      "key": "async-await/first",
+      "hash": "0af8a034dda90cc37c4dc4b14c76722c8f699284e6b8b43925f9ec3a1a5d56c9",
+      "status": "ran",
+      "observed": "start,caller,end"
+    },
+    {
+      "key": "csharp-arrays/array-shapes",
+      "hash": "dacc2d9961e8ae42df8db588e724f9b9f480e552d6c5e5d6a7f73291d38038a1",
+      "status": "ran",
+      "observed": "123456 length=6\n1\n2,3\nnull\n3/2\nBình\nkhác kiểu phần tử"
+    },
+    {
+      "key": "csharp-arrays/first",
+      "hash": "e590529a1d348b07a908522be648b6138bc055b8df1a96370f2e889c5557510d",
+      "status": "ran",
+      "observed": "8\n3"
+    },
+    {
+      "key": "csharp-collections/collection-selection",
+      "hash": "de985fce7291a971c13c8f0bd28b78cc79f2f30c6a9e697bafb838cbed185655",
+      "status": "ran",
+      "observed": "True:An\nFalse\n2\nFIFO 1, LIFO 2\nenumerator invalid\n3"
+    },
+    {
+      "key": "csharp-collections/first",
+      "hash": "3428f1207ee575858e3e99e714ec344fd98168117a34fe2235bbc61d3117457f",
+      "status": "ran",
+      "observed": "3\nBình"
+    },
+    {
+      "key": "csharp-control-flow/first",
+      "hash": "429ac6614a1334b74ab89f0a9ab1f8178dab85c407874b1c1292d719765154e5",
+      "status": "ran",
+      "observed": "13"
+    },
+    {
+      "key": "csharp-control-flow/loop-boundaries",
+      "hash": "931dece1faaf8f2181ebec114a554f33848cdec41794dc42c54a4f28773c6eff",
+      "status": "ran",
+      "observed": "0\n1\n-1\n0\n-1\nFalse\nA02"
+    },
+    {
+      "key": "csharp-events/event-lifecycle",
+      "hash": "e7917208e989c0ac51d298d36923cf524352a42f0130bfa35f5bf2bfdf24bef0",
+      "status": "ran",
+      "observed": "first\nsecond\nsecond\ndừng trước second"
+    },
+    {
+      "key": "csharp-events/first",
+      "hash": "58031e75af8d9200e16f3f2db7a6018c2c8f0764a4d4f2260055518c7b6f5081",
+      "status": "ran",
+      "observed": "1"
+    },
+    {
+      "key": "csharp-exceptions/dispose-paths",
+      "hash": "8092707fae06da358f9452c62e6bf193e7b9a98bd0db1872858a23364e522277",
+      "status": "ran",
+      "observed": "ok:work\ndispose ok:second\ndispose ok:first\ndispose error:second\ndispose error:first\nfailed\ndispose cancel:second\ndispose cancel:first\ncanceled"
+    },
+    {
+      "key": "csharp-exceptions/first",
+      "hash": "157a396dee7e7dec9b3de19513cfa0979277c8722582d573320aad8687584958",
+      "status": "ran",
+      "observed": "Sai định dạng\nĐã dọn dẹp"
+    },
+    {
+      "key": "csharp-generics/constraint-error",
+      "hash": "2653d8b5c8f131009c42d17e60c9ace1ceca3658018b71703c70f9b6a625d7f2",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\csharp-generics\\constraint-error\\Program.cs(1,5): error CS0311: The type 'Plain' cannot be used as type parameter 'T' in the generic type or method 'Max<T>(T, T)'. There is no implicit reference conversion from 'Plain' to 'System.IComparable<Plain>'. [$REPO\\.tools\\upgrade-examples\\csharp-generics\\constraint-error\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\csharp-generics\\constraint-error\\Program.cs(1,5): error CS0311: The type 'Plain' cannot be used as type parameter 'T' in the generic type or method 'Max<T>(T, T)'. There is no implicit reference conversion from 'Plain' to 'System.IComparable<Plain>'. [$REPO\\.tools\\upgrade-examples\\csharp-generics\\constraint-error\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:01.08"
+    },
+    {
+      "key": "csharp-generics/constraints-variance",
+      "hash": "b1d849da107b0a771b9b9ff10c95525a10a70764ed085a59117d6e273383e729",
+      "status": "ran",
+      "observed": "5\nunbox sai\n10\nAn\nBình\nTrue\nInt32"
+    },
+    {
+      "key": "csharp-generics/first",
+      "hash": "9385efcdd6db801cc900d5b2b919d2e289da6dffcda015c2e634aebdfb5c7db8",
+      "status": "ran",
+      "observed": "12\n5"
+    },
+    {
+      "key": "csharp-lambda/closure-loop",
+      "hash": "283eae56cc9d68acafa206d2748b98168703400ecd0715c6cc66d4b43144bc25",
+      "status": "ran",
+      "observed": "False\n3,3,3\n0,1,2\nGreaterThan\nawaited"
+    },
+    {
+      "key": "csharp-lambda/first",
+      "hash": "0e17f138898f6c02be9510d2d151ecac05f12be0c999bac8be7c0e3c080a2c6e",
+      "status": "ran",
+      "observed": "5\n8"
+    },
+    {
+      "key": "csharp-lambda/static-capture",
+      "hash": "2fe88f0faf1a6e3a580666896877057558c52dc9a93069d91ab25593839b9996",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\csharp-lambda\\static-capture\\Program.cs(2,33): error CS8820: A static anonymous function cannot contain a reference to 'limit'. [$REPO\\.tools\\upgrade-examples\\csharp-lambda\\static-capture\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\csharp-lambda\\static-capture\\Program.cs(2,33): error CS8820: A static anonymous function cannot contain a reference to 'limit'. [$REPO\\.tools\\upgrade-examples\\csharp-lambda\\static-capture\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:01.02"
+    },
+    {
+      "key": "csharp-language/compile-member",
+      "hash": "0bdb3bb4f12fe6f2e1316934e5c791862f69624a815af6b5e2804f34a0196f1e",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\csharp-language\\compile-member\\Program.cs(1,9): error CS0117: 'Console' does not contain a definition for 'NoSuchMethod' [$REPO\\.tools\\upgrade-examples\\csharp-language\\compile-member\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\csharp-language\\compile-member\\Program.cs(1,9): error CS0117: 'Console' does not contain a definition for 'NoSuchMethod' [$REPO\\.tools\\upgrade-examples\\csharp-language\\compile-member\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:00.78"
+    },
+    {
+      "key": "csharp-language/entry-point",
+      "hash": "bd39e525b1fd9a779f3a0155e0e84c21fd8364f4f7d41c4f4adefd4e7eb7d9be",
+      "status": "ran",
+      "observed": "runtime: DivideByZeroException\nSai: -1; đúng: 5"
+    },
+    {
+      "key": "csharp-language/first",
+      "hash": "0b4580a78aeb3fb9e5e6bb5c24a336c54e5b331c912ea551c8dd6ce76c59a65f",
+      "status": "ran",
+      "observed": "Xin chào Khôi, có 41 phần kiến thức."
+    },
+    {
+      "key": "csharp-methods/first",
+      "hash": "90a0024a3e497dc1c60dc5c984937aa439d3973e238ef41f4816fd300bc8bb1b",
+      "status": "ran",
+      "observed": "3"
+    },
+    {
+      "key": "csharp-methods/parameter-copies",
+      "hash": "b5b86b05622663320e68d6413650f5f1c24f3cbb2d98aeeffd63fc544f9504ea",
+      "status": "ran",
+      "observed": "4\nBình\nBình\nDung\nTrue:42"
+    },
+    {
+      "key": "csharp-methods/ref-initialization",
+      "hash": "ba061053b87852edebfb23733a725ece2208710122c331530603c2f690a7f65f",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\csharp-methods\\ref-initialization\\Program.cs(2,12): error CS0165: Use of unassigned local variable 'value' [$REPO\\.tools\\upgrade-examples\\csharp-methods\\ref-initialization\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\csharp-methods\\ref-initialization\\Program.cs(2,12): error CS0165: Use of unassigned local variable 'value' [$REPO\\.tools\\upgrade-examples\\csharp-methods\\ref-initialization\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:00.80"
+    },
+    {
+      "key": "csharp-static/extensions-generic-static",
+      "hash": "cc76518412ac9bca498754ffc6b1ef63f75a4f54ac87703d1bcfd3aaabef16ea",
+      "status": "ran",
+      "observed": "1/0\n6\n6\n2"
+    },
+    {
+      "key": "csharp-static/first",
+      "hash": "10729edb63fdd086367eb75849b1f04589abba313c90319ee088031926564c4c",
+      "status": "ran",
+      "observed": "1\n0\n1"
+    },
+    {
+      "key": "csharp-strings-unicode/culture-comparison",
+      "hash": "881cecf673db651dfaae1e8b57533fcaecb48c2f75b25121f4e9962848734b46",
+      "status": "ran",
+      "observed": "True\nİ\n1234.50\nTrue"
+    },
+    {
+      "key": "csharp-strings-unicode/unicode-units",
+      "hash": "9bfa40ad06eee2e9a8a32b1d9d921e6d1c0f35c195404f405b407f41dfbe5261",
+      "status": "ran",
+      "observed": "2/1/4\n2\n1\nFalse\nTrue"
+    },
+    {
+      "key": "csharp-types/copy-and-cast",
+      "hash": "db2ff961507151feb3313a81f696494506aa45eb3fc986af61ea46de86f52b89",
+      "status": "ran",
+      "observed": "sai unbox\nBình;2;A;2;2;2.5\n10"
+    },
+    {
+      "key": "csharp-types/first",
+      "hash": "756e425c1dfa5aa27761027f73e0ee632602008e3ed53cb0f9f0a6eb7a3ad900",
+      "status": "ran",
+      "observed": "2\n5"
+    },
+    {
+      "key": "csharp-types/var-null",
+      "hash": "deaa08a7824417255093f88722cc14368d2ceb76f6de4d8fd3d5e13778ca6f9e",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\csharp-types\\var-null\\Program.cs(1,5): error CS0815: Cannot assign <null> to an implicitly-typed variable [$REPO\\.tools\\upgrade-examples\\csharp-types\\var-null\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\csharp-types\\var-null\\Program.cs(1,5): error CS0815: Cannot assign <null> to an implicitly-typed variable [$REPO\\.tools\\upgrade-examples\\csharp-types\\var-null\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:00.79"
+    },
+    {
+      "key": "csharp-value-modeling/mutable-key",
+      "hash": "002992227de317c3e3bd331316011ab644bd5efc2b17bf52a8c89cff89cbcddd",
+      "status": "ran",
+      "observed": "True\nFalse"
+    },
+    {
+      "key": "csharp-value-modeling/record-shallow",
+      "hash": "5280bba9c061c00d0c2963f0269160b209ac513f75eae8ba9e62ca5762677d4d",
+      "status": "ran",
+      "observed": "False\nTrue\n2\nTrue"
+    },
+    {
+      "key": "decorator-pattern/decorator-order",
+      "hash": "5d2ddec21ce70b16b239b93fabf5763f2ba3db41ba60f422c6effe623aecc25e",
+      "status": "ran",
+      "observed": "xin chào AN\nXIN CHÀO AN\ndata\ndata\n1\nlỗi được truyền"
+    },
+    {
+      "key": "decorator-pattern/first",
+      "hash": "ec3ff341e11371700541bc3332baea47ff4adfeb23b045b7851240059b029b08",
+      "status": "ran",
+      "observed": "[Thông báo] Xin chào"
+    },
+    {
+      "key": "dependency-injection/first",
+      "hash": "73fab0917898d1b53f86c6a61cfe2baf000a4fb75aba185dd8babb63173126ca",
+      "status": "ran",
+      "observed": "True\nFalse"
+    },
+    {
+      "key": "dependency-injection/lifetime-disposal",
+      "hash": "7d838218f9c6e47a1ecd85cdd816a597b39b466ae462eaefbd8a8287e48a5f20",
+      "status": "ran",
+      "observed": "False\nTrue\nFalse\nTrue\nScoped disposed\nScoped disposed\ncaptive dependency"
+    },
+    {
+      "key": "design-testing-patterns/first",
+      "hash": "e179f9ef1e911f0603b8feba3157351e5a4d57f4b288bfbe045c5fe825989219",
+      "status": "ran",
+      "observed": "Học C# | Ôn C#"
+    },
+    {
+      "key": "design-testing-patterns/solid-refactor",
+      "hash": "55f0ebe0a0caa9b9ac0012564e04b6f6992ba2fbedbd3926ef9cf806f367e6f0",
+      "status": "ran",
+      "observed": "C#,C# nâng cao\nC#,C# nâng cao\nvi phạm contract đọc"
+    },
+    {
+      "key": "dotnet-background-workers/channel-cancel",
+      "hash": "c99bf19e85a8df69872c246bc2297afc25ee86b78d57094fa681d024190b43c8",
+      "status": "ran",
+      "observed": "False\nwriter canceled\n1"
+    },
+    {
+      "key": "dotnet-background-workers/worker-drain",
+      "hash": "b2dd8162e4236cfc591266a46eb02504a4984b0ddfc4944bc05cb9823a728037",
+      "status": "ran",
+      "observed": "processed:3;failed:1;disposed:3"
+    },
+    {
+      "key": "dotnet-dates-numbers-culture/dates-rounding",
+      "hash": "07a93b15de15add3793894896710e901a364b626d016f2af761fe8d826967fb7",
+      "status": "ran",
+      "observed": "2004-10-02\n07:00 +07:00\n2.34\n2.35"
+    },
+    {
+      "key": "dotnet-dates-numbers-culture/dst-clock",
+      "hash": "c92d7c5ad9d981686374255d005f5bb24ea7849b335ec4721af8bcec1d68e8ef",
+      "status": "ran",
+      "observed": "True\nTrue\n2026"
+    },
+    {
+      "key": "dotnet-delivery-basics/publish-models",
+      "hash": "c9dd503eaa56fbd5ea3179a085b0f956fbe01b7d8e158bf6c5085d5c01459db9",
+      "status": "illustration",
+      "observed": "Giải thích/lệnh tùy chọn, không tuyên bố đã chạy."
+    },
+    {
+      "key": "dotnet-delivery-basics/publish-smoke",
+      "hash": "c6152cadf0e34b675b75faa02265e3ba96ef43449fb3711a720ab413fd47c576",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "Release publish starts from its output directory"
+      }
+    },
+    {
+      "key": "dotnet-first-program/first",
+      "hash": "fefb93672c8ce4c43a48a1f6ac3f4a3fa5da9f9c4ceb08d226140571a318f002",
+      "status": "ran",
+      "observed": "Xin chào, An!\nTổng: 5"
+    },
+    {
+      "key": "dotnet-first-program/sdk-diagnostics",
+      "hash": "a5e683d3b5e6648adba0741276e92015374be8428f346f1c3c23c81cc8de8bb1",
+      "status": "cli-verified",
+      "observed": "$ dotnet --info\n.NET SDK:\n Version:           10.0.403\n Commit:            5a2162bea6\n Workload version:  10.0.400-manifests.a00bebb6\n MSBuild version:   18.9.15+5a2162bea\n\nRuntime Environment:\n OS Name:     Windows\n OS Version:  10.0.26200\n OS Platform: Windows\n RID:         win-x64\n Base Path:   C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk\\10.0.403\\\n\n.NET workloads installed:\n [wasm-tools-net8]\n   Installation Source: VS 18.8.12023.21\n   Manifest Version:    10.0.114/10.0.100\n   Manifest Path:       C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk-manifests\\10.0.100\\microsoft.net.workload.mono.toolchain.net8\\10.0.114\\WorkloadManifest.json\n   Install Type:        FileBased\n\nConfigured to use workload sets when installing new manifests.\nNo workload sets are installed. Run \"dotnet workload restore\" to install a workload set.\n\nHost:\n  Version:      10.0.14\n  Architecture: x64\n  Commit:       0427b9abbe\n\n.NET SDKs installed:\n  10.0.403 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk]\n\n.NET runtimes installed:\n  Microsoft.AspNetCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.AspNetCore.App]\n  Microsoft.NETCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.NETCore.App]\n  Microsoft.WindowsDesktop.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.WindowsDesktop.App]\n\nOther architectures found:\n  x86   [C:\\Program Files (x86)\\dotnet]\n    registered at [HKLM\\SOFTWARE\\dotnet\\Setup\\InstalledVersions\\x86\\InstallLocation]\n\nEnvironment variables:\n  DOTNET_CLI_HOME                          [$REPO\\.tools\\upgrade-examples\\cli-home]\n  DOTNET_CLI_TELEMETRY_OPTOUT              [1]\n  DOTNET_CLI_UI_LANGUAGE                   [en-US]\n  DOTNET_GENERATE_ASPNET_CERTIFICATE       [false]\n  DOTNET_NOLOGO                            [1]\n  DOTNET_ROOT                              [C:/Users/Darween/Documents/Codex/2026-11-01/hi/work/dotnet-current/sdk]\n  DOTNET_SKIP_FIRST_TIME_EXPERIENCE        [1]\n\nglobal.json file:\n  $REPO\\global.json\n\nLearn more:\n  https://aka.ms/dotnet/info\n\nDownload .NET:\n  https://aka.ms/dotnet/download\n$ dotnet --list-sdks\n10.0.403 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk]\n$ dotnet --list-runtimes\nMicrosoft.AspNetCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.AspNetCore.App]\nMicrosoft.NETCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.NETCore.App]\nMicrosoft.WindowsDesktop.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.WindowsDesktop.App]\n$ dotnet run --no-build --project Demo.csproj\nHello .NET 10\n$ dotnet package list --project Demo.csproj --include-transitive --no-restore\nProject 'Demo' has the following package references\n   [net10.0]: No packages were found for this framework.\n$ dotnet publish Demo.csproj -c Release --self-contained false --no-restore\nDemo -> $REPO\\.tools\\upgrade-examples\\dotnet-first-program\\sdk-diagnostics\\bin\\Release\\net10.0\\Demo.dll\n  Demo -> $REPO\\.tools\\upgrade-examples\\dotnet-first-program\\sdk-diagnostics\\bin\\Release\\net10.0\\publish\\\nVulnerability audit was not executed; its output depends on the live advisory source. IDE breakpoint keys are manual guidance, not automated verification."
+    },
+    {
+      "key": "dotnet-memory-gc/pooled-data",
+      "hash": "8736d64d416c81a4795f8d75547d46d200622885ea1015c8dfb217a88ab15cd6",
+      "status": "ran",
+      "observed": "6\n16\n7"
+    },
+    {
+      "key": "dotnet-memory-gc/subscription-retention",
+      "hash": "896422e192ce268b878500bb0b7266272b400f9bab10ed308442fd951c7389ab",
+      "status": "ran",
+      "observed": "1\n0\nusing\nDispose\nscope ended"
+    },
+    {
+      "key": "dotnet-reflection/first",
+      "hash": "7410b5cf57850483f1a1fbe32e4b59afd14db638d020979313f332109e7eb46a",
+      "status": "ran",
+      "observed": "An"
+    },
+    {
+      "key": "dotnet-reflection/reflection-attribute",
+      "hash": "68f554ad51f69d6a85bede6a2bbb7a0fb6209b96a28c877fce75dca88ab4e443",
+      "status": "ran",
+      "observed": "True\nTrue\nAn\nđọc metadata\nInvalidOperationException"
+    },
+    {
+      "key": "dotnet-streams/first",
+      "hash": "f9f8cc6f20fc501f987f3b52372fc03285bb0ed6743f9c369a0cab4fbd1781aa",
+      "status": "ran",
+      "observed": "A\n1\n3"
+    },
+    {
+      "key": "dotnet-streams/partial-read",
+      "hash": "8a53a2212f0912b4a0f7ae30e29a57065f5d90185696594817fe35557dd76e8b",
+      "status": "ran",
+      "observed": "Chào\nXBCDE\nX\nChào"
+    },
+    {
+      "key": "dotnet-threads/first",
+      "hash": "0190f50dc1b92bc9ba5ba9af9513980192b836e200ddce1c108d00e7e58d83ea",
+      "status": "ran",
+      "observed": "7"
+    },
+    {
+      "key": "dotnet-threads/thread-cooperation",
+      "hash": "3fef0bcc5c86f59cf9f272350a9f6137e5b6df3b010eeee2901c20ff77dddc62",
+      "status": "ran",
+      "observed": "canceled\nTrue\nInvalidOperationException"
+    },
+    {
+      "key": "efcore-context/first",
+      "hash": "dadeef3d7f4dc547788ca874c23954c8c9b61b508edfc1b85f0db7f41284c778",
+      "status": "ran",
+      "observed": "1"
+    },
+    {
+      "key": "efcore-context/tracking-states",
+      "hash": "2567e91d9b9881d0c4528c24fe86c5f4a97d573009e38349b8eee93f01d30731",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "DataLab SQL, tracking, relationships, conflict and rollback"
+      }
+    },
+    {
+      "key": "efcore-migrations/first",
+      "hash": "534632909ab827c960e43a58012c270922a07f029ea39890a1172f60d75bd33d",
+      "status": "compiled",
+      "observed": "Build thành công; không tính là đã chạy."
+    },
+    {
+      "key": "efcore-migrations/migration-evolution",
+      "hash": "589b0e1b9c747234ccc1846a4776fabcecf4df6056b19bfc246f13a23ed76621",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "Two real EF migrations preserve An and add Email"
+      }
+    },
+    {
+      "key": "efcore-query-performance/executeupdate-tracking",
+      "hash": "63929988b8303d5fb4e2aaa71f6763940f6a7926a931191c9400ab06c0200e87",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "DataLab SQL, tracking, relationships, conflict and rollback"
+      }
+    },
+    {
+      "key": "efcore-query-performance/projection-commands",
+      "hash": "4a47877644984a43fbb3046660a65fd6eaccc6c7ca230d8966a2d4027584f315",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "DataLab SQL, tracking, relationships, conflict and rollback"
+      }
+    },
+    {
+      "key": "efcore-relationships/first",
+      "hash": "1718e203d485e2ac4c7586d8cb7e8422e7ef786f4ff9905ad5324e588af2d628",
+      "status": "ran",
+      "observed": "An:CNTT"
+    },
+    {
+      "key": "efcore-relationships/relationships-loading",
+      "hash": "1dd50d25de77ecba733b63323a3a7c990732436338aae57bab490faf7f67f757",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "DataLab SQL, tracking, relationships, conflict and rollback"
+      }
+    },
+    {
+      "key": "efcore-transactions-concurrency/optimistic-conflict",
+      "hash": "deb0f04ccf43eeafd7da49d52d5f903bf35cf091bf68e8cecd28ed62379e3d4e",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "DataLab SQL, tracking, relationships, conflict and rollback"
+      }
+    },
+    {
+      "key": "efcore-transactions-concurrency/transaction-rollback",
+      "hash": "80853e27d113f50a4a46425104989f8ea6e2d49a64f1718047f86f08019e60b3",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "DataLab SQL, tracking, relationships, conflict and rollback"
+      }
+    },
+    {
+      "key": "factory-pattern/abstract-families",
+      "hash": "bcfc9be118d7c9d28ef3942f580723915b3978ffc2c07867b808a0089ff6c6ec",
+      "status": "ran",
+      "observed": "plain[text:An]\n<p>An</p>\nunsupported\nmemory\nfile fixture"
+    },
+    {
+      "key": "factory-pattern/first",
+      "hash": "acf683122d3aebd6c88acf3669ebd8e24fd5760d439a208e73e42a74f43d7a92",
+      "status": "ran",
+      "observed": "Nội dung từ bộ nhớ"
+    },
+    {
+      "key": "http-headers/first",
+      "hash": "595c0beeb2129ae099d63662d141d3894566d0aacdfd93078f410eb2a587906e",
+      "status": "ran",
+      "observed": "True\nclose"
+    },
+    {
+      "key": "http-headers/header-boundaries",
+      "hash": "5010f4f02faacadd70b50425445618bb401542894d1c6dc89ad40d1d321fc2f1",
+      "status": "ran",
+      "observed": "example.test\na:b\n2\nEndOfStreamException\nFormatException\nFormatException\nFormatException"
+    },
+    {
+      "key": "http-request-line/first",
+      "hash": "b729988af31adfe7a4081bc87250846e61cce2247778000336f007c821ef0cd2",
+      "status": "ran",
+      "observed": "200"
+    },
+    {
+      "key": "http-request-line/http-route-status",
+      "hash": "22cd5505eaa5ee7782b997e2eda39237fc1207091d541a7458dde6c62818a1f2",
+      "status": "ran",
+      "observed": "200\n400\n404\n405 Allow: GET\n501"
+    },
+    {
+      "key": "http-response/first",
+      "hash": "3fad39e88e3193f2c24985cf17c5bbb4cd500509b79418883f1ca9a81c99902a",
+      "status": "ran",
+      "observed": "5\nHTTP/1.1 200 OK\\r\\nContent-Type: text/plain; charset=utf-8\\r\\nContent-Length: 5\\r\\n\\r\\nChào"
+    },
+    {
+      "key": "http-response/stream-body-writers",
+      "hash": "f89e532280868802a0c4280a02daa188cf23b1b2524e997dc00aa791cd0a4b1c",
+      "status": "ran",
+      "observed": "text:5\nfile:10000\nhead:0\nempty:0\ncanceled"
+    },
+    {
+      "key": "httpclient-json/first",
+      "hash": "d2c47405e6eb3d72c59a48b1321088492a1f2dae844b9b0b1b025b7e382d3c64",
+      "status": "ran",
+      "observed": "An"
+    },
+    {
+      "key": "httpclient-json/http-error-matrix",
+      "hash": "1d13f3d9355feb436099f7fffeab4a2eb4faf60baa239d989df6aba0272d537e",
+      "status": "ran",
+      "observed": "404:HttpRequestException\n500:HttpRequestException\n204:JsonException\nbad:JsonException\nnull:InvalidDataException\nmissing:InvalidDataException\ncanceled\nquota"
+    },
+    {
+      "key": "linq-basics/deferred-groups",
+      "hash": "bf2a3fa1b9315cd836be60ea967d1d570767c0d7e3f736bb4e187ef6848df19d",
+      "status": "ran",
+      "observed": "2,3\n2,3,4\nA:2\nB:1\n1,2,3\nSingle: nhiều phần tử"
+    },
+    {
+      "key": "linq-basics/first",
+      "hash": "d6d48acbcbb8b3411f7cf3e1b113a6f3b3b497395ca3ad7ca7f352a9fdac6327",
+      "status": "ran",
+      "observed": "60, 80"
+    },
+    {
+      "key": "memory-caching/first",
+      "hash": "29dd8faded5042a70b126c8a5a1e81a255343250c9507ab3fbb8ba976f4f2a13",
+      "status": "ran",
+      "observed": "1\n1\n1"
+    },
+    {
+      "key": "memory-caching/mutable-cache-stampede",
+      "hash": "cffeca68b9f880f0d8fad9a4fa481b205338b9391891ef3944b742cebf4a8cd0",
+      "status": "ran",
+      "observed": "2\nFalse\nfactory:2\nsafe-factory:1"
+    },
+    {
+      "key": "mvc-binding/binding-errors",
+      "hash": "5351fe381398de8eb1f81de6e58018802784caa7311b38db1918c0e820cfd707",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "mvc-binding/first",
+      "hash": "c9b084605242895fc3763bed79b036960c3774f66b1ecabf8204a876e82cc0a8",
+      "status": "http-verified",
+      "observed": "[{\"method\":\"POST\",\"path\":\"/signup\",\"status\":400,\"body\":\"{\\\"type\\\":\\\"https://tools.ietf.org/html/rfc9110#section-15.5.1\\\",\\\"title\\\":\\\"One or more validation errors occurred.\\\",\\\"status\\\":400,\\\"errors\\\":{\\\"Age\\\":[\\\"The field Age must be between 18 and 120.\\\"]},\\\"traceId\\\":\\\"00-e13e2f4b8ff28a5da37cbb4adc93fb66-c461b054806ef0a8-00\\\"}\"}]"
+    },
+    {
+      "key": "mvc-routing/first",
+      "hash": "819a85fc991b0079d13cdc96aaf8e446209226aa6790ad24f137ca3778533d41",
+      "status": "http-verified",
+      "observed": "[{\"method\":\"GET\",\"path\":\"/products/5\",\"status\":200,\"body\":\"Đạt ngưỡng\"}]"
+    },
+    {
+      "key": "mvc-routing/routing-matrix",
+      "hash": "359b8b3022eb437b032964c66f7966bff84fe4a75bfb771a34f104a94224a28a",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "mvc-views/first",
+      "hash": "46fa08e954b2b09983fd6d382e1623790d46d07b33b6b8fae2cf99839ccfa5e1",
+      "status": "http-verified",
+      "observed": "[{\"method\":\"GET\",\"path\":\"/\",\"status\":200,\"body\":\"<p>Xin chào An</p>\"}]"
+    },
+    {
+      "key": "mvc-views/razor-form",
+      "hash": "f88922c10ac74e23af005e1617837ceae3e308984d8b67619405d0369f579681",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "WebLab HTTP contracts (xUnit)"
+      }
+    },
+    {
+      "key": "oop-classes/account-boundaries",
+      "hash": "860e43639b74607f2008f4ba5e971c6d7989669a2f1d07a5da473c50c835ada6",
+      "status": "ran",
+      "observed": "âm: bị từ chối\nFalse\nTrue\n5\noverflow: bị từ chối"
+    },
+    {
+      "key": "oop-classes/first",
+      "hash": "3a3405071508c3220ad0c1a730bc279c2f0a07491b5d8c17b6d9121b5ab38fb1",
+      "status": "ran",
+      "observed": "True\n150"
+    },
+    {
+      "key": "oop-interfaces/explicit-error",
+      "hash": "427a9190e04ab112a1f4f4457864b6b96d17888871c5305e406ee77f802d35f0",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\oop-interfaces\\explicit-error\\Program.cs(1,12): error CS1061: 'Both' does not contain a definition for 'Print' and no accessible extension method 'Print' accepting a first argument of type 'Both' could be found (are you missing a using directive or an assembly reference?) [$REPO\\.tools\\upgrade-examples\\oop-interfaces\\explicit-error\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\oop-interfaces\\explicit-error\\Program.cs(1,12): error CS1061: 'Both' does not contain a definition for 'Print' and no accessible extension method 'Print' accepting a first argument of type 'Both' could be found (are you missing a using directive or an assembly reference?) [$REPO\\.tools\\upgrade-examples\\oop-interfaces\\explicit-error\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:00.79"
+    },
+    {
+      "key": "oop-interfaces/explicit-interface",
+      "hash": "cabb15956df15022a8776a9aa594e54b9a596543fa2d3b50a0b77679b08c499d",
+      "status": "ran",
+      "observed": "file (fixture)\nmemory\nleft\nright\ndefault\nTrue"
+    },
+    {
+      "key": "oop-interfaces/first",
+      "hash": "5ff033bbbe82b69a9bfa541d6ccf5c42478dcdd143d8389d9b8d7aa394823c93",
+      "status": "ran",
+      "observed": "An"
+    },
+    {
+      "key": "oop-polymorphism/dispatch-matrix",
+      "hash": "6ef4dc88e80f99613175bac33032ad0be6f063097d7b2f736edf894cbb603afd",
+      "status": "ran",
+      "observed": "derived virtual\nderived virtual\nbase hidden\nderived hidden\noverload Base\noverload Derived"
+    },
+    {
+      "key": "oop-polymorphism/first",
+      "hash": "486eafa0ecd9c5df92a7b3c222fb5d16b351db413240ae0c8fee4fa661d6c230",
+      "status": "ran",
+      "observed": "Dog"
+    },
+    {
+      "key": "relational-databases/first",
+      "hash": "e374d12d3d2ac49a4138e18443100359716b5a523b3e251ee7f2062affe0c559",
+      "status": "sql-verified",
+      "observed": "[{\"Name\":\"An\",\"Score\":8}]"
+    },
+    {
+      "key": "relational-databases/left-join-sql",
+      "hash": "73079ac281a1dcc7761beaa20d416ce21d11ddb0786baa8df3786ebd12228a65",
+      "status": "lab-verified",
+      "observed": "Kiểm chứng trong project lab dùng chung theo check được liên kết; không tuyên bố mỗi khối request trên trang được chạy như một script độc lập.",
+      "evidence": {
+        "file": "docs/upgrade-lab-results.json",
+        "check": "DataLab SQL, tracking, relationships, conflict and rollback"
+      }
+    },
+    {
+      "key": "semaphore-limits/bounded-errors",
+      "hash": "0a8f59a807ee5e2560fa26de1b3e4b3825a89d0b09b9de0140bf6ea109722afb",
+      "status": "ran",
+      "observed": "peak:2;active:0;permits:2\ncanceled wait, không Release\nFalse\n2"
+    },
+    {
+      "key": "semaphore-limits/first",
+      "hash": "94f8a1ff22b4516304efe7eacc7625dfd9bec5f5e53c54e5b4442ac5e3bd7a9b",
+      "status": "ran",
+      "observed": "True\nTrue\n0"
+    },
+    {
+      "key": "task-composition/first",
+      "hash": "96412823554f093dbd84895e5ca935a16cc1f29217ca0097f16b0fe61f6c15c7",
+      "status": "ran",
+      "observed": "False\n10,20"
+    },
+    {
+      "key": "task-composition/whenany-faults",
+      "hash": "bf02d6cba8b20e1f8e8ec9425a46705292cd379693c3922cf863c0297001c367",
+      "status": "ran",
+      "observed": "True\nwinner observed\n2\nFalse\nFaulted"
+    },
+    {
+      "key": "tasks-concurrency/controlled-io",
+      "hash": "5857e7081d7510a62c78981ed4c13abeca8eadf8291e6aaa9db17d5118947f49",
+      "status": "ran",
+      "observed": "start:A\nstart:B\nFalse\nA-result,B-result"
+    },
+    {
+      "key": "tasks-concurrency/first",
+      "hash": "b34cbea6cf1b8a120f42e3e397618c1c2fef618ec90219e5a2b73e57279d9c10",
+      "status": "ran",
+      "observed": "False\n8"
+    },
+    {
+      "key": "tcp-sockets/first",
+      "hash": "ff22abede720c8449e5cd87f4d971e12b0f11c119ba69bab9e2a17a21e6076a7",
+      "status": "ran",
+      "observed": "An"
+    },
+    {
+      "key": "tcp-sockets/length-framing",
+      "hash": "edda6527bbb5afe84862068fd4f8aabfe6364915c61eb942c17c75cdcbd4713c",
+      "status": "ran",
+      "observed": "Chào\nAn\noversize\nEOF payload\ncanceled"
+    },
+    {
+      "key": "thread-lock/atomic-and-monitor",
+      "hash": "0c12ed870fc56a6d2d8abb57999b4d503424f8c14901a3925dc3438377517096",
+      "status": "ran",
+      "observed": "200\nTrue\nFalse\npredicate true\nLock scope"
+    },
+    {
+      "key": "thread-lock/first",
+      "hash": "862c96f9465e2a28d76a787d9aa0df1a4c5fea9d5e921472eec36decb6f41da0",
+      "status": "ran",
+      "observed": "200"
+    },
+    {
+      "key": "thread-signals/auto-manual",
+      "hash": "e9d9c03f7698631036986b13f2a6fd086afabd8c543d5df714621b33a440fdfc",
+      "status": "ran",
+      "observed": "True\nFalse\nTrue\nTrue\nFalse\nTrue\n12\nFalse"
+    },
+    {
+      "key": "thread-signals/first",
+      "hash": "92cef883662bed464e57ef8bfea625bdf981e242f71145c17552148c7218864f",
+      "status": "ran",
+      "observed": "True\nFalse"
+    },
+    {
+      "key": "unit-testing/first",
+      "hash": "87ef1a5aef558955dad9586b6793ab71cea31dea3dd4b6e8919e191b9779b78c",
+      "status": "compiled",
+      "observed": "Build thành công; không tính là đã chạy."
+    },
+    {
+      "key": "unit-testing/production-tests",
+      "hash": "91371b2f97e68fa1ce78df34e276f4684a10da767c67ec304340601baebfcddf",
+      "status": "test-verified",
+      "observed": "Domain -> $REPO\\.tools\\upgrade-examples\\unit-testing\\production-tests\\Domain\\bin\\Debug\\net10.0\\Domain.dll\n  Tests -> $REPO\\.tools\\upgrade-examples\\unit-testing\\production-tests\\Tests\\bin\\Debug\\net10.0\\Tests.dll\nTest run for $REPO\\.tools\\upgrade-examples\\unit-testing\\production-tests\\Tests\\bin\\Debug\\net10.0\\Tests.dll (.NETCoreApp,Version=v10.0)\nA total of 1 test files matched the specified pattern.\n\nPassed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 111 ms - Tests.dll (net10.0)\nMutation bỏ guard bị test phát hiện đúng."
+    },
+    {
+      "key": "visual-studio/cli-clean",
+      "hash": "30df7d00156c5c3efe197355ba31a456fc58501df3ac6a8d5a05703b39631267",
+      "status": "cli-verified",
+      "observed": "$ dotnet --info\n.NET SDK:\n Version:           10.0.403\n Commit:            5a2162bea6\n Workload version:  10.0.400-manifests.a00bebb6\n MSBuild version:   18.9.15+5a2162bea\n\nRuntime Environment:\n OS Name:     Windows\n OS Version:  10.0.26200\n OS Platform: Windows\n RID:         win-x64\n Base Path:   C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk\\10.0.403\\\n\n.NET workloads installed:\n [wasm-tools-net8]\n   Installation Source: VS 18.8.12023.21\n   Manifest Version:    10.0.114/10.0.100\n   Manifest Path:       C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk-manifests\\10.0.100\\microsoft.net.workload.mono.toolchain.net8\\10.0.114\\WorkloadManifest.json\n   Install Type:        FileBased\n\nConfigured to use workload sets when installing new manifests.\nNo workload sets are installed. Run \"dotnet workload restore\" to install a workload set.\n\nHost:\n  Version:      10.0.14\n  Architecture: x64\n  Commit:       0427b9abbe\n\n.NET SDKs installed:\n  10.0.403 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk]\n\n.NET runtimes installed:\n  Microsoft.AspNetCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.AspNetCore.App]\n  Microsoft.NETCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.NETCore.App]\n  Microsoft.WindowsDesktop.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.WindowsDesktop.App]\n\nOther architectures found:\n  x86   [C:\\Program Files (x86)\\dotnet]\n    registered at [HKLM\\SOFTWARE\\dotnet\\Setup\\InstalledVersions\\x86\\InstallLocation]\n\nEnvironment variables:\n  DOTNET_CLI_HOME                          [$REPO\\.tools\\upgrade-examples\\cli-home]\n  DOTNET_CLI_TELEMETRY_OPTOUT              [1]\n  DOTNET_CLI_UI_LANGUAGE                   [en-US]\n  DOTNET_GENERATE_ASPNET_CERTIFICATE       [false]\n  DOTNET_NOLOGO                            [1]\n  DOTNET_ROOT                              [C:/Users/Darween/Documents/Codex/2026-11-01/hi/work/dotnet-current/sdk]\n  DOTNET_SKIP_FIRST_TIME_EXPERIENCE        [1]\n\nglobal.json file:\n  $REPO\\global.json\n\nLearn more:\n  https://aka.ms/dotnet/info\n\nDownload .NET:\n  https://aka.ms/dotnet/download\n$ dotnet --list-sdks\n10.0.403 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk]\n$ dotnet --list-runtimes\nMicrosoft.AspNetCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.AspNetCore.App]\nMicrosoft.NETCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.NETCore.App]\nMicrosoft.WindowsDesktop.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.WindowsDesktop.App]\n$ dotnet run --no-build --project HelloDotNet/HelloDotNet.csproj\nHello, World!\n$ dotnet package list --project HelloDotNet/HelloDotNet.csproj --include-transitive --no-restore\nProject 'HelloDotNet' has the following package references\n   [net10.0]: \n   Top-level Package                                Requested   Resolved\n   > Microsoft.Extensions.Logging.Abstractions      10.0.14     10.0.14 \n\n   Transitive Package                                           Resolved\n   > Microsoft.Extensions.DependencyInjection.Abstractions      10.0.14\n$ dotnet publish HelloDotNet/HelloDotNet.csproj -c Release --self-contained false --no-restore\nHelloDotNet -> $REPO\\.tools\\upgrade-examples\\visual-studio\\cli-clean\\HelloDotNet\\bin\\Release\\net10.0\\HelloDotNet.dll\n  HelloDotNet -> $REPO\\.tools\\upgrade-examples\\visual-studio\\cli-clean\\HelloDotNet\\bin\\Release\\net10.0\\publish\\\nVulnerability audit was not executed; its output depends on the live advisory source. IDE breakpoint keys are manual guidance, not automated verification."
+    },
+    {
+      "key": "visual-studio/first",
+      "hash": "935b1dbf7323262e5f514dbbba591c8b589527dfdff57c2878639776ba63422e",
+      "status": "cli-verified",
+      "observed": "$ dotnet --info\n.NET SDK:\n Version:           10.0.403\n Commit:            5a2162bea6\n Workload version:  10.0.400-manifests.a00bebb6\n MSBuild version:   18.9.15+5a2162bea\n\nRuntime Environment:\n OS Name:     Windows\n OS Version:  10.0.26200\n OS Platform: Windows\n RID:         win-x64\n Base Path:   C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk\\10.0.403\\\n\n.NET workloads installed:\n [wasm-tools-net8]\n   Installation Source: VS 18.8.12023.21\n   Manifest Version:    10.0.114/10.0.100\n   Manifest Path:       C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk-manifests\\10.0.100\\microsoft.net.workload.mono.toolchain.net8\\10.0.114\\WorkloadManifest.json\n   Install Type:        FileBased\n\nConfigured to use workload sets when installing new manifests.\nNo workload sets are installed. Run \"dotnet workload restore\" to install a workload set.\n\nHost:\n  Version:      10.0.14\n  Architecture: x64\n  Commit:       0427b9abbe\n\n.NET SDKs installed:\n  10.0.403 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk]\n\n.NET runtimes installed:\n  Microsoft.AspNetCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.AspNetCore.App]\n  Microsoft.NETCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.NETCore.App]\n  Microsoft.WindowsDesktop.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.WindowsDesktop.App]\n\nOther architectures found:\n  x86   [C:\\Program Files (x86)\\dotnet]\n    registered at [HKLM\\SOFTWARE\\dotnet\\Setup\\InstalledVersions\\x86\\InstallLocation]\n\nEnvironment variables:\n  DOTNET_CLI_HOME                          [$REPO\\.tools\\upgrade-examples\\cli-home]\n  DOTNET_CLI_TELEMETRY_OPTOUT              [1]\n  DOTNET_CLI_UI_LANGUAGE                   [en-US]\n  DOTNET_GENERATE_ASPNET_CERTIFICATE       [false]\n  DOTNET_NOLOGO                            [1]\n  DOTNET_ROOT                              [C:/Users/Darween/Documents/Codex/2026-11-01/hi/work/dotnet-current/sdk]\n  DOTNET_SKIP_FIRST_TIME_EXPERIENCE        [1]\n\nglobal.json file:\n  $REPO\\global.json\n\nLearn more:\n  https://aka.ms/dotnet/info\n\nDownload .NET:\n  https://aka.ms/dotnet/download\n$ dotnet --list-sdks\n10.0.403 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk]\n$ dotnet --list-runtimes\nMicrosoft.AspNetCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.AspNetCore.App]\nMicrosoft.NETCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.NETCore.App]\nMicrosoft.WindowsDesktop.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.WindowsDesktop.App]\n$ dotnet run --no-build --project Demo.csproj\nHello, World!\n$ dotnet package list --project Demo.csproj --include-transitive --no-restore\nProject 'Demo' has the following package references\n   [net10.0]: No packages were found for this framework.\n$ dotnet publish Demo.csproj -c Release --self-contained false --no-restore\nDemo -> $REPO\\.tools\\upgrade-examples\\visual-studio\\first\\bin\\Release\\net10.0\\Demo.dll\n  Demo -> $REPO\\.tools\\upgrade-examples\\visual-studio\\first\\bin\\Release\\net10.0\\publish\\\nVulnerability audit was not executed; its output depends on the live advisory source. IDE breakpoint keys are manual guidance, not automated verification."
+    }
+  ]
+}

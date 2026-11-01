@@ -1,0 +1,180 @@
+{
+  "id": "csharp-strings-unicode",
+  "title": "String, Unicode và so sánh văn bản",
+  "description": "Phân biệt code unit, scalar, grapheme và byte; chọn comparer, normalization và culture có chủ đích.",
+  "category": "foundation",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "String .NET là chuỗi UTF-16 code units bất biến. char là một code unit, không luôn một ký tự người dùng nhìn thấy. Rune biểu diễn Unicode scalar; grapheme cluster có thể gồm nhiều scalar. Encoding chuyển dữ liệu text sang byte và ngược lại."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Emoji có thể cần surrogate pair nên Length=2 nhưng một scalar; e cộng dấu kết hợp có hai code unit và một grapheme. UTF-8 byte count không là Length. Normalization như FormC có thể đưa một số biểu diễn tương đương về dạng so sánh cần thiết, nhưng không tự giải mọi khác biệt ngôn ngữ hoặc quy tắc identifier.",
+        "Ordinal/OrdinalIgnoreCase phù hợp nhiều token/mã kỹ thuật theo hợp đồng; culture comparison phù hợp khi người dùng/nghiệp vụ yêu cầu ngôn ngữ. Parse/format hợp đồng máy thường dùng InvariantCulture và format rõ, còn hiển thị người dùng dùng culture theo yêu cầu."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Interpolation/Concat có thể được compiler tối ưu theo ngữ cảnh; StringBuilder hữu ích khi ghép lặp nhiều, không phải thay mọi phép +. Allocation và throughput cần benchmark có điều kiện công khai nếu đưa số. Comparer của Dictionary/HashSet phải thống nhất rule equality của key; lowercase theo culture rồi so có thể sai với token kỹ thuật."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "unicode-units",
+          "title": "Emoji và dấu kết hợp",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Globalization;using System.Text;\nstring emoji=\"😀\";Console.WriteLine($\"{emoji.Length}/{emoji.EnumerateRunes().Count()}/{Encoding.UTF8.GetByteCount(emoji)}\");\nstring combined=\"e\\u0301\";string precomposed=\"é\";Console.WriteLine(combined.Length);Console.WriteLine(StringInfo.ParseCombiningCharacters(combined).Length);\nConsole.WriteLine(combined.Equals(precomposed,StringComparison.Ordinal));Console.WriteLine(combined.Normalize(NormalizationForm.FormC).Equals(precomposed,StringComparison.Ordinal));",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "2/1/4\n2\n1\nFalse\nTrue",
+          "explanation": "Ký tự hiển thị không đồng nhất code unit; normalization được dùng trong đúng bài toán tương đương canonical.",
+          "verification": "ran"
+        },
+        {
+          "id": "culture-comparison",
+          "title": "Comparer và parsing có hợp đồng",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Globalization;\nConsole.WriteLine(string.Equals(\"FILE\",\"file\",StringComparison.OrdinalIgnoreCase));\nConsole.WriteLine(\"i\".ToUpper(CultureInfo.GetCultureInfo(\"tr-TR\")));\ndecimal amount=decimal.Parse(\"1234.50\",CultureInfo.InvariantCulture);Console.WriteLine(amount.ToString(\"F2\",CultureInfo.InvariantCulture));\nvar keys=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase){{\"SV1\",1}};Console.WriteLine(keys.ContainsKey(\"sv1\"));",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\nİ\n1234.50\nTrue",
+          "explanation": "Culture được chỉ định, không dựa culture máy chạy. Turkish casing là ví dụ cho việc không dùng ToUpper mặc định như một contract token chung.",
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "In riêng UTF-16 Length, rune count, grapheme count và UTF-8 byte count. Ghi rõ culture và comparison trong ca test có dấu/emoji. Nếu đọc file lỗi chữ, kiểm tra encoding và chunk boundary trước khi sửa từng ký tự bằng tay."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "char có luôn là ký tự nhìn thấy không?",
+          "answer": "Không, nó là UTF-16 code unit.",
+          "explanation": "Surrogate pair và grapheme có thể dùng nhiều đơn vị.",
+          "misconception": "Length luôn đếm chữ người dùng thấy.",
+          "followUp": "Rune khác grapheme thế nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Emoji 😀 có UTF-8 length bằng string.Length không?",
+          "answer": "Không, ví dụ là 4 byte so với 2 code unit.",
+          "explanation": "Encoding là phép chuyển biểu diễn, không chỉ đếm char.",
+          "misconception": "Mỗi char luôn một byte.",
+          "followUp": "Content-Length nên dùng phép đo nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "e cộng dấu và é so Ordinal mặc định có equal không?",
+          "answer": "Không trong ví dụ; normalize FormC rồi có thể equal canonical.",
+          "explanation": "Normalization cần đúng yêu cầu nghiệp vụ.",
+          "misconception": "Mọi chuỗi trông giống nhau đều cùng byte.",
+          "followUp": "Có nên normalize mọi secret/token tùy tiện không?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Identifier kỹ thuật nên luôn ToLower theo culture máy?",
+          "answer": "Không, chọn StringComparison/Comparer theo hợp đồng.",
+          "explanation": "Culture casing có thể khác điều người thiết kế token muốn.",
+          "misconception": "Lowercase bất kỳ là canonical universal.",
+          "followUp": "Dictionary key cần rule equality nào nhất quán?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "StringBuilder luôn nhanh hơn interpolation không?",
+          "answer": "Không, phụ thuộc số bước ghép, compiler và allocation thực.",
+          "explanation": "Đo workload và dùng API theo mục đích.",
+          "misconception": "StringBuilder là thay thế mọi string +.",
+          "followUp": "Benchmark muốn công bố số phải nêu điều kiện gì?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "UTF-16, Rune và grapheme trong .NET",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-encoding-introduction"
+        },
+        {
+          "title": "So sánh string theo ordinal/culture",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/base-types/best-practices-strings"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N03",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Giải thích vì sao Length, Rune count và byte count có thể khác.",
+    "Chọn comparison/format cho mã máy và văn bản người dùng."
+  ],
+  "prerequisiteIds": [
+    "csharp-types",
+    "dotnet-streams"
+  ],
+  "relatedIds": [
+    "dotnet-streams",
+    "csharp-collections",
+    "httpclient-json"
+  ]
+}

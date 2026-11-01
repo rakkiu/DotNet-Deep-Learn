@@ -1,7 +1,7 @@
 {
   "id": "csharp-lambda",
   "title": "Lambda: truyền một quy tắc như dữ liệu",
-  "description": "Lambda là cú pháp viết một hàm ẩn danh, ví dụ x => x > 0. Nó mô tả hành vi để truyền cho hàm khác hoặc lưu dưới dạng delegate/expression tree. Lambda không phải LINQ, dù LINQ thường dùng lambda làm đi…",
+  "description": "Lambda là cú pháp viết một hàm ẩn danh, ví dụ x => x > 0. Nó mô tả hành vi để truyền cho hàm khác hoặc lưu dưới dạng delegate/expression tree. Lambda không phải LINQ, dù LINQ thường dùng lambda làm điều kiện lọc hay phép biến đổi.",
   "category": "foundation",
   "kind": "Biểu thức ngôn ngữ",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Lambda là cú pháp viết một hàm ẩn danh, ví dụ x => x > 0. Nó mô tả hành vi để truyền cho hàm khác hoặc lưu dưới dạng delegate/expression tree. Lambda không phải LINQ, dù LINQ thường dùng lambda làm điều kiện lọc hay phép biến đổi."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Khái niệm và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Đừng nhầm => trong expression-bodied method với một biến delegate luôn được tạo. Closure capture biến, không phải luôn đóng băng giá trị của biến. Expression tree lưu cấu trúc biểu thức, không phải delegate đã thực thi; provider có thể không dịch được mọi lambda.",
         "Lambda ngắn diễn tả quy tắc lọc/chuyển đổi tốt. Logic dài, có nhiều nhánh hay cần dùng lại thường rõ hơn khi đặt thành method có tên. Tránh side effect trong predicate vì số lần gọi phụ thuộc cách duyệt."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,96 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Expression lambda x=>x*2 trả biểu thức; statement lambda x=>{return x*2;} có block. Method group chọn hàm phù hợp mà không viết lambda bọc. Func<T,R> có kết quả, Action<T> không có kết quả, Predicate<T> thường trả bool.",
+        "Closure capture biến, không luôn chụp giá trị tại lúc tạo delegate. Vòng for dùng chung biến đếm có thể cho mọi lambda thấy giá trị cuối; tạo bản sao mỗi lượt nếu muốn lưu giá trị lượt đó. foreach C# hiện đại có biến iteration riêng cho từng lượt, không bê kết luận for sang foreach máy móc."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Expression<Func<T,bool>> là cây cấu trúc để provider xử lý, còn Func<T,bool> là delegate có thể gọi trong process. Statement lambda và một số cú pháp mới không chuyển được thành expression tree; EF còn có giới hạn dịch riêng. Static lambda không capture được local/this, nhưng không cam kết không allocation trong mọi ngữ cảnh. Async lambda gán Action thành async void; cần Func<Task> khi caller phải await/quan sát lỗi."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "Func<int, bool> accepts = x => x >= 5;\nint[] scores = { 3, 5, 8 };\nforeach (int score in scores)\n    if (accepts(score)) Console.WriteLine(score);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "5\n8",
-        "steps": [
-          "accepts là delegate nhận int, trả bool. Việc gán lambda chưa duyệt scores.",
-          "Gọi accepts(3) nhận false nên không in.",
-          "Gọi với 5 và 8 nhận true nên in hai dòng theo thứ tự nguồn."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "Func<int, bool> accepts = x => x >= 5;\nint[] scores = { 3, 5, 8 };\nforeach (int score in scores)\n    if (accepts(score)) Console.WriteLine(score);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "5\n8",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. accepts là delegate nhận int, trả bool. Việc gán lambda chưa duyệt scores. Gọi accepts(3) nhận false nên không in. Gọi với 5 và 8 nhận true nên in hai dòng theo thứ tự nguồn.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "closure-loop",
+          "title": "Thời điểm gọi và bản sao mỗi lượt",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int threshold=3;Func<int,bool> keep=x=>x>threshold;threshold=5;Console.WriteLine(keep(4));\nvar bad=new List<Func<int>>();var good=new List<Func<int>>();\nfor(int i=0;i<3;i++){bad.Add(()=>i);int snapshot=i;good.Add(()=>snapshot);}\nConsole.WriteLine(string.Join(\",\",bad.Select(f=>f())));\nConsole.WriteLine(string.Join(\",\",good.Select(f=>f())));\nSystem.Linq.Expressions.Expression<Func<int,bool>> tree=x=>x>5;Console.WriteLine(tree.Body.NodeType);\nFunc<Task> done=async()=>{await Task.CompletedTask;Console.WriteLine(\"awaited\");};await done();",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "False\n3,3,3\n0,1,2\nGreaterThan\nawaited",
+          "explanation": "threshold được đọc lúc delegate chạy; snapshot là biến mới mỗi lượt. Tree mô tả phép so sánh, chưa tự truy vấn database.",
+          "verification": "ran"
+        },
+        {
+          "id": "static-capture",
+          "title": "Static lambda cố capture local",
+          "kind": "compile-error",
+          "label": "Cố ý lỗi biên dịch",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int limit=3;\nFunc<int,bool> test=static x=>x>limit;"
+          },
+          "expected": "CS8820",
+          "explanation": "Bỏ static hoặc truyền limit thành tham số/đặt dữ liệu tường minh.",
+          "verification": "expected-diagnostic",
+          "diagnostic": "CS8820"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +186,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "threshold đổi sau khi tạo lambda thì khi gọi dùng giá trị nào?",
+          "answer": "Giá trị biến hiện tại khi đọc trong delegate.",
+          "explanation": "Closure capture biến, không mặc định copy snapshot.",
+          "misconception": "Lambda luôn đóng băng mọi input lúc khai báo.",
+          "followUp": "Làm sao giữ giá trị của một lượt for?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Func khác Action theo hợp đồng nào?",
+          "answer": "Func trả kết quả, Action không có kết quả trả về.",
+          "explanation": "Chữ ký delegate quyết định cách caller gọi và chờ.",
+          "misconception": "Action async tự trả Task cho caller.",
+          "followUp": "Predicate<int> thường trả kiểu gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Expression tree có tự chạy query ngay không?",
+          "answer": "Không, nó mô tả cấu trúc; provider hoặc code khác phải xử lý.",
+          "explanation": "Xây biểu thức không đồng nghĩa đã enumerate.",
+          "misconception": "Mọi lambda lập tức lọc dữ liệu.",
+          "followUp": "Compile tree thành delegate khác dịch SQL thế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Async lambda gán Action có vấn đề gì?",
+          "answer": "Caller không có Task để await/quan sát hoàn tất theo contract.",
+          "explanation": "Nó thành async void; lỗi và lifetime khó phối hợp.",
+          "misconception": "Action và Func<Task> là tương đương.",
+          "followUp": "Nếu callback cần chờ xong nên đổi signature thế nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Static lambda có chứng minh không allocation không?",
+          "answer": "Không, nó chặn capture local/this nhưng allocation còn tùy cách dùng/compiler.",
+          "explanation": "Cần đo và hiểu delegate/boxing thay vì khẩu quyết.",
+          "misconception": "Có static là không tốn bộ nhớ.",
+          "followUp": "Closure sống lâu có thể giữ object lớn ra sao?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "lambda expressions",
+          "title": "Lambda expressions and anonymous functions",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions"
         },
         {
-          "title": "expression trees",
+          "title": "Expression Trees",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/"
         }
       ],
@@ -139,5 +254,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A11",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đọc capture theo biến và phân biệt delegate với expression tree.",
+    "Nhận biết lifetime closure và async lambda sai contract."
+  ],
+  "prerequisiteIds": [
+    "csharp-language",
+    "csharp-types"
+  ],
+  "relatedIds": []
 }

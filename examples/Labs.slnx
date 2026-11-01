@@ -1,0 +1,1 @@
+<Solution><Project Path="WebLab/WebLab.csproj"/><Project Path="WebLab.Tests/WebLab.Tests.csproj"/><Project Path="DataLab/DataLab.csproj"/><Project Path="MigrationLab/MigrationLab.csproj"/></Solution>

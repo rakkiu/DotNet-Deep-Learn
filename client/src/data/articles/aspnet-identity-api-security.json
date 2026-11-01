@@ -1,0 +1,225 @@
+{
+  "id": "aspnet-identity-api-security",
+  "title": "Identity, token và bảo vệ endpoint",
+  "description": "Dùng flow tài khoản của framework; phân biệt cookie, bearer, JWT/OAuth/OIDC và kiểm tra quyền theo resource.",
+  "category": "web",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Identity quản lý user/store/password hash/token account và các flow tài khoản theo framework; không tự viết thuật toán hash. Cookie session và bearer là cách mang credential theo client/kiến trúc. JWT là format token, OAuth2 mô tả ủy quyền, OIDC thêm lớp danh tính; không dùng lẫn các tên."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "WebLab dùng AddIdentityApiEndpoints, EF store SQLite và MapIdentityApi; login có thể dùng cookie hoặc built-in bearer token. Bearer token built-in của Identity API trong demo không được gọi là JWT. Access token mang quyền truy cập, refresh token phục vụ cấp access mới theo policy; reset-password/email token có mục đích khác và không dùng thay access token.",
+        "Lockout/reset/đăng xuất dùng API framework. Lab dùng ephemeral Data Protection keys và DB tạm để cô lập, chỉ dành local: restart làm credential/token cũ không còn đáng tin theo vòng đời này. Production cần HTTPS, key persistence/rotation và secret storage phù hợp, không sao chép cấu hình lab như production-ready."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "JWT từ identity provider chuẩn cần xác minh signature/issuer/audience/lifetime; payload decode được không chứng minh đã xác minh, và JWT không tự là encryption. Resource ownership chống IDOR phải lấy principal/owner server tin cậy. CORS chỉ là browser policy; cookie CSRF cần antiforgery, XSS cần encoding/ngữ cảnh và thiết kế token storage. Không đưa refresh token vào log, URL hay kho client tùy tiện; rotation/revocation tùy mô hình."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "identity-flows",
+          "title": "Identity store và register/login/refresh/logout",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/WebLab/WebLab.csproj -- --urls http://127.0.0.1:5090",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "POST",
+              "path": "/identity/register",
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "email": "local@example.test",
+                "password": "Local-demo-only-42!"
+              },
+              "status": 200
+            },
+            {
+              "method": "POST",
+              "path": "/identity/login?useCookies=false",
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "email": "local@example.test",
+                "password": "Local-demo-only-42!"
+              },
+              "status": 200
+            }
+          ],
+          "expected": "/identity/login trả accessToken/refreshToken của framework. Dùng Bearer nhận /identity/manage/info 200; invalid token →401; user không role Admin →403; refresh hợp lệ →200. Cookie login và logout được test riêng.",
+          "explanation": "Tài khoản/mật khẩu chỉ là dữ liệu giả local; không hardcode credential thật. Không có endpoint tự chọn role, không tự tạo production token server.",
+          "verification": "lab-verified"
+        },
+        {
+          "id": "security-boundaries",
+          "title": "Owner và antiforgery tách với authentication",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/WebLab/WebLab.csproj -- --urls http://127.0.0.1:5090",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "GET",
+              "path": "/mine/alice",
+              "status": 401
+            },
+            {
+              "method": "POST",
+              "path": "/students/create",
+              "headers": {
+                "Content-Type": "application/x-www-form-urlencoded"
+              },
+              "body": "Name=An&Age=20",
+              "status": 400
+            }
+          ],
+          "expected": "Test-only principal bob gọi tài nguyên alice →403; owner alice →200. Form thiếu antiforgery bị 400 dù dữ liệu Name/Age có vẻ hợp lệ.",
+          "explanation": "Header X-Test-* chỉ tồn tại trong test handler ở test assembly, không được app production tin.",
+          "verification": "lab-verified"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Xem scheme, challenge/forbid và claims server đã xác minh; không log cookie/token/password. Với JWT provider ngoài, xem signature/issuer/audience/lifetime theo cấu hình tin cậy. Với form, tách lỗi antiforgery khỏi validation và quyền owner."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Bearer token trong WebLab có được gọi JWT không?",
+          "answer": "Không, built-in Identity bearer của mẫu là token framework riêng.",
+          "explanation": "Bearer là cách trình credential, không luôn cùng format JWT.",
+          "misconception": "Mọi Bearer đều là JWT.",
+          "followUp": "OAuth2/OIDC giải quyết khác điều gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Reset password token có thay access token không?",
+          "answer": "Không, mỗi token có mục đích và validation riêng.",
+          "explanation": "Không đổi lẫn token giữa các flow.",
+          "misconception": "Có chuỗi token là dùng endpoint nào cũng được.",
+          "followUp": "Refresh token cần bảo vệ khác gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "CORS có thay authentication không?",
+          "answer": "Không, nó áp policy browser theo origin.",
+          "explanation": "curl/client ngoài browser không bị CORS như cơ chế firewall.",
+          "misconception": "Origin được cho phép tức user đã login.",
+          "followUp": "CSRF với cookie cần cơ chế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "User đủ role nhưng sai owner có thể bị chặn không?",
+          "answer": "Có, resource-based policy còn kiểm tra object cụ thể.",
+          "explanation": "Role không thay quyền trên mỗi resource.",
+          "misconception": "Admin trong payload client tự gửi là đáng tin.",
+          "followUp": "IDOR thường phát sinh ở bước nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Vì sao ephemeral keys của lab không phù hợp triển khai nhiều instance?",
+          "answer": "Token/cookie phải được xác minh theo key lifecycle/chia sẻ đúng kiến trúc.",
+          "explanation": "Restart/instance khác có thể không đọc được dữ liệu được key cũ bảo vệ.",
+          "misconception": "Cứ dùng Identity là tự cấu hình key production xong.",
+          "followUp": "JWT validation phải kiểm tra những trường nào?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "Identity API endpoints và token framework",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-10.0"
+        },
+        {
+          "title": "Cấu hình JWT bearer validation",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-10.0"
+        },
+        {
+          "title": "Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0"
+        },
+        {
+          "title": "CORS và giới hạn browser policy",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-10.0"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N09",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Theo dấu register/login/logout/refresh bằng Identity local.",
+    "Nêu threat boundary cho CSRF, XSS, CORS, IDOR và validation token."
+  ],
+  "prerequisiteIds": [
+    "aspnet-authorization",
+    "mvc-binding",
+    "aspnet-web-api-design"
+  ],
+  "relatedIds": [
+    "aspnet-authorization",
+    "mvc-binding",
+    "aspnet-integration-testing"
+  ]
+}

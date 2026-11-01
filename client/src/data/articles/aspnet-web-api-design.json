@@ -1,0 +1,232 @@
+{
+  "id": "aspnet-web-api-design",
+  "title": "Web API, REST và hợp đồng HTTP",
+  "description": "Thiết kế resource, DTO, status và lỗi có cấu trúc; phân trang, cache HTTP và idempotency theo nhu cầu thực.",
+  "category": "web",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Web API công bố hợp đồng qua HTTP; REST nhấn mạnh tài nguyên và các ràng buộc kiến trúc, không đơn thuần tên controller có chữ API. DTO request/response tạo ranh giới dữ liệu được phép nhận/trả. ControllerBase/ApiController và Minimal API typed results là hai cách tổ chức endpoint theo nhu cầu."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "GET safe; PUT/DELETE có semantics idempotent theo tác động mong đợi, POST thường tạo/xử lý không mặc định idempotent, PATCH áp thay đổi theo media type/contract. 200 có body thành công, 201 tạo resource kèm Location, 204 không có body. 400/415 xử lý input/media type; 401/403 auth; 404 vắng; 409 conflict theo nghiệp vụ. 422 có thể dùng khi contract chọn, không quy định mọi validation luôn phải 422. 500 là failure server, không tự đổi mọi exception thành 409.",
+        "CreatedAtAction tạo Location từ endpoint đọc; ProblemDetails/ValidationProblemDetails cho cấu trúc lỗi thay text tùy tiện. OpenAPI mô tả request/response để tra cứu, không chứng minh triển khai đã đúng. Content negotiation và Content-Type/Accept cần thống nhất với serializer/framework."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Filtering/sorting phải allowlist field và giới hạn page size. Offset pagination đơn giản nhưng có thể chậm/đổi trang khi dữ liệu thay; keyset dùng khóa thứ tự ổn định và contract cursor. Versioning chỉ thêm khi thay hợp đồng cần quản lý. Idempotency key đòi lưu trạng thái/kết quả theo policy, không chỉ đọc một header. ETag/If-None-Match/304 và Cache-Control là cache HTTP, khác IMemoryCache/output cache."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "rest-crud",
+          "title": "Resource sinh viên và error contract",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/WebLab/WebLab.csproj -- --urls http://127.0.0.1:5090",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "POST",
+              "path": "/api/students",
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "name": "REST demo",
+                "age": 20
+              },
+              "status": 201
+            },
+            {
+              "method": "POST",
+              "path": "/api/students",
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "name": "REST demo",
+                "age": 20
+              },
+              "status": 409
+            },
+            {
+              "method": "POST",
+              "path": "/api/students",
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "name": "An",
+                "age": 17
+              },
+              "status": 400
+            }
+          ],
+          "expected": "201 có Location trỏ /api/students/{id}; GET Location 200; PUT đúng DTO 204; DELETE 204; GET sau xóa 404. Input age=17 là 400 errors.",
+          "explanation": "Store lab là in-memory để cô lập HTTP, chưa bảo đảm unique atomic cho production; unique DB và transaction xem DataLab.",
+          "verification": "lab-verified"
+        },
+        {
+          "id": "conditional-get",
+          "title": "ETag và request có điều kiện",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/WebLab/WebLab.csproj -- --urls http://127.0.0.1:5090",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "GET",
+              "path": "/etag",
+              "status": 200
+            },
+            {
+              "method": "GET",
+              "path": "/etag",
+              "headers": {
+                "If-None-Match": "\"catalog-v1\""
+              },
+              "status": 304
+            }
+          ],
+          "expected": "Response đầu có ETag \"catalog-v1\", Cache-Control private,max-age=30. Request khớp ETag nhận 304 không body representation.",
+          "explanation": "Đây là HTTP validation cache, không phải cache-aside hay token authentication.",
+          "verification": "lab-verified"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Dùng curl -i hoặc tab Network xem method, Content-Type, status, Location và ProblemDetails. Với phân trang, kiểm tra thứ tự cùng cursor/khóa phụ. Đối chiếu request đầu và lặp lại trước khi gọi hành vi là idempotent."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "POST tạo resource nên trả gì theo contract mẫu?",
+          "answer": "201 Created với Location và DTO phù hợp.",
+          "explanation": "Client có thể theo Location để đọc resource vừa tạo.",
+          "misconception": "Mọi thành công đều 200 string.",
+          "followUp": "CreatedAtAction tránh hardcode URL như thế nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "204 có nên kèm JSON error không?",
+          "answer": "Không, response này không có body.",
+          "explanation": "Lỗi cần status/ProblemDetails phù hợp.",
+          "misconception": "Body lỗi vẫn ổn nếu code là 204.",
+          "followUp": "400 và 415 khác nguyên nhân nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "DELETE lần hai 404 có phá idempotency không?",
+          "answer": "Không nhất thiết, trạng thái mong đợi vẫn là resource đã bị xóa.",
+          "explanation": "Idempotency không yêu cầu response giống hệt.",
+          "misconception": "Idempotent là mọi output y hệt.",
+          "followUp": "Safe method khác ở tiêu chí gì?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Khi nào cân nhắc keyset thay offset?",
+          "answer": "Dữ liệu lớn/thay đổi và access pattern theo khóa thứ tự ổn định.",
+          "explanation": "Đổi complexity và contract cursor lấy cách truy cập phù hợp, không luôn tốt hơn.",
+          "misconception": "Keyset hỗ trợ nhảy mọi trang tùy ý miễn phí.",
+          "followUp": "Cần khóa phụ khi nhiều dòng cùng timestamp không?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Đọc Idempotency-Key header có đủ chống thanh toán lặp?",
+          "answer": "Không, cần cơ chế lưu/so/khóa kết quả theo hợp đồng nghiệp vụ.",
+          "explanation": "Header không tự tạo transaction hay exactly-once.",
+          "misconception": "Có header là framework tự chống lặp.",
+          "followUp": "ETag phục vụ mục đích khác gì?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "Controller Web APIs và ApiController",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/web-api/?view=aspnetcore-10.0"
+        },
+        {
+          "title": "HTTP semantics và status",
+          "url": "https://www.rfc-editor.org/rfc/rfc9110.html"
+        },
+        {
+          "title": "Handle errors in ASP.NET Core APIs",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling-api?view=aspnetcore-10.0"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N05",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đọc vòng tạo/đọc/sửa/xóa với method, status và Location rõ.",
+    "Chọn pagination/error/cache contract thay vì trả 200 cho mọi tình huống."
+  ],
+  "prerequisiteIds": [
+    "aspnet-first-app",
+    "mvc-routing",
+    "mvc-binding"
+  ],
+  "relatedIds": [
+    "mvc-binding",
+    "http-request-line",
+    "aspnet-identity-api-security"
+  ]
+}

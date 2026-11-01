@@ -1,0 +1,12 @@
+// Deterministic ZIP using Node's built-in deflater; no build output, databases or keys.
+import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';import {deflateRawSync} from 'node:zlib';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const files=[];function walk(dir){for(const entry of fs.readdirSync(path.join(root,dir),{withFileTypes:true})){if(['bin','obj','.tools'].includes(entry.name))continue;const name=dir+'/'+entry.name;if(entry.isDirectory())walk(name);else if(!/\.db(?:-|$)/.test(name))files.push(name);}}walk('examples');files.push('global.json');files.sort();
+const crcTable=Uint32Array.from({length:256},(_,n)=>{for(let k=0;k<8;k++)n=n&1?0xedb88320^(n>>>1):n>>>1;return n>>>0;});
+function crc32(data){let crc=0xffffffff;for(const b of data)crc=crcTable[(crc^b)&255]^(crc>>>8);return(crc^0xffffffff)>>>0;}
+let offset=0;const records=[],directory=[];
+for(const name of files){const filename=Buffer.from(name),data=fs.readFileSync(path.join(root,name)),compressed=deflateRawSync(data),crc=crc32(data);const local=Buffer.alloc(30);local.writeUInt32LE(0x04034b50);local.writeUInt16LE(20,4);local.writeUInt16LE(0x800,6);local.writeUInt16LE(8,8);local.writeUInt16LE(23905,12);local.writeUInt32LE(crc,14);local.writeUInt32LE(compressed.length,18);local.writeUInt32LE(data.length,22);local.writeUInt16LE(filename.length,26);records.push(local,filename,compressed);
+ const central=Buffer.alloc(46);central.writeUInt32LE(0x02014b50);central.writeUInt16LE(20,4);central.writeUInt16LE(20,6);central.writeUInt16LE(0x800,8);central.writeUInt16LE(8,10);central.writeUInt16LE(23905,14);central.writeUInt32LE(crc,16);central.writeUInt32LE(compressed.length,20);central.writeUInt32LE(data.length,24);central.writeUInt16LE(filename.length,28);central.writeUInt32LE(offset,42);directory.push(central,filename);offset+=local.length+filename.length+compressed.length;
+}
+const cd=Buffer.concat(directory),end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50);end.writeUInt16LE(files.length,8);end.writeUInt16LE(files.length,10);end.writeUInt32LE(cd.length,12);end.writeUInt32LE(offset,16);
+const target=path.join(root,'client/public/examples/dotnet-labs.zip');fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,Buffer.concat([...records,cd,end]));console.log(`Packaged ${files.length} source files into dotnet-labs.zip`);

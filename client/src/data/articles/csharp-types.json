@@ -1,7 +1,7 @@
 {
   "id": "csharp-types",
   "title": "Biến, kiểu dữ liệu, var và null",
-  "description": "Kiểu dữ liệu xác định tập giá trị một biến có thể chứa và các phép toán hợp lệ trên giá trị đó. C# kiểm tra kiểu tĩnh lúc biên dịch; int, decimal, bool, string và kiểu tự định nghĩa đều tham gia hệ th…",
+  "description": "Kiểu dữ liệu xác định tập giá trị một biến có thể chứa và các phép toán hợp lệ trên giá trị đó. C# kiểm tra kiểu tĩnh lúc biên dịch; int, decimal, bool, string và kiểu tự định nghĩa đều tham gia hệ thống kiểu chung của .NET. Đây là tính năng ngôn ngữ, không phải một database hay thư viện cài riêng.",
   "category": "foundation",
   "kind": "Hệ thống kiểu của C#",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Kiểu dữ liệu xác định tập giá trị một biến có thể chứa và các phép toán hợp lệ trên giá trị đó. C# kiểm tra kiểu tĩnh lúc biên dịch; int, decimal, bool, string và kiểu tự định nghĩa đều tham gia hệ thống kiểu chung của .NET. Đây là tính năng ngôn ngữ, không phải một database hay thư viện cài riêng."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Khái niệm và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "var không phải dynamic. String là reference type bất biến; không cần viết new để dùng literal. Nullable reference types chủ yếu tạo cảnh báo compile-time, không bảo đảm mọi object runtime khác null. Đừng dùng vị trí stack/heap làm định nghĩa của value/reference type.",
         "Dùng int cho số nguyên trong khoảng giá trị của nó, decimal khi cần số thập phân tài chính với quy tắc làm tròn rõ ràng; double phù hợp tính toán số thực gần đúng. int.Parse có thể ném lỗi; TryParse phù hợp dữ liệu nhập sai thường gặp. Interpolation thuận tiện nhưng không bảo đảm không cấp phát."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,125 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "int là alias của System.Int32; bool, char, enum và struct là value types; string, object và class là reference types. default của field/phần tử int array là 0, nhưng local chưa gán bị definite-assignment error khi đọc. var suy luận kiểu cố định từ initializer, object chấp nhận boxing/reference, dynamic dời binding thao tác tới runtime. var x = null không đủ thông tin kiểu.",
+        "5/2 cho int là 2; (double)(5/2) là 2.0 vì chia trước cast; 5/2.0 là 2.5. Suffix m chọn decimal, L chọn long. Implicit conversion phải được ngôn ngữ cho phép; explicit cast có thể mất dữ liệu; parsing đọc text theo định dạng/culture. checked phát hiện overflow phép toán nguyên phù hợp.",
+        "int? là Nullable<int>: HasValue kiểm tra trước Value; ?? chọn mặc định, ?. truy cập có điều kiện, ??= gán nếu null. string? là annotation; null-forgiving ! chỉ tắt chẩn đoán của compiler tại đó, không kiểm tra runtime."
+      ],
+      "tables": [
+        {
+          "caption": "Ba cách khai báo",
+          "headers": [
+            "Cú pháp",
+            "Kiểu lúc build",
+            "Rủi ro"
+          ],
+          "rows": [
+            [
+              "var x = 10",
+              "int",
+              "Không thể gán string sau đó"
+            ],
+            [
+              "object x = 10",
+              "object, chứa int boxed",
+              "Unbox sang sai kiểu lỗi runtime"
+            ],
+            [
+              "dynamic x = 10",
+              "Binding động",
+              "Gọi member sai có thể lỗi runtime"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Copy struct chứa field List chỉ copy reference của field, không deep clone graph. Gán lại string tạo/tham chiếu tới giá trị chuỗi khác, không sửa instance cũ. Boxing int sang object và unboxing phải đúng kiểu đóng gói; chuyển int thành long là bước chuyển đổi riêng. decimal hữu ích cho số thập phân theo nghiệp vụ nhưng 1/3 vẫn không chính xác vô hạn và tiền cần quy tắc làm tròn/đơn vị."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "int quantity = 2;\nint copy = quantity;\nquantity = 5;\nConsole.WriteLine(copy);\nConsole.WriteLine(quantity);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "2\n5",
-        "steps": [
-          "quantity ban đầu giữ số nguyên 2.",
-          "copy nhận bản sao của số 2; hai biến int là hai vị trí lưu giá trị độc lập.",
-          "Gán quantity = 5 không sửa copy; hai lệnh in cho 2 rồi 5."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int quantity = 2;\nint copy = quantity;\nquantity = 5;\nConsole.WriteLine(copy);\nConsole.WriteLine(quantity);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "2\n5",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. quantity ban đầu giữ số nguyên 2. copy nhận bản sao của số 2; hai biến int là hai vị trí lưu giá trị độc lập. Gán quantity = 5 không sửa copy; hai lệnh in cho 2 rồi 5.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "copy-and-cast",
+          "title": "Alias, struct có List, string và chia nguyên",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var a = new Student { Name = \"An\" };\nvar b = a; b.Name = \"Bình\";\nvar first = new Bucket(new List<int>{1});\nvar second = first; second.Items.Add(2);\nstring s = \"A\"; string copy = s; s += \"B\";\nobject boxed = 10;\ntry { _ = (long)boxed; } catch (InvalidCastException) { Console.WriteLine(\"sai unbox\"); }\nConsole.WriteLine($\"{a.Name};{first.Items.Count};{copy};{5/2};{(double)(5/2)};{5/2.0}\");\nConsole.WriteLine((long)(int)boxed);\nclass Student { public string Name {get;set;} = \"\"; }\nrecord struct Bucket(List<int> Items);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "sai unbox\nBình;2;A;2;2;2.5\n10",
+          "explanation": "Class alias dùng cùng Student; struct copy vẫn cùng list; biến copy giữ chuỗi A. Dấu chấm thập phân được cố định bằng InvariantCulture trong fixture kiểm chứng.",
+          "verification": "ran",
+          "culture": "InvariantCulture"
+        },
+        {
+          "id": "var-null",
+          "title": "var không suy luận được từ null",
+          "kind": "compile-error",
+          "label": "Cố ý lỗi biên dịch",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var value = null;"
+          },
+          "expected": "CS0815",
+          "explanation": "Thay bằng string? value = null hoặc initializer có kiểu.",
+          "verification": "expected-diagnostic",
+          "diagnostic": "CS0815"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +215,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "var có phải dynamic không?",
+          "answer": "Không, var x=10 có kiểu int cố định.",
+          "explanation": "Compiler suy luận initializer rồi kiểm tra các thao tác tiếp theo.",
+          "misconception": "var bỏ kiểm tra kiểu.",
+          "followUp": "var x=null thiếu dữ kiện gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Vì sao struct chứa List vẫn quan sát thay đổi list?",
+          "answer": "Field reference được copy chứ object List không được clone.",
+          "explanation": "Hai struct có field trỏ cùng list dù phép gán struct là value copy.",
+          "misconception": "Copy value type luôn deep copy.",
+          "followUp": "Thay second.Items sang list mới khác sửa list thế nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "(double)(5/2) có bằng 2.5 không?",
+          "answer": "Không, chia nguyên đã trả 2 rồi mới chuyển double.",
+          "explanation": "Muốn 2.5 phải có toán hạng thực trước phép chia như 5/2.0.",
+          "misconception": "Cast ngoài cùng thay cách phép chia đã diễn ra.",
+          "followUp": "checked ảnh hưởng phép cộng int quá giới hạn thế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "string! có bảo đảm khác null ở runtime?",
+          "answer": "Không, ! là null-forgiving cho phân tích tĩnh.",
+          "explanation": "Dữ liệu từ API/thư viện cũ vẫn cần validation tại ranh giới.",
+          "misconception": "! tự chèn guard và ném sớm.",
+          "followUp": "Khi nào nên dùng TryParse thay Parse?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "object chứa int có cast thẳng sang long được không?",
+          "answer": "Không, unboxing yêu cầu đúng kiểu int đã đóng gói.",
+          "explanation": "Sau (int)boxed mới chuyển số sang long được.",
+          "misconception": "Mọi kiểu số unbox chuyển đổi tự động.",
+          "followUp": "Nullable<int> có giá trị được boxing ra dạng nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "types",
+          "title": "The C# type system",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/"
         },
         {
-          "title": "nullable references",
+          "title": "Nullable reference types",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references"
         }
       ],
@@ -139,5 +283,27 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A04",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Giải thích copy giá trị, copy tham chiếu và nullable bằng code.",
+    "Chọn kiểu số/chuyển đổi theo hợp đồng dữ liệu, không theo cảm giác."
+  ],
+  "prerequisiteIds": [
+    "csharp-language"
+  ],
+  "relatedIds": []
 }

@@ -1,7 +1,7 @@
 {
   "id": "efcore-context",
   "title": "Entity Framework Core và DbContext",
-  "description": "EF Core là ORM ánh xạ giữa object .NET và dữ liệu trong database thông qua provider. Nó không phải database: SQL Server, SQLite hay PostgreSQL mới là hệ quản trị/lưu trữ phía dưới. DbContext quản lý m…",
+  "description": "EF Core là ORM ánh xạ giữa object .NET và dữ liệu trong database thông qua provider. Nó không phải database: SQL Server, SQLite hay PostgreSQL mới là hệ quản trị/lưu trữ phía dưới. DbContext quản lý một đơn vị làm việc gồm model, truy vấn và theo dõi thay đổi.",
   "category": "data",
   "kind": "Thư viện ORM",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "EF Core là ORM ánh xạ giữa object .NET và dữ liệu trong database thông qua provider. Nó không phải database: SQL Server, SQLite hay PostgreSQL mới là hệ quản trị/lưu trữ phía dưới. DbContext quản lý một đơn vị làm việc gồm model, truy vấn và theo dõi thay đổi."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "DbContext không thread-safe; không chạy nhiều thao tác đồng thời trên một instance. DbSet là điểm truy vấn entity, không bảo đảm ánh xạ một-một với một bảng. Không nhúng connection string production vào source.",
         "EnsureCreated phù hợp database thử nghiệm ở đây, không dùng xen với Migrations cho cùng database. Scaffold phù hợp schema có sẵn; model-first phù hợp khi dự án quản lý schema. ORM vẫn cần hiểu SQL, indexes và transaction."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -91,33 +91,77 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "DbContext quản lý unit of work và model; Added/Unchanged/Modified/Deleted/Detached mô tả state của entity trong tracker. Add chỉ đánh dấu, SaveChanges/SaveChangesAsync mới gửi lệnh. Sửa property tracked có thể cần DetectChanges trước khi nhìn state; database không tự cập nhật chỉ vì property đổi.",
+        "Tracking có identity resolution nên cùng key có thể nhận cùng instance; AsNoTracking không cập nhật entity đang track và thích hợp nhiều query read-only. Không khẳng định no-tracking luôn nhanh hơn: tracking có thể tái dùng instance và phù hợp sửa dữ liệu. Projection DTO giới hạn cột và graph trả ra."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Context không thread-safe; không WhenAll nhiều query trên một context. AddDbContext thường scoped request, IDbContextFactory hữu ích khi cần nhiều đơn vị làm việc có lifetime riêng. Connection pooling quản lý kết nối vật lý, DbContext pooling tái sử dụng context theo cơ chế khác. Context không luôn giữ kết nối mở cả đời; một SaveChanges có transaction khi provider hỗ trợ và theo cấu hình, nhiều SaveChanges chưa tự thành một transaction nghiệp vụ."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\ndotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 10.0.0\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "using Microsoft.EntityFrameworkCore;\nusing Microsoft.Data.Sqlite;\nusing var connection = new SqliteConnection(\"Data Source=:memory:\");\nconnection.Open();\nvar options = new DbContextOptionsBuilder<School>().UseSqlite(connection).Options;\nusing var db = new School(options);\ndb.Database.EnsureCreated();\ndb.Students.Add(new Student { Name = \"An\", Score = 8 });\ndb.SaveChanges();\nConsole.WriteLine(db.Students.Count(s => s.Score >= 8));\nclass Student\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public int Score { get; set; }\n}\nclass School(DbContextOptions<School> options) : DbContext(options)\n{\n    public DbSet<Student> Students => Set<Student>();\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "1",
-        "steps": [
-          "Mở connection in-memory và tạo schema để ví dụ độc lập.",
-          "Add đánh dấu Student mới; SaveChanges ghi bản ghi.",
-          "Count dịch điều kiện sang database; điểm 8 thỏa >= 8 nên kết quả 1."
-        ],
-        "request": null,
-        "note": "Ví dụ sử dụng SQLite in-memory để không phụ thuộc SQL Server. EnsureCreated chỉ tạo schema cho ví dụ độc lập này; mục Migrations có luồng riêng cho database được quản lý bằng migration. Package 10.0.0 là mốc minh họa tương thích .NET 10, không phải khuyến nghị bỏ qua các bản vá."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.EntityFrameworkCore.Sqlite\" Version=\"10.0.14\" />\n  </ItemGroup>\n</Project>",
+            "Program.cs": "using Microsoft.EntityFrameworkCore;\nusing Microsoft.Data.Sqlite;\nusing var connection = new SqliteConnection(\"Data Source=:memory:\");\nconnection.Open();\nvar options = new DbContextOptionsBuilder<School>().UseSqlite(connection).Options;\nusing var db = new School(options);\ndb.Database.EnsureCreated();\ndb.Students.Add(new Student { Name = \"An\", Score = 8 });\ndb.SaveChanges();\nConsole.WriteLine(db.Students.Count(s => s.Score >= 8));\nclass Student\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public int Score { get; set; }\n}\nclass School(DbContextOptions<School> options) : DbContext(options)\n{\n    public DbSet<Student> Students => Set<Student>();\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "1",
+          "explanation": "Ví dụ sử dụng SQLite in-memory để không phụ thuộc SQL Server. EnsureCreated chỉ tạo schema cho ví dụ độc lập này; mục Migrations có luồng riêng cho database được quản lý bằng migration. Package 10.0.0 là mốc minh họa tương thích .NET 10, không phải khuyến nghị bỏ qua các bản vá. Mở connection in-memory và tạo schema để ví dụ độc lập. Add đánh dấu Student mới; SaveChanges ghi bản ghi. Count dịch điều kiện sang database; điểm 8 thỏa >= 8 nên kết quả 1.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "tracking-states",
+          "title": "CRUD, identity resolution và SQL thật",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/DataLab/DataLab.csproj",
+          "project": "examples/DataLab/DataLab.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "state:Added → Unchanged → Modified; before-save:5; after-save:6; identity:True/False; xóa:Deleted → Detached.",
+          "explanation": "DataLab dùng SQLite file tạm, hai context chứng minh chưa SaveChanges thì observer vẫn thấy giá trị cũ. ToQueryString và CommandCounter giúp xem SQL và số reader commands, không log sensitive data.",
+          "verification": "lab-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "School/\n├── School.csproj         # provider và EF Design packages\n├── Program.cs            # đăng ký context / điểm chạy\n├── Models/Student.cs     # entity\n├── Data/SchoolContext.cs # DbContext và mapping\n├── Migrations/           # migration và model snapshot\n└── appsettings.json      # cấu hình; không chứa secret thật",
-        "note": "Tên thư mục là quy ước gợi ý; EF không bắt buộc entity ở Models. Ví dụ gọn có thể khai báo type trong Program.cs để dễ đọc. Secret dùng biến môi trường hoặc cơ chế secret phù hợp, không gửi xuống trình duyệt."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -128,18 +172,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Add có gửi INSERT ngay không?",
+          "answer": "Không, nó đánh dấu Added tới lúc SaveChanges.",
+          "explanation": "Database và tracker là hai trạng thái khác nhau.",
+          "misconception": "Add giống SaveChanges.",
+          "followUp": "Observer context thấy gì trước Save?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Hai query tracked cùng key có thể cùng instance không?",
+          "answer": "Có nhờ identity resolution trong context.",
+          "explanation": "Không chỉ so giá trị mà cả reference có thể trùng.",
+          "misconception": "Mỗi SELECT luôn new object hoàn toàn khác.",
+          "followUp": "AsNoTracking thay điều này như thế nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Sửa property entity detached có tự UPDATE không?",
+          "answer": "Không chỉ bằng phép gán đó.",
+          "explanation": "Context cần biết thay đổi theo hợp đồng tracking/attach/update phù hợp.",
+          "misconception": "EF theo dõi mọi object C# toàn process.",
+          "followUp": "DebugView hỗ trợ chẩn đoán state ra sao?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Có thể dùng một DbContext singleton cho mọi task không?",
+          "answer": "Không, context không thread-safe và tracker sẽ sống quá lâu.",
+          "explanation": "Tách unit of work/context theo scope, không dùng chung concurrent query.",
+          "misconception": "Connection pool khiến context thread-safe.",
+          "followUp": "IDbContextFactory giúp lifetime nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Một SaveChanges và hai SaveChanges có cùng transaction nghiệp vụ không?",
+          "answer": "Không tự động; cần ranh giới transaction rõ khi gộp nhiều lần.",
+          "explanation": "Provider hỗ trợ transaction và cấu hình còn quan trọng.",
+          "misconception": "Mọi lời gọi EF trong app chung một transaction.",
+          "followUp": "HTTP/email có nằm trong DB transaction không?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "core",
+          "title": "Entity Framework Core",
           "url": "https://learn.microsoft.com/en-us/ef/core/"
         },
         {
-          "title": "dbcontext configuration",
+          "title": "DbContext Lifetime, Configuration, and Initialization",
           "url": "https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/"
         },
         {
-          "title": "querying",
+          "title": "Querying Data",
           "url": "https://learn.microsoft.com/en-us/ef/core/querying/"
         }
       ],
@@ -148,5 +244,31 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A28",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Quan sát entity states và thời điểm dữ liệu thực sự được ghi.",
+    "Chọn tracking, projection và lifetime context theo unit of work."
+  ],
+  "prerequisiteIds": [
+    "csharp-collections",
+    "linq-basics"
+  ],
+  "relatedIds": [
+    "efcore-transactions-concurrency",
+    "efcore-query-performance"
+  ]
 }

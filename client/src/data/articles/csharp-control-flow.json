@@ -1,7 +1,7 @@
 {
   "id": "csharp-control-flow",
   "title": "Rẽ nhánh, vòng lặp và theo dấu chương trình",
-  "description": "if, switch, for, while, do/while và foreach quyết định câu lệnh nào chạy và chạy bao nhiêu lần. Chúng là cú pháp điều khiển luồng của C#, không phải framework. Một chương trình có dữ liệu đúng vẫn có …",
+  "description": "if, switch, for, while, do/while và foreach quyết định câu lệnh nào chạy và chạy bao nhiêu lần. Chúng là cú pháp điều khiển luồng của C#, không phải framework. Một chương trình có dữ liệu đúng vẫn có thể sai nếu đi nhầm nhánh hoặc lặp sai số lượt.",
   "category": "foundation",
   "kind": "Cấu trúc điều khiển",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "if, switch, for, while, do/while và foreach quyết định câu lệnh nào chạy và chạy bao nhiêu lần. Chúng là cú pháp điều khiển luồng của C#, không phải framework. Một chương trình có dữ liệu đúng vẫn có thể sai nếu đi nhầm nhánh hoặc lặp sai số lượt."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Khái niệm và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "while kiểm tra trước; do...while chạy thân ít nhất một lần. for (i = 0; i < array.Length; i++) dừng trước Length; <= thường vượt chỉ số. Khi debug, kiểm tra giá trị trước và sau từng lần lặp thay vì chỉ nhìn output cuối.",
         "foreach đơn giản khi chỉ cần duyệt phần tử. for cần thiết nếu phải biết vị trí hoặc cập nhật theo index. Hai vòng lặp lồng nhau có thể thành O(n²); trước khi tối ưu hãy làm rõ thuật toán tìm kiếm/sắp xếp và dữ liệu biên."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,34 +86,110 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "while kiểm tra trước, do/while kiểm tra sau nên chạy ít nhất một lần. continue trong for vẫn chuyển tới bước cập nhật, còn break trong switch chỉ thoát switch gần nhất. &&/|| short-circuit giúp x != null && x.Length>0 không đọc Length khi x null. Guard clause trả sớm cho đầu vào không hợp lệ để giảm lồng khối.",
+        "switch statement chọn nhánh lệnh; switch expression trả một giá trị và có pattern/when. for dùng i < array.Length; <= có thể truy cập index ngoài biên. Sửa List trong foreach có thể vô hiệu enumerator; dùng vòng ngược theo index, bản sao hoặc phép RemoveAll phù hợp."
+      ],
+      "tables": [
+        {
+          "caption": "Theo dấu tổng",
+          "headers": [
+            "index",
+            "value",
+            ">=5",
+            "sum sau lượt"
+          ],
+          "rows": [
+            [
+              "0",
+              "2",
+              "false",
+              "0"
+            ],
+            [
+              "1",
+              "5",
+              "true",
+              "5"
+            ],
+            [
+              "2",
+              "8",
+              "true",
+              "13"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Tìm kiếm tuyến tính tối đa n phép so sánh, trả vị trí đầu khớp hoặc -1; dữ liệu rỗng không thực hiện so sánh. Hai vòng nối tiếp mỗi vòng n là O(n), không phải O(n²). Hai vòng lồng chưa đủ kết luận: phải đếm cận và quan hệ kích thước. Vòng xử lý dài cần cancellation tại điểm có nghĩa, không giết thread cưỡng bức."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "int[] values = { 2, 5, 8 };\nint sum = 0;\nforeach (int value in values)\n{\n    if (value >= 5) sum += value;\n}\nConsole.WriteLine(sum);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "13",
-        "steps": [
-          "sum khởi đầu bằng 0.",
-          "Với 2, điều kiện false: sum vẫn 0.",
-          "Với 5, điều kiện true: sum thành 5.",
-          "Với 8, sum thành 13. Chỉ sau khi duyệt xong mới in."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int[] values = { 2, 5, 8 };\nint sum = 0;\nforeach (int value in values)\n{\n    if (value >= 5) sum += value;\n}\nConsole.WriteLine(sum);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "13",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. sum khởi đầu bằng 0. Với 2, điều kiện false: sum vẫn 0. Với 5, điều kiện true: sum thành 5. Với 8, sum thành 13. Chỉ sau khi duyệt xong mới in.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "loop-boundaries",
+          "title": "Kiểm tra trước/sau và tìm kiếm rỗng",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int count=0; while(false) count++;\nConsole.WriteLine(count);\ndo {count++;} while(false); Console.WriteLine(count);\nConsole.WriteLine(Find(Array.Empty<int>(),5));\nConsole.WriteLine(Find(new[]{5,5},5));\nConsole.WriteLine(Find(new[]{1,2},5));\nstring? text=null;Console.WriteLine(text is not null && text.Length>0);\nfor(int i=0;i<3;i++){if(i==1)continue;switch(i){case 0: Console.Write(\"A\");break;}Console.Write(i);}\nConsole.WriteLine();\nstatic int Find(int[] a,int target){for(int i=0;i<a.Length;i++)if(a[i]==target)return i;return -1;}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "0\n1\n-1\n0\n-1\nFalse\nA02",
+          "explanation": "break chỉ rời switch; continue ở i=1 vẫn thực hiện i++. Hai kết quả Find chỉ vị trí đầu tiên và ca không tìm được.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -124,14 +200,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "while(false) khác do/while(false) thế nào?",
+          "answer": "while bỏ thân; do/while thực hiện thân một lần.",
+          "explanation": "Vị trí kiểm tra điều kiện quyết định số lượt tối thiểu.",
+          "misconception": "Cả hai đều không chạy.",
+          "followUp": "Đặt tác dụng phụ trong thân ảnh hưởng gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "continue trong for có bỏ qua i++ không?",
+          "answer": "Không, nó chuyển đến bước cập nhật của for.",
+          "explanation": "Vì vậy ví dụ không kẹt ở index 1.",
+          "misconception": "continue nhảy về điều kiện mà bỏ update.",
+          "followUp": "Với while tự tăng biến thì cần chú ý gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Find mảng rỗng nên trả gì trong hợp đồng ví dụ?",
+          "answer": "-1, vì không có index phù hợp.",
+          "explanation": "Không đọc a[0] khi Length=0.",
+          "misconception": "Mảng rỗng phải gây exception.",
+          "followUp": "Hai phần tử trùng thì vị trí nào được chọn?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Hai vòng for nối tiếp đều chạy n có O(n²) không?",
+          "answer": "Không, tổng khoảng 2n nên là O(n).",
+          "explanation": "Phải đếm công việc, không nhân chỉ vì thấy hai vòng.",
+          "misconception": "Cứ hai for là bình phương.",
+          "followUp": "Nếu cận vòng trong luôn 3 thì sao?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Vì sao x!=null && x.Length>0 an toàn hơn dùng & ở đây?",
+          "answer": "&& không đánh giá vế phải khi vế trái false.",
+          "explanation": "& với bool đánh giá cả hai vế nên có thể truy cập null.",
+          "misconception": "Hai toán tử chỉ khác tốc độ.",
+          "followUp": "Guard clause có giúp tách nhánh sai đầu vào không?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "iteration statements",
+          "title": "Iteration statements - for, foreach, do, and while",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/iteration-statements"
         },
         {
-          "title": "selection statements",
+          "title": "Selection statements - if, if-else, and switch",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements"
         }
       ],
@@ -140,5 +268,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A06",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Theo dấu điều kiện, vòng lặp và short-circuit.",
+    "Phân tích số phép so sánh thay vì nhìn số vòng lặp bằng mắt."
+  ],
+  "prerequisiteIds": [
+    "csharp-language",
+    "csharp-types"
+  ],
+  "relatedIds": []
 }

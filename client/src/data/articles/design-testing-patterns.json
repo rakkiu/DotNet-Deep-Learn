@@ -1,7 +1,7 @@
 {
   "id": "design-testing-patterns",
   "title": "SOLID và phân chia trách nhiệm",
-  "description": "SOLID là nhóm nguyên lý định hướng thiết kế object: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation và Dependency Inversion. Chúng là công cụ đánh giá khả năng thay đổi …",
+  "description": "SOLID là nhóm nguyên lý định hướng thiết kế object: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation và Dependency Inversion. Chúng là công cụ đánh giá khả năng thay đổi của code, không phải framework hay bộ thư mục bắt buộc. Bài 15 của thầy kết hợp chúng với unit test và các pattern.",
   "category": "architecture",
   "kind": "Nguyên lý thiết kế phần mềm",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "SOLID là nhóm nguyên lý định hướng thiết kế object: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation và Dependency Inversion. Chúng là công cụ đánh giá khả năng thay đổi của code, không phải framework hay bộ thư mục bắt buộc. Bài 15 của thầy kết hợp chúng với unit test và các pattern."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Một factory tập trung cách tạo object; không phải mọi hàm new đều cần Abstract Factory. Decorator không tự làm code nhanh hay thread-safe. Test nên bao phủ không tìm thấy, phân biệt hoa thường và input rỗng; không chỉ lặp lại implementation trong assertion.",
         "Pattern có lợi khi thực sự có nhiều nguồn hoặc nhiều lớp hành vi cần ghép. Với một phép lọc ngắn dùng một lần, LINQ trực tiếp đơn giản hơn. Chi phí thêm interface/class chỉ đáng khi nó làm yêu cầu và kiểm thử rõ hơn."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,115 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "SOLID hỗ trợ tổ chức thay đổi; không phải yêu cầu mỗi class một method. Use case lọc dòng có policy Contains, nguồn I/O và phần trình bày là các lý do thay đổi khác nhau. Tách chúng để đổi nguồn không buộc viết lại policy. DI là kỹ thuật cung cấp dependency, DIP là định hướng phụ thuộc, IoC là ý tưởng rộng hơn."
+      ],
+      "tables": [
+        {
+          "caption": "Năm nguyên lý với dấu hiệu và giới hạn",
+          "headers": [
+            "Nguyên lý",
+            "Trước → sau",
+            "Giới hạn"
+          ],
+          "rows": [
+            [
+              "SRP",
+              "Reader vừa đọc đĩa/lọc/in → I/O source + filter policy + renderer",
+              "Theo lý do thay đổi, không theo số method"
+            ],
+            [
+              "OCP",
+              "switch nhiều nơi → một strategy contract cho quy tắc lọc mới",
+              "Không đoán trước mọi biến thể chưa cần"
+            ],
+            [
+              "LSP",
+              "Read hứa đọc được nhưng subclass luôn ném → contract phù hợp capability",
+              "Signature đúng chưa đủ"
+            ],
+            [
+              "ISP",
+              "IStore bắt read/write với caller chỉ read → IReadStore/IWriteStore",
+              "Đừng tách interface vụn không mục đích"
+            ],
+            [
+              "DIP",
+              "Policy tự new FileStream → nhận nguồn dòng qua contract",
+              "Interface phải phục vụ policy, không sao chép chi tiết I/O"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "LSP xét precondition/postcondition/invariant: một subclass ném NotSupported cho đầu vào base chấp nhận có thể phá caller dù build pass. OCP chỉ có ý nghĩa tại điểm mở rộng có thật; thêm interface cho mọi class không tự đạt DIP. Giữ thiết kế đơn giản nếu chỉ có một biến thể và không có ranh giới cần thay. Test hành vi trước/sau refactor để kiểm tra việc tách lớp không đổi kết quả."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "ILineSource source = new FixedLines();\nILineSource filtered = new ContainsFilter(source, \"C#\");\nConsole.WriteLine(string.Join(\" | \", filtered.Read()));\n\ninterface ILineSource { IEnumerable<string> Read(); }\nclass FixedLines : ILineSource\n{\n    public IEnumerable<string> Read() => new[] { \"Học C#\", \"Học SQL\", \"Ôn C#\" };\n}\nclass ContainsFilter : ILineSource\n{\n    private readonly ILineSource inner;\n    private readonly string keyword;\n    public ContainsFilter(ILineSource inner, string keyword)\n    { this.inner = inner; this.keyword = keyword; }\n    public IEnumerable<string> Read() => inner.Read().Where(x => x.Contains(keyword, StringComparison.Ordinal));\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Học C# | Ôn C#",
-        "steps": [
-          "FixedLines trả ba dòng theo thứ tự xác định.",
-          "ContainsFilter gọi inner.Read rồi dùng Contains với Ordinal, có phân biệt hoa thường.",
-          "Hai dòng có C# được giữ; string.Join nối bằng dấu phân cách."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "ILineSource source = new FixedLines();\nILineSource filtered = new ContainsFilter(source, \"C#\");\nConsole.WriteLine(string.Join(\" | \", filtered.Read()));\n\ninterface ILineSource { IEnumerable<string> Read(); }\nclass FixedLines : ILineSource\n{\n    public IEnumerable<string> Read() => new[] { \"Học C#\", \"Học SQL\", \"Ôn C#\" };\n}\nclass ContainsFilter : ILineSource\n{\n    private readonly ILineSource inner;\n    private readonly string keyword;\n    public ContainsFilter(ILineSource inner, string keyword)\n    { this.inner = inner; this.keyword = keyword; }\n    public IEnumerable<string> Read() => inner.Read().Where(x => x.Contains(keyword, StringComparison.Ordinal));\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Học C# | Ôn C#",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. FixedLines trả ba dòng theo thứ tự xác định. ContainsFilter gọi inner.Read rồi dùng Contains với Ordinal, có phân biệt hoa thường. Hai dòng có C# được giữ; string.Join nối bằng dấu phân cách.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "solid-refactor",
+          "title": "Policy thuần và hợp đồng bị phá",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "string[] input={\"C#\",\"SQL\",\"C# nâng cao\"};\nConsole.WriteLine(string.Join(\",\",Filter(input,\"C#\")));\nConsole.WriteLine(string.Join(\",\",new Search(new FixedSource(input)).Find(\"C#\")));\ntry{new Search(new BrokenSource()).Find(\"C#\").ToArray();}\ncatch(NotSupportedException){Console.WriteLine(\"vi phạm contract đọc\");}\nstatic IEnumerable<string> Filter(IEnumerable<string> lines,string key)=>lines.Where(s=>s.Contains(key,StringComparison.Ordinal));\ninterface IReadSource{IEnumerable<string> Read();}\nclass FixedSource(string[] lines):IReadSource{public IEnumerable<string> Read()=>lines;}\nclass BrokenSource:IReadSource{public IEnumerable<string> Read()=>throw new NotSupportedException();}\nclass Search(IReadSource source){public IEnumerable<string> Find(string key)=>source.Read().Where(s=>s.Contains(key,StringComparison.Ordinal));}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "C#,C# nâng cao\nC#,C# nâng cao\nvi phạm contract đọc",
+          "explanation": "Hai phiên bản có cùng output trên cùng input. BrokenSource cố ý giữ signature nhưng phá hợp đồng Read của ví dụ; không phải mọi exception trong implementation đều tự là vi phạm LSP.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,11 +205,67 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "SRP có nghĩa mỗi class một method?",
+          "answer": "Không, một trách nhiệm theo lý do thay đổi có thể cần nhiều method.",
+          "explanation": "Đếm method không tìm được coupling giữa nghiệp vụ và I/O.",
+          "misconception": "Class hơn một method là sai SRP.",
+          "followUp": "Đổi định dạng output nên tác động module nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "ISP giải quyết caller chỉ cần đọc thế nào?",
+          "answer": "Cho caller phụ thuộc hợp đồng đọc nhỏ phù hợp.",
+          "explanation": "Không buộc implementation read-only cung cấp Write giả.",
+          "misconception": "Interface càng nhiều method càng tái sử dụng.",
+          "followUp": "Khi nào tách nhỏ quá mức gây hại?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "DI và DIP có cùng nghĩa không?",
+          "answer": "Không; DI là kỹ thuật cấp dependency, DIP là nguyên lý hướng phụ thuộc.",
+          "explanation": "Có container vẫn có thể thiết kế dependency sai.",
+          "misconception": "Dùng DI tức tự đạt mọi SOLID.",
+          "followUp": "Composition root đặt ở đâu?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "BrokenSource biên dịch nhưng caller hỏng có thể vi phạm gì?",
+          "answer": "LSP nếu Read trái pre/postcondition mà caller hợp lệ dựa vào.",
+          "explanation": "Hợp đồng hành vi rộng hơn chữ ký.",
+          "misconception": "LSP do compiler chứng minh.",
+          "followUp": "Base cho input rỗng nhưng derived cấm thì cần phân tích gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Có nên tạo abstraction trước cho mọi thay đổi tưởng tượng?",
+          "answer": "Không, chi phí lớp và gián tiếp phải tương xứng nhu cầu thay đổi.",
+          "explanation": "OCP chọn điểm mở rộng có thật, không hứa không bao giờ sửa code.",
+          "misconception": "SOLID yêu cầu mọi thứ extensible ngay.",
+          "followUp": "Một thay đổi cụ thể nào chứng minh refactor có ích?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "architectural principles",
+          "title": "Architectural principles",
           "url": "https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+        },
+        {
+          "title": "Tài liệu API .NET theo phiên bản mục tiêu",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/c%23",
@@ -135,5 +273,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A17",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Dùng đủ năm nguyên lý để lý giải một thay đổi thực tế.",
+    "Nhận ra abstraction quá mức và vi phạm hợp đồng hành vi."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": []
 }

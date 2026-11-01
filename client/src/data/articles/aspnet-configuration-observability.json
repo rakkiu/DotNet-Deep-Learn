@@ -1,0 +1,202 @@
+{
+  "id": "aspnet-configuration-observability",
+  "title": "Configuration, Options, logging và xử lý lỗi",
+  "description": "Theo dấu cấu hình từ nguồn tới options; nối lỗi qua trace ID và phân biệt log, metric, trace.",
+  "category": "web",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Configuration hợp nhất nhiều provider theo thứ tự; nguồn thêm sau thường ghi đè key trùng. Default host/template có appsettings, environment-specific JSON, user-secrets Development khi cấu hình phù hợp, environment và command-line, nhưng phải xem host thực. Options ánh xạ phần cấu hình vào type có validation."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Biến môi trường dùng __ cho phân cấp, ví dụ Lab__Name; command-line có thể override theo host/provider order. User-secrets phục vụ development, không tự mã hóa như vault. IOptions<T> cung cấp value theo lifetime hỗ trợ; IOptionsSnapshot scoped chụp cho scope; IOptionsMonitor hỗ trợ đọc hiện tại/thông báo đổi, reload còn tùy provider.",
+        "ILogger dùng message template như \"Created {StudentId}\" giữ structured field, category/level/scope/trace ID. Không log password/token/cookie. Exception handler/ProblemDetails công bố mã lỗi và trace ID, giữ stack ở log server theo policy. Liveness hỏi process sống, readiness hỏi sẵn phục vụ theo thiết kế, không một endpoint OK chứng minh mọi dependency khỏe."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Options ValidateOnStart phát hiện thiếu/sai cấu hình sớm, nhưng không thay mọi kiểm tra hạ tầng. Log ghi sự kiện, metric tổng hợp đại lượng, trace nối đường đi qua các operation/service. OpenTelemetry là lựa chọn công cụ, không bắt dựng backend ngoài cho demo local. Mức log quá chi tiết có thể gây tải/rò dữ liệu; sampling, retention và cardinality cần chính sách."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "trace-and-options",
+          "title": "Override cấu hình và lỗi có trace ID",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/WebLab/WebLab.csproj -- --urls http://127.0.0.1:5090",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "GET",
+              "path": "/config",
+              "status": 200
+            },
+            {
+              "method": "GET",
+              "path": "/boom",
+              "status": 500
+            },
+            {
+              "method": "GET",
+              "path": "/health/live",
+              "status": 200
+            }
+          ],
+          "expected": "Config mặc định WebLab; integration test override thành TestLab qua provider test. /boom có traceId, không trả Internal lab detail.",
+          "explanation": "Chạy PowerShell $env:Lab__Name=\"Override\" trước dotnet run để override file; Bash dùng Lab__Name=Override dotnet run. Không đặt cú pháp shell này vào Program.cs.",
+          "verification": "lab-verified"
+        },
+        {
+          "id": "options-validation",
+          "title": "Thiếu options bị phát hiện khi host khởi động",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using Microsoft.Extensions.Hosting;using Microsoft.Extensions.DependencyInjection;using Microsoft.Extensions.Options;using Microsoft.Extensions.Logging;\nvar builder=Host.CreateApplicationBuilder();builder.Logging.ClearProviders();builder.Services.AddOptions<Config>().Validate(x=>!string.IsNullOrWhiteSpace(x.Name),\"Name required\").ValidateOnStart();\nusing var host=builder.Build();try{await host.StartAsync();}catch(OptionsValidationException){Console.WriteLine(\"startup rejected\");}\nclass Config {public string Name {get;set;}=\"\";}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "startup rejected",
+          "explanation": "Demo chỉ kiểm tra options, không mở server và không gọi dịch vụ ngoài.",
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Kiểm tra provider nào cung cấp key theo thứ tự mà không xuất giá trị secret. Xem OptionsValidationException khi startup thiếu cấu hình. Tìm traceId của ProblemDetails trong log scope để nối request tới lỗi gốc; phân biệt thiếu ready dependency với process không còn sống."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Provider thêm sau có thể đổi value key trước không?",
+          "answer": "Có theo cơ chế configuration hợp nhất thông thường.",
+          "explanation": "Phải xem thứ tự của host/provider đang dùng.",
+          "misconception": "appsettings luôn có ưu tiên cao nhất.",
+          "followUp": "Lab__Name ánh xạ key gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "User-secrets có tự là vault mã hóa không?",
+          "answer": "Không, nó là cách tách secret development khỏi repo.",
+          "explanation": "Production cần cơ chế secret phù hợp.",
+          "misconception": "Có chữ secret tức không ai trên máy đọc được.",
+          "followUp": "Không nên commit dữ liệu nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "ILogger template khác nối chuỗi ở đâu?",
+          "answer": "Template giữ field có tên cho structured logging.",
+          "explanation": "Nó hỗ trợ tìm/lọc ngữ cảnh mà không nhét secret vào text.",
+          "misconception": "Log template tự xóa mọi dữ liệu nhạy cảm.",
+          "followUp": "Trace ID giúp nối lỗi qua những bước nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "IOptionsMonitor luôn reload mọi nguồn không?",
+          "answer": "Không, khả năng thay đổi/reload phụ thuộc provider và cấu hình.",
+          "explanation": "Monitor không khiến environment variables tự phát notification đổi.",
+          "misconception": "Monitor buộc mọi config realtime.",
+          "followUp": "Snapshot scoped khác singleton options thế nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Readiness 200 có đồng nghĩa mọi giao dịch sẽ thành công?",
+          "answer": "Không, health contract chỉ đo điều nó được thiết kế đo.",
+          "explanation": "Cần phân biệt live/readiness và metric/trace vận hành.",
+          "misconception": "Một health URL đủ chứng minh hệ thống không lỗi.",
+          "followUp": "Cardinality cao trong metric gây đánh đổi gì?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "Configuration providers và precedence",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-10.0"
+        },
+        {
+          "title": "Options, snapshots và monitor",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/options"
+        },
+        {
+          "title": "Logging in C# and .NET",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/logging"
+        },
+        {
+          "title": "Error handling và ProblemDetails",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-10.0"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N06",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Giải thích precedence và startup validation theo đúng host.",
+    "Giữ lỗi có ngữ cảnh mà không lộ secret/stack trong response."
+  ],
+  "prerequisiteIds": [
+    "dependency-injection",
+    "aspnet-first-app"
+  ],
+  "relatedIds": [
+    "dependency-injection",
+    "csharp-exceptions",
+    "dotnet-delivery-basics"
+  ]
+}

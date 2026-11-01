@@ -1,0 +1,6 @@
+@model StudentListViewModel
+<h1>Sinh viên</h1>
+@if (TempData["Message"] is string message) { <p>@message</p> }
+@if (Model.Names.Count == 0) { <p>Chưa có sinh viên</p> }
+else { @foreach (var name in Model.Names) { <partial name="_Name" model="name"/> } }
+<a asp-controller="Students" asp-action="Create">Tạo sinh viên</a>

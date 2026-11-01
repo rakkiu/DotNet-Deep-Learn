@@ -1,0 +1,221 @@
+{
+  "id": "csharp-value-modeling",
+  "title": "Struct, record, immutability và equality",
+  "description": "Chọn cách mô hình hóa giá trị và identity; phân biệt sao chép, equality và tính bất biến của cả graph.",
+  "category": "foundation",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Class có reference semantics mặc định; struct có value-copy semantics. Record class vẫn là reference type nhưng compiler hỗ trợ value equality theo member; record struct là value type với cơ chế record. Chọn theo ý nghĩa dữ liệu và identity, không bằng khẩu quyết struct luôn nhanh hơn class."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "== có thể được overload, Equals là contract equality, object.Equals xử lý null rồi dispatch phù hợp, ReferenceEquals hỏi identity reference và có thể boxing value types. IEquatable<T> cung cấp contract equality mạnh kiểu. Hai object equal phải có hash bằng nhau; hai hash bằng nhau không chứng minh equal. GetHashCode không là ID bền vững để lưu DB.",
+        "init và required có vai trò trong khởi tạo, readonly struct hạn chế mutation của instance; readonly reference không làm object bên trong immutable. with thường shallow copy: record chứa List vẫn có thể chia sẻ cùng List. Entity có identity thường cần suy nghĩ khác DTO/value object như Money."
+      ],
+      "tables": [
+        {
+          "caption": "Chọn kiểu",
+          "headers": [
+            "Kiểu",
+            "Copy",
+            "Equality mặc định đáng chú ý",
+            "Kế thừa"
+          ],
+          "rows": [
+            [
+              "class",
+              "Reference",
+              "Identity nếu không override",
+              "Có class inheritance"
+            ],
+            [
+              "struct",
+              "Giá trị field",
+              "ValueType equality hoặc tùy override",
+              "Không kế thừa struct/class khác theo kiểu class"
+            ],
+            [
+              "record class",
+              "Reference; with tạo bản shallow",
+              "Member-based được compiler hỗ trợ",
+              "Record inheritance theo quy tắc record"
+            ],
+            [
+              "record struct",
+              "Giá trị; with copy field",
+              "Member-based",
+              "Không có class inheritance"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Mutable struct truyền/copy hoặc gọi member qua readonly receiver có thể tạo defensive copy, nên thay đổi không tới nơi caller tưởng. Struct lớn có chi phí copy; ref/in cũng có trade-off và cần đo. Dictionary key phải giữ equality/hash ổn định khi đang nằm trong collection. Record có member mutable không tự deep immutable; dùng immutable elements/collections hoặc copy có chủ đích khi hợp đồng cần snapshot."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "record-shallow",
+          "title": "with không clone List",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var a=new Student(\"An\",new List<int>{8});var b=a with{Name=\"Bình\"};b.Scores.Add(9);\nConsole.WriteLine(ReferenceEquals(a,b));Console.WriteLine(ReferenceEquals(a.Scores,b.Scores));Console.WriteLine(a.Scores.Count);\nConsole.WriteLine(new Point(1,2)==new Point(1,2));\nrecord Student(string Name,List<int> Scores);readonly record struct Point(int X,int Y);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "False\nTrue\n2\nTrue",
+          "explanation": "Hai record instance khác nhưng list là cùng reference; Point có equality theo hai giá trị.",
+          "verification": "ran"
+        },
+        {
+          "id": "mutable-key",
+          "title": "Key đổi hash khi đang trong dictionary",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var key=new Key{Code=1};var map=new Dictionary<Key,string>{{key,\"data\"}};Console.WriteLine(map.ContainsKey(key));key.Code=2;Console.WriteLine(map.ContainsKey(key));\nclass Key:IEquatable<Key>{public int Code;public bool Equals(Key? other)=>other?.Code==Code;public override bool Equals(object? other)=>other is Key k&&Equals(k);public override int GetHashCode()=>Code;}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\nFalse",
+          "explanation": "Hash ở mẫu được định nghĩa là Code để minh họa deterministically, không in hoặc coi hash của string là ID cố định.",
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Khi key không tra được, kiểm tra member tham gia Equals/GetHashCode đã thay đổi chưa. Dùng ReferenceEquals cho class khi muốn hỏi identity, so giá trị cho value object; kiểm tra từng reference bên trong with bằng debugger thay vì đoán đã clone sâu."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Record class có thành value type không?",
+          "answer": "Không, nó vẫn là reference type.",
+          "explanation": "Value equality và copy semantics là hai trục khác nhau.",
+          "misconception": "Có chữ record tức nằm trong nhóm struct.",
+          "followUp": "with tạo object nào và giữ reference nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Equal objects có cần cùng hash không?",
+          "answer": "Có theo contract equality/hash.",
+          "explanation": "Nhưng collision cho phép object không equal có cùng hash.",
+          "misconception": "Hash bằng nhau chứng minh equal.",
+          "followUp": "Có thể lưu GetHashCode làm khóa lâu dài không?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "readonly List field có deep immutable không?",
+          "answer": "Không, chỉ reference không gán lại ngoài nơi hợp lệ.",
+          "explanation": "List và elements vẫn có thể mutable.",
+          "misconception": "readonly thay thế mọi immutable collection.",
+          "followUp": "Money cần đảm bảo invariant nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Vì sao dictionary khó tìm key sau khi Code đổi?",
+          "answer": "Hash/equality khi tra không còn khớp thông tin đã lưu lúc insert.",
+          "explanation": "Key cần ổn định trong thời gian nằm trong collection.",
+          "misconception": "Dictionary tự theo dõi mutation mọi field.",
+          "followUp": "Thay bằng record bất biến giải quyết phần nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Struct lớn có luôn nhanh hơn class vì tránh heap không?",
+          "answer": "Không; copy cost, layout, boxing và lifetime phải xét theo workload.",
+          "explanation": "Vị trí stack/heap không là định nghĩa value type.",
+          "misconception": "Struct luôn nhanh và không allocation.",
+          "followUp": "in/readonly receiver có thể phát sinh defensive copy khi nào?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "Record, with và value equality",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/records"
+        },
+        {
+          "title": "Equality cho value và reference types",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/equality-comparisons"
+        },
+        {
+          "title": "Thiết kế value types",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/choosing-between-class-and-struct"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N01",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "So sánh class/struct/record class/record struct theo hành vi.",
+    "Thiết kế equality/hash/key và hiểu giới hạn của with/readonly."
+  ],
+  "prerequisiteIds": [
+    "csharp-types",
+    "oop-classes"
+  ],
+  "relatedIds": [
+    "csharp-types",
+    "oop-classes",
+    "csharp-collections"
+  ]
+}

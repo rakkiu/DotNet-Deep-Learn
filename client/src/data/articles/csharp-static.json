@@ -1,7 +1,7 @@
 {
   "id": "csharp-static",
   "title": "static, vòng đời state và phương thức mở rộng",
-  "description": "static gắn member với type thay vì từng instance. Static method có thể gọi qua tên type; static field là trạng thái dùng chung cho type được nạp tương ứng. Extension method cổ điển là static method có…",
+  "description": "static gắn member với type thay vì từng instance. Static method có thể gọi qua tên type; static field là trạng thái dùng chung cho type được nạp tương ứng. Extension method cổ điển là static method có tham số this, được gọi với cú pháp giống method trên object.",
   "category": "architecture",
   "kind": "Tính năng ngôn ngữ",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "static gắn member với type thay vì từng instance. Static method có thể gọi qua tên type; static field là trạng thái dùng chung cho type được nạp tương ứng. Extension method cổ điển là static method có tham số this, được gọi với cú pháp giống method trên object."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Static state không phải dữ liệu dùng chung giữa mọi server hoặc mọi process. Mỗi closed generic type như Cache<int> và Cache<string> có static state riêng; các AssemblyLoadContext cũng có thể ảnh hưởng danh tính type. Chọn static theo trách nhiệm, không theo lời hứa tự động nhanh hơn.",
         "Một hàm static vẫn có thể nhận object rồi truy cập member instance qua tham chiếu đó. Singleton trong DI là một instance mỗi container, không tự có thread safety. Với khởi tạo lười cân nhắc Lazy<T> thay vì tự viết double-checked locking thiếu an toàn."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,80 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Instance member thuộc từng object; static member thuộc type được nạp. const là hằng compile-time, readonly gán trong các vị trí cho phép của instance; static readonly là field type không gán lại ngoài khởi tạo hợp lệ. Một readonly reference tới List vẫn cho sửa List.",
+        "Extension this truyền thống nằm trong static class có namespace trong scope. sum.Twice() tương ứng NumberExtensions.Twice(sum), không thêm virtual member vào type gốc. Instance member phù hợp được ưu tiên; extension được phân giải theo kiểu tĩnh, không override class."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Static constructor có bảo đảm chạy tối đa một lần theo type load thích hợp, nhưng không tóm tắt mọi trường hợp thành lần đầu chạm tên type: beforefieldinit và cách khai báo ảnh hưởng thời điểm khởi tạo. Lỗi khởi tạo có thể xuất hiện như TypeInitializationException. Lazy<T> kiểm soát khởi tạo lười theo mode, không làm mọi thao tác sau đó thread-safe. Static generic Cache<int> và Cache<string> có state riêng; nhiều process không chia sẻ static."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "var a = new Counter();\nvar b = new Counter();\na.Increase();\nConsole.WriteLine(a.Value);\nConsole.WriteLine(b.Value);\nConsole.WriteLine(Counter.Total);\n\nclass Counter\n{\n    public int Value { get; private set; }\n    public static int Total { get; private set; }\n    public void Increase() { Value++; Total++; }\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "1\n0\n1",
-        "steps": [
-          "Hai Counter mới có Value bằng 0.",
-          "a.Increase tăng riêng a.Value và tăng Counter.Total.",
-          "b.Value không bị sửa; ba dòng in là 1,0,1."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var a = new Counter();\nvar b = new Counter();\na.Increase();\nConsole.WriteLine(a.Value);\nConsole.WriteLine(b.Value);\nConsole.WriteLine(Counter.Total);\n\nclass Counter\n{\n    public int Value { get; private set; }\n    public static int Total { get; private set; }\n    public void Increase() { Value++; Total++; }\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "1\n0\n1",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Hai Counter mới có Value bằng 0. a.Increase tăng riêng a.Value và tăng Counter.Total. b.Value không bị sửa; ba dòng in là 1,0,1.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "extensions-generic-static",
+          "title": "Extension và static trên closed generic type",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using Helpers;\nCache<int>.Count++;Console.WriteLine($\"{Cache<int>.Count}/{Cache<string>.Count}\");\nConsole.WriteLine(3.Twice());Console.WriteLine(NumberExtensions.Twice(3));\nvar lazy=new Lazy<List<int>>(()=>new(){1});lazy.Value.Add(2);Console.WriteLine(lazy.Value.Count);\nstatic class Cache<T>{public static int Count;}",
+            "NumberExtensions.cs": "namespace Helpers;\npublic static class NumberExtensions {public static int Twice(this int n)=>checked(n*2);} ",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "1/0\n6\n6\n2",
+          "explanation": "Extension được gọi cả hai cú pháp với cùng kết quả; state riêng theo type argument. Lazy chỉ khởi tạo list, không biến list thành immutable.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +170,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Hai Counter instance có Value riêng nhưng Total chung không?",
+          "answer": "Có trong ví dụ tuần tự dùng cùng loaded type.",
+          "explanation": "Total static không gắn với từng object.",
+          "misconception": "Mỗi new Counter tạo lại mọi static field.",
+          "followUp": "Total++ có thread-safe không?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "readonly List có cấm Add không?",
+          "answer": "Không, nó cấm đổi field reference ở ngoài nơi hợp lệ.",
+          "explanation": "Object được trỏ tới vẫn mutable.",
+          "misconception": "readonly là deep immutable.",
+          "followUp": "Dùng ImmutableArray thay đổi contract thế nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Extension x.Twice thực chất thêm member runtime không?",
+          "answer": "Không, compiler chọn lời gọi static theo scope và kiểu tĩnh.",
+          "explanation": "Type gốc không được thay đổi thành lớp mới.",
+          "misconception": "Extension có thể override method có sẵn.",
+          "followUp": "Instance member phù hợp được ưu tiên thế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Cache<int>.Count và Cache<string>.Count có dùng chung không?",
+          "answer": "Không, closed generic types có static state riêng.",
+          "explanation": "Chỉ cùng definition chưa có nghĩa cùng field storage.",
+          "misconception": "Một static field duy nhất cho mọi T.",
+          "followUp": "Nhiều process có chia sẻ static không?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Lazy<T> làm mọi method của T thread-safe không?",
+          "answer": "Không, nó tập trung vào khởi tạo theo mode.",
+          "explanation": "Mutable object sau khởi tạo cần chính sách đồng bộ riêng.",
+          "misconception": "Khởi tạo an toàn là mọi thao tác an toàn.",
+          "followUp": "Lỗi trong static constructor được nhìn thấy qua exception nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "static",
+          "title": "static (C# Reference)",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/static"
         },
         {
-          "title": "extension methods",
+          "title": "Extension members (C# Programming Guide)",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods"
         }
       ],
@@ -139,5 +238,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A15",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Quan sát state theo instance/type và gọi extension thật.",
+    "Phân biệt readonly, lazy initialization và state dùng chung."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": []
 }

@@ -1,7 +1,7 @@
 {
   "id": "httpclient-json",
   "title": "HttpClient và System.Text.Json",
-  "description": "HttpClient gửi HTTP request và nhận response từ ứng dụng .NET. System.Text.Json chuyển giữa JSON và object .NET; GetFromJsonAsync kết hợp gửi request và deserialize. Chúng là thư viện, không phải API …",
+  "description": "HttpClient gửi HTTP request và nhận response từ ứng dụng .NET. System.Text.Json chuyển giữa JSON và object .NET; GetFromJsonAsync kết hợp gửi request và deserialize. Chúng là thư viện, không phải API server hay database.",
   "category": "network",
   "kind": "Thư viện HTTP client / serializer",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "HttpClient gửi HTTP request và nhận response từ ứng dụng .NET. System.Text.Json chuyển giữa JSON và object .NET; GetFromJsonAsync kết hợp gửi request và deserialize. Chúng là thư viện, không phải API server hay database."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Client thật cần cancellation, timeout, xử lý non-2xx và JSON không hợp lệ. EnsureSuccessStatusCode chấp nhận 2xx, không chỉ riêng 200; GetFromJsonAsync đã dùng kiểm tra thành công. Response thành công vẫn có thể có body không đúng schema kỳ vọng.",
         "Không new/dispose HttpClient cho từng request trong vòng lặp production. Dùng client sống lâu với PooledConnectionLifetime thích hợp hoặc IHttpClientFactory; fixture sở hữu client trong một lượt thử độc lập nên dùng using."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,106 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Hai chiến lược hợp lệ: HttpClient sống lâu với SocketsHttpHandler.PooledConnectionLifetime phù hợp, hoặc named/typed client từ IHttpClientFactory quản lý handler pool. Không giữ typed client transient trong singleton tùy tiện. BaseAddress + relative URI theo quy tắc URI, dấu / đầu hoặc cuối đổi path.",
+        "GetAsync trả response cần Dispose, EnsureSuccessStatusCode chấp nhận 2xx. GetFromJsonAsync có thể lỗi JSON dù status 2xx; 204 body rỗng, JSON null, property thiếu/sai schema phải được phân biệt. Web defaults có casing/options khác JsonSerializerOptions mặc định; deserialize không thay validation nghiệp vụ."
+      ],
+      "tables": [
+        {
+          "caption": "Ghép URI",
+          "headers": [
+            "BaseAddress",
+            "Relative",
+            "Kết quả"
+          ],
+          "rows": [
+            [
+              "https://x.test/api/",
+              "students",
+              "https://x.test/api/students"
+            ],
+            [
+              "https://x.test/api",
+              "students",
+              "https://x.test/students"
+            ],
+            [
+              "https://x.test/api/",
+              "/students",
+              "https://x.test/students"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "ResponseHeadersRead cho phép bắt đầu xử lý trước body đầy đủ; timeout của lời gửi/headers không tự là budget trọn quá trình đọc body trong mọi API. Truyền token cả SendAsync và Read/Deserialize, đặt quota dữ liệu. Retry chỉ lỗi tạm thời theo idempotency, có budget/backoff/jitter; circuit breaker đổi hành vi tải, không tự sửa dependency. Shared mutable DefaultRequestHeaders và URL do caller tùy ý có rủi ro cạnh tranh/SSRF."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "using System.Net;\nusing System.Net.Http.Json;\nusing System.Text;\nusing var client = new HttpClient(new FixtureHandler()) { BaseAddress = new Uri(\"https://example.test/\") };\nvar student = await client.GetFromJsonAsync<Student>(\"students/1\");\nConsole.WriteLine(student?.Name ?? \"(rỗng)\");\nrecord Student(string Name);\nclass FixtureHandler : HttpMessageHandler\n{\n    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)\n    {\n        string json = \"{\\\"name\\\":\\\"An\\\"}\";\n        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) {\n            Content = new StringContent(json, Encoding.UTF8, \"application/json\")\n        });\n    }\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "An",
-        "steps": [
-          "Tạo client với handler trả status 200 và JSON cố định.",
-          "GetFromJsonAsync yêu cầu students/1, kiểm tra response và đọc JSON.",
-          "Student.Name nhận An và được in; không có request Internet thật."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Net;\nusing System.Net.Http.Json;\nusing System.Text;\nusing var client = new HttpClient(new FixtureHandler()) { BaseAddress = new Uri(\"https://example.test/\") };\nvar student = await client.GetFromJsonAsync<Student>(\"students/1\");\nConsole.WriteLine(student?.Name ?? \"(rỗng)\");\nrecord Student(string Name);\nclass FixtureHandler : HttpMessageHandler\n{\n    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)\n    {\n        string json = \"{\\\"name\\\":\\\"An\\\"}\";\n        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) {\n            Content = new StringContent(json, Encoding.UTF8, \"application/json\")\n        });\n    }\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "An",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Tạo client với handler trả status 200 và JSON cố định. GetFromJsonAsync yêu cầu students/1, kiểm tra response và đọc JSON. Student.Name nhận An và được in; không có request Internet thật.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "http-error-matrix",
+          "title": "404, 500, 204, JSON và token với handler offline",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Net;using System.Net.Http.Json;using System.Text;using System.Text.Json;\nusing var client=new HttpClient(new Fixture()){BaseAddress=new Uri(\"https://example.test/api/\")};\nforeach(string path in new[]{\"404\",\"500\",\"204\",\"bad\",\"null\",\"missing\"}){try{var dto=await client.GetFromJsonAsync<Student>(path);if(dto?.Name is null)throw new InvalidDataException(\"missing name\");Console.WriteLine(dto.Name);}catch(Exception ex)when(ex is HttpRequestException or JsonException or InvalidDataException){Console.WriteLine(path+\":\"+ex.GetType().Name);}}\nusing var cts=new CancellationTokenSource();cts.Cancel();try{await client.GetAsync(\"slow\",cts.Token);}catch(OperationCanceledException){Console.WriteLine(\"canceled\");}\nusing var request=new HttpRequestMessage(HttpMethod.Get,\"large\");using var response=await client.SendAsync(request,HttpCompletionOption.ResponseHeadersRead);response.EnsureSuccessStatusCode();await using var stream=await response.Content.ReadAsStreamAsync();byte[] buffer=new byte[16];int total=0,n;try{while((n=await stream.ReadAsync(buffer))>0){total+=n;if(total>32)throw new InvalidDataException(\"body quota\");}}catch(InvalidDataException){Console.WriteLine(\"quota\");}\nrecord Student(string? Name);\nclass Fixture:HttpMessageHandler{protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken t){string p=request.RequestUri!.Segments.Last();if(p==\"slow\"){await Task.Delay(Timeout.Infinite,t);}var status=p switch{\"404\"=>HttpStatusCode.NotFound,\"500\"=>HttpStatusCode.InternalServerError,\"204\"=>HttpStatusCode.NoContent,_=>HttpStatusCode.OK};string body=p switch{\"204\"=>\"\",\"bad\"=>\"{\",\"null\"=>\"null\",\"missing\"=>\"{}\",\"large\"=>new string('x',128),_=>\"{\\\"name\\\":\\\"An\\\"}\"};return new(status){Content=new StringContent(body,Encoding.UTF8,\"application/json\")};}}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "404:HttpRequestException\n500:HttpRequestException\n204:JsonException\nbad:JsonException\nnull:InvalidDataException\nmissing:InvalidDataException\ncanceled\nquota",
+          "explanation": "Handler không mở mạng; error matrix giữ status/body có kiểm soát. using/await using dọn request, response và stream. Typed client cấu hình AddHttpClient trong WebLab/guide được liên kết.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,18 +196,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "2xx có bảo đảm body hợp schema không?",
+          "answer": "Không, JSON có thể rỗng, lỗi hoặc thiếu field nghiệp vụ.",
+          "explanation": "Status transport thành công và dữ liệu hợp đồng là hai điều kiện.",
+          "misconception": "EnsureSuccessStatusCode xác minh mọi property.",
+          "followUp": "204 với GetFromJson cần policy gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "BaseAddress /api không có slash cuối có ghép /api/students không?",
+          "answer": "Không với relative students, segment api bị thay theo URI rules.",
+          "explanation": "Cần nhìn URI cuối gửi thật trong handler/log.",
+          "misconception": "Ghép URI luôn là nối hai string.",
+          "followUp": "Relative bắt đầu / có tác dụng gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "ResponseHeadersRead có nghĩa đọc xong body chưa?",
+          "answer": "Chưa, caller quản lý đọc stream tiếp.",
+          "explanation": "Token/quota phải áp dụng cho bước body riêng phù hợp.",
+          "misconception": "HttpClient.Timeout luôn bao trọn mọi đọc stream sau đó.",
+          "followUp": "Dispose response tác động resource nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Retry mọi request POST khi 500 có an toàn không?",
+          "answer": "Không, server có thể đã thực hiện tác dụng phụ trước lỗi/đứt kết nối.",
+          "explanation": "Cần idempotency policy và budget cho retry.",
+          "misconception": "500 luôn chứng minh chưa có thay đổi.",
+          "followUp": "Backoff/jitter và circuit breaker đổi tải thế nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Typed client từ factory giữ trong singleton vô hạn có gì cần xem?",
+          "answer": "Lifetime handler/DNS và dependency bị capture có thể trái thiết kế.",
+          "explanation": "Factory là công cụ quản lý lifecycle, không miễn trừ đánh giá cách giữ client.",
+          "misconception": "AddHttpClient khiến mọi lifetime tự đúng.",
+          "followUp": "PooledConnectionLifetime giúp xử lý điều gì?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "httpclient guidelines",
+          "title": "Guidelines for using HttpClient",
           "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines"
         },
         {
-          "title": "overview",
+          "title": "JSON serialization and deserialization in .NET - overview",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview"
         },
         {
-          "title": "httpclient factory",
+          "title": "IHttpClientFactory with .NET",
           "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/httpclient-factory"
         }
       ],
@@ -143,5 +268,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A47",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Quan sát status/JSON/cancel và URI thực gửi mà không gọi Internet.",
+    "Thiết kế lifetime, streaming quota và retry theo hợp đồng."
+  ],
+  "prerequisiteIds": [
+    "dotnet-streams",
+    "async-await"
+  ],
+  "relatedIds": []
 }

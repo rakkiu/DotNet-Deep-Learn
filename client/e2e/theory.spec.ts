@@ -8,7 +8,7 @@ test("library, body search, accents, filters and clear state", async ({
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "Hiểu công nghệ",
   );
-  await expect(page.locator(".article-card")).toHaveCount(47);
+  await expect(page.locator(".article-card")).toHaveCount(59);
   const search = page.getByRole("textbox", {
     name: "Tìm trong nội dung bài viết",
   });
@@ -24,27 +24,32 @@ test("library, body search, accents, filters and clear state", async ({
     page.getByRole("heading", { name: "Chưa tìm thấy nội dung phù hợp" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Xóa bộ lọc" }).click();
-  await expect(page.locator(".article-card")).toHaveCount(47);
+  await expect(page.locator(".article-card")).toHaveCount(59);
   await page
     .getByRole("button", { name: "Đồng thời & bất đồng bộ", exact: true })
     .click();
-  await expect(page.locator(".article-card")).toHaveCount(7);
+  await expect(page.locator(".article-card")).toHaveCount(8);
   await page.reload();
-  await expect(page.locator(".article-card")).toHaveCount(7);
+  await expect(page.locator(".article-card")).toHaveCount(8);
 });
-test("all 47 deep links render complete theory with no runtime errors or answer controls", async ({
+test("all 59 deep links render theory, examples and explanatory disclosures", async ({
   page,
 }) => {
+  test.setTimeout(120000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   for (const l of data.lessons) {
     await page.goto(`/#/read/${l.id}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(l.title);
-    await expect(page.locator(".article-section")).toHaveCount(11);
-    await expect(page.locator(".code-block").first()).toBeVisible();
-    await expect(page.locator("#resources a")).toHaveCount(
-      l.resourceCount,
+    await expect(page.locator(".article-section")).toHaveCount(
+      l.origin === "lecture" ? 15 : 7,
     );
+    await expect(page.locator(".code-block").first()).toBeVisible();
+    await expect(page.locator(".qa")).toHaveCount(5);
+    expect(
+      await page.locator(".worked-example").count(),
+    ).toBeGreaterThanOrEqual(2);
+    await expect(page.locator("#resources a")).toHaveCount(l.resourceCount);
   }
   expect(errors).toEqual([]);
   await expect(
@@ -91,6 +96,81 @@ test("source coverage maps all lectures to articles", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Decorator — mở rộng bằng cách bọc",
   );
+});
+
+test("reading paths, extension origin, disclosure answers and labelled order", async ({
+  page,
+}) => {
+  await page.goto("/#/paths/foundation");
+  await expect(page.locator(".path-module")).toHaveCount(6);
+  await expect(page.locator(".path-module li")).toHaveCount(59);
+  await page
+    .locator(".path-switch")
+    .getByRole("link", { name: "Ôn phỏng vấn", exact: true })
+    .click();
+  await page.locator(".path-module li a").first().click();
+  await expect(page).toHaveURL(/order=interview#questions$/);
+  const answer = page.locator(".qa").first();
+  await expect(answer).not.toHaveAttribute("open");
+  await answer.locator("summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(answer).toHaveAttribute("open", "");
+  await expect(
+    answer.getByRole("heading", { name: "Hiểu nhầm thường gặp" }),
+  ).toBeVisible();
+  await page.locator(".article-pagination a").last().click();
+  await expect(page).toHaveURL(/order=interview#questions$/);
+  await page.goto("/#/read/csharp-value-modeling");
+  await expect(page.locator(".article-header .eyebrow")).toContainText(
+    "MỞ RỘNG ĐỂ ÔN PHỎNG VẤN",
+  );
+  await expect(page.locator(".article-facts")).toContainText("7 mục");
+  await expect(
+    page.locator('#reading-order option[value="lecture"]'),
+  ).toHaveCount(0);
+  await page.goto("/#/sources");
+  await expect(page.locator(".extension-list>a")).toHaveCount(12);
+  await page.goto("/#/?origin=extension");
+  await expect(page.locator(".article-card")).toHaveCount(12);
+  const download = await page.request.get("/examples/dotnet-labs.zip");
+  expect(download.status()).toBe(200);
+  expect((await download.body()).subarray(0, 2).toString()).toBe("PK");
+});
+
+test("copy contains only the displayed source, tables scroll independently and intro stays complete", async ({
+  page,
+  context,
+  browserName,
+}) => {
+  await page.goto("/#/read/csharp-types#variations");
+  const block = page
+    .locator("#variations .code-block")
+    .filter({
+      has: page.locator(".code-toolbar>span", { hasText: "Program.cs" }),
+    })
+    .first();
+  if (browserName === "chromium") {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await block
+      .getByRole("button", { name: "Sao chép Program.cs", exact: true })
+      .click();
+    expect(
+      (await page.evaluate(() => navigator.clipboard.readText())).replaceAll(
+        "\r\n",
+        "\n",
+      ),
+    ).toBe(await block.locator("code").innerText());
+  }
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.goto("/#/read/efcore-relationships");
+  const deck = page.locator(".article-deck");
+  expect((await deck.innerText()).endsWith("…")).toBe(false);
+  await page.goto("/#/guide");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("debug");
 });
 test("reading is available when old data is corrupt and localStorage is blocked", async ({
   page,
@@ -139,7 +219,14 @@ test("layout, mobile menu and keyboard search", async ({ page, isMobile }) => {
   await expect(
     page.locator(".article-card").filter({ hasText: "Reflection và metadata" }),
   ).toHaveCount(1);
-  for (const url of ["/#/", "/#/read/efcore-relationships", "/#/sources"]) {
+  for (const url of [
+    "/#/",
+    "/#/read/efcore-relationships",
+    "/#/sources",
+    "/#/read/csharp-types#junior",
+    "/#/paths/foundation",
+    "/#/guide",
+  ]) {
     await page.goto(url);
     expect(
       await page.evaluate(
@@ -151,7 +238,12 @@ test("layout, mobile menu and keyboard search", async ({ page, isMobile }) => {
 test("light and dark library and reader pass accessibility checks", async ({
   page,
 }) => {
-  for (const url of ["/#/", "/#/read/async-await"]) {
+  for (const url of [
+    "/#/",
+    "/#/read/async-await",
+    "/#/paths/foundation",
+    "/#/read/aspnet-web-api-design#questions",
+  ]) {
     await page.goto(url);
     for (const dark of [false, true]) {
       if (dark)

@@ -1,7 +1,7 @@
 {
   "id": "relational-databases",
   "title": "SQL, SQL Server và SQLite",
-  "description": "SQL là ngôn ngữ mô tả truy vấn và thay đổi dữ liệu quan hệ. SQL Server là hệ quản trị database chạy dạng dịch vụ; SQLite là engine nhúng thường lưu một database trong file. EF Core là ORM nằm trên các…",
+  "description": "SQL là ngôn ngữ mô tả truy vấn và thay đổi dữ liệu quan hệ. SQL Server là hệ quản trị database chạy dạng dịch vụ; SQLite là engine nhúng thường lưu một database trong file. EF Core là ORM nằm trên các engine này, không phải thứ thay thế database. SQLite được dùng cho ví dụ độc lập, còn bài giảng giới thiệu provider SQL Server.",
   "category": "data",
   "kind": "Ngôn ngữ truy vấn / database",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "SQL là ngôn ngữ mô tả truy vấn và thay đổi dữ liệu quan hệ. SQL Server là hệ quản trị database chạy dạng dịch vụ; SQLite là engine nhúng thường lưu một database trong file. EF Core là ORM nằm trên các engine này, không phải thứ thay thế database. SQLite được dùng cho ví dụ độc lập, còn bài giảng giới thiệu provider SQL Server."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -40,7 +40,7 @@
       "paragraphs": [
         "Không chọn SQLite cho tải nhiều writer từ nhiều máy như thể nó là server database đầy đủ. Không vận hành SQL Server chỉ để lưu một tệp cấu hình nhỏ. Không nối input vào SQL string và không cho tài khoản app quyền quản trị schema nếu chỉ cần CRUD."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -82,31 +82,106 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "PK định danh, FK ràng buộc tham chiếu; unique chống trùng, NOT NULL cấm thiếu và CHECK áp quy tắc hàng theo engine. UPDATE/DELETE phải có điều kiện đúng. IS NULL kiểm tra null, so =NULL không có semantics như so số. INNER JOIN chỉ giữ match, LEFT JOIN còn giữ dòng trái không match. GROUP BY/HAVING nhóm và lọc nhóm; không có ORDER BY thì không hứa thứ tự.",
+        "DataLab là lối chạy SQL qua Microsoft.Data.Sqlite/EF provider .NET, không bắt cài sqlite3 shell. Database luôn mới trong thư mục temp riêng. FromSql interpolation hoặc DbParameter đưa giá trị riêng khỏi SQL text, khác nối input vào string lệnh."
+      ],
+      "tables": [
+        {
+          "caption": "Hai engine trong bối cảnh học",
+          "headers": [
+            "Thuộc tính",
+            "SQLite",
+            "SQL Server"
+          ],
+          "rows": [
+            [
+              "Mô hình",
+              "Engine nhúng/file",
+              "Dịch vụ nhiều client"
+            ],
+            [
+              "Kiểu/identity",
+              "Affinity và INTEGER PRIMARY KEY",
+              "Kiểu/cột identity theo SQL Server"
+            ],
+            [
+              "Concurrency/isolation",
+              "Quy tắc lock/MVCC riêng, hạn chế writer",
+              "Cơ chế lock/version/isolation riêng"
+            ],
+            [
+              "Test",
+              "Nhanh cho relational local",
+              "Cần engine tương ứng khi xác minh SQL Server semantics"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "ACID phụ thuộc transaction và engine/isolation; dirty/non-repeatable/phantom reads không thể tóm tắt như nhau cho mọi DB. Deadlock cần xử lý theo chính sách retry có giới hạn và đọc lại điều kiện. Index hỗ trợ một số đường tìm nhưng tốn ghi/bộ nhớ và optimizer có thể không chọn. Composite index phụ thuộc thứ tự cột và query cụ thể; xem execution plan. SQL Server khác SQLite về typing, collation, identity, khóa/concurrency và dialect; test SQLite không chứng minh toàn bộ hành vi SQL Server."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "sqlite3 school.db\n-- Nhập các câu SQL bên dưới trong sqlite3 shell\n-- .quit để đóng shell",
-        "code": "CREATE TABLE Students (\n    Id INTEGER PRIMARY KEY,\n    Name TEXT NOT NULL,\n    Score INTEGER NOT NULL\n);\nINSERT INTO Students (Id, Name, Score) VALUES (1, 'An', 8);\nSELECT Name, Score FROM Students WHERE Score >= 8;",
-        "file": "schema.sql",
-        "language": "sql",
-        "files": {},
-        "output": "An|8 (định dạng mặc định của sqlite3 shell)",
-        "steps": [
-          "Ví dụ dùng SQLite để dễ chạy local; cú pháp kiểu dữ liệu ở SQL Server có khác biệt.",
-          "PRIMARY KEY và NOT NULL là ràng buộc database; WHERE lọc dòng và SELECT chọn cột."
-        ],
-        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "SQL cơ bản (sqlite3 shell)",
+          "kind": "sql",
+          "label": "SQL chạy trong database demo mới",
+          "shell": "sqlite3",
+          "input": "Bảng Students mới, một dòng An điểm 8.",
+          "setup": "sqlite3 --version\nsqlite3 school.db",
+          "files": {
+            "schema.sql": "CREATE TABLE Students (\n    Id INTEGER PRIMARY KEY,\n    Name TEXT NOT NULL,\n    Score INTEGER NOT NULL\n);\nINSERT INTO Students (Id, Name, Score) VALUES (1, 'An', 8);\nSELECT Name, Score FROM Students WHERE Score >= 8;"
+          },
+          "expected": "An|8 (định dạng mặc định của sqlite3 shell)",
+          "explanation": "Cần cài sqlite3 shell và mở một database demo mới. Nếu không có shell, chạy DataLab qua provider .NET theo ví dụ tiếp theo; không dán câu SQL vào PowerShell.",
+          "verification": "sql-verified"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "left-join-sql",
+          "title": "LEFT JOIN, nhóm rỗng và query có parameter",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/DataLab/DataLab.csproj",
+          "project": "examples/DataLab/DataLab.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "left:CNTT:2; left:Empty:0; parameterized:1.",
+          "explanation": "SQL thật giữ khoa Empty qua LEFT JOIN; COUNT(s.Id) là 0 cho dòng không match. Parameter name An được gửi riêng qua provider, không nối vào text SQL.",
+          "verification": "lab-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "data-demo/\n├── schema.sql            # câu lệnh tạo bảng mẫu\n├── queries.sql           # truy vấn có thể review\n└── school.db             # dữ liệu SQLite local",
-        "note": "Đây là bố cục minh họa, không có một chuẩn thư mục áp dụng mọi database. Không commit file database chứa dữ liệu cá nhân; với SQL Server, dữ liệu do dịch vụ DB quản lý chứ không nằm trong wwwroot."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -117,18 +192,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "LEFT JOIN có giữ khoa không có sinh viên không?",
+          "answer": "Có, cột phía sinh viên là null.",
+          "explanation": "COUNT(s.Id) đếm giá trị non-null nên có thể 0.",
+          "misconception": "LEFT JOIN giống INNER JOIN khi không có match.",
+          "followUp": "WHERE lọc cột phải có thể loại dòng null như thế nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "So sánh NULL bằng =NULL có đúng để tìm dòng thiếu không?",
+          "answer": "Không, dùng IS NULL theo SQL semantics.",
+          "explanation": "NULL biểu diễn thiếu/unknown, không là số hay chuỗi rỗng.",
+          "misconception": "NULL luôn bằng NULL như hai int.",
+          "followUp": "WHERE unknown có được giữ không?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Vì sao cần ORDER BY cho output dự kiến?",
+          "answer": "Database không cam kết thứ tự nếu query không yêu cầu.",
+          "explanation": "Thứ tự lưu hay query lần trước không là contract.",
+          "misconception": "PK tự làm mọi SELECT được sắp.",
+          "followUp": "Phân trang ổn định cần khóa phụ nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Index có luôn làm mọi query nhanh hơn không?",
+          "answer": "Không, nó thêm chi phí ghi và chỉ giúp query/plan phù hợp.",
+          "explanation": "Cần xem cardinality, predicates và execution plan.",
+          "misconception": "Có index là không cần đọc SQL.",
+          "followUp": "Composite index liên quan thứ tự cột ra sao?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "SQLite pass có đủ chứng minh rowversion SQL Server không?",
+          "answer": "Không, engine và cơ chế concurrency token khác.",
+          "explanation": "Cần test engine đích cho hành vi đặc thù.",
+          "misconception": "Cùng SQL là cùng mọi semantics.",
+          "followUp": "Provider .NET parameter giúp chống injection theo cơ chế nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "learn.microsoft.com — what is sql server",
+          "title": "What is SQL Server?",
           "url": "https://learn.microsoft.com/en-us/sql/sql-server/what-is-sql-server"
         },
         {
-          "title": "www.sqlite.org — whentouse.html",
+          "title": "1. Situations Where SQLite Works Well",
           "url": "https://www.sqlite.org/whentouse.html"
         },
         {
-          "title": "www.sqlite.org — lang.html",
+          "title": "SQL As Understood By SQLite",
           "url": "https://www.sqlite.org/lang.html"
         }
       ],
@@ -137,5 +264,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A29",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đọc CRUD/LEFT JOIN/NULL và ràng buộc trong database mới.",
+    "Nêu khác biệt engine và đánh đổi index/isolation."
+  ],
+  "prerequisiteIds": [
+    "csharp-collections",
+    "linq-basics"
+  ],
+  "relatedIds": []
 }

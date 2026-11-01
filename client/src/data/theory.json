@@ -1,8 +1,8 @@
 {
-  "version": 2,
+  "version": 3,
   "title": "DotNet Deep Learn — Thư viện lý thuyết",
   "sourceDocument": "tech_thầy_đã_dạy.docx",
-  "sourceNote": "Phạm vi được đối chiếu với 41 mục trong bản ghi bài giảng do người dùng cung cấp. Nội dung giải thích được biên soạn lại và mở rộng; không phải bản chép nguyên văn, không tuyên bố đã xem trực tiếp video. Ví dụ đặt trong bối cảnh .NET 10; bản ghi của thầy có bối cảnh .NET 8. Những khác biệt quan trọng được ghi trong bài.",
+  "sourceNote": "47 bài gốc giữ ánh xạ 41 phần từ tài liệu bài giảng đã cung cấp; 12 bài bổ sung được đánh dấu Mở rộng để ôn phỏng vấn. Bản nâng cấp được biên soạn theo yêu cầu rà soát ngày 01/11/2026, dùng .NET10/C#14 và nguồn chính thức theo từng bài. Không tuyên bố đã xem trực tiếp video hay bảo đảm kết quả tuyển dụng.",
   "categories": [
     {
       "id": "foundation",
@@ -343,7 +343,9 @@
       "sourceParts": [
         1
       ],
-      "resourceCount": 3
+      "origin": "lecture",
+      "auditCode": "A01",
+      "resourceCount": 4
     },
     {
       "id": "csharp-language",
@@ -351,6 +353,8 @@
       "sourceParts": [
         1
       ],
+      "origin": "lecture",
+      "auditCode": "A02",
       "resourceCount": 3
     },
     {
@@ -359,6 +363,8 @@
       "sourceParts": [
         1
       ],
+      "origin": "lecture",
+      "auditCode": "A03",
       "resourceCount": 4
     },
     {
@@ -367,6 +373,8 @@
       "sourceParts": [
         2
       ],
+      "origin": "lecture",
+      "auditCode": "A04",
       "resourceCount": 3
     },
     {
@@ -375,7 +383,9 @@
       "sourceParts": [
         3
       ],
-      "resourceCount": 2
+      "origin": "lecture",
+      "auditCode": "A05",
+      "resourceCount": 3
     },
     {
       "id": "csharp-control-flow",
@@ -383,6 +393,8 @@
       "sourceParts": [
         4
       ],
+      "origin": "lecture",
+      "auditCode": "A06",
       "resourceCount": 3
     },
     {
@@ -391,7 +403,9 @@
       "sourceParts": [
         5
       ],
-      "resourceCount": 2
+      "origin": "lecture",
+      "auditCode": "A07",
+      "resourceCount": 3
     },
     {
       "id": "csharp-exceptions",
@@ -399,7 +413,9 @@
       "sourceParts": [
         6
       ],
-      "resourceCount": 2
+      "origin": "lecture",
+      "auditCode": "A08",
+      "resourceCount": 3
     },
     {
       "id": "dotnet-streams",
@@ -407,6 +423,8 @@
       "sourceParts": [
         7
       ],
+      "origin": "lecture",
+      "auditCode": "A09",
       "resourceCount": 3
     },
     {
@@ -415,6 +433,8 @@
       "sourceParts": [
         8
       ],
+      "origin": "lecture",
+      "auditCode": "A10",
       "resourceCount": 3
     },
     {
@@ -423,6 +443,8 @@
       "sourceParts": [
         9
       ],
+      "origin": "lecture",
+      "auditCode": "A11",
       "resourceCount": 3
     },
     {
@@ -431,6 +453,8 @@
       "sourceParts": [
         10
       ],
+      "origin": "lecture",
+      "auditCode": "A12",
       "resourceCount": 4
     },
     {
@@ -439,6 +463,8 @@
       "sourceParts": [
         11
       ],
+      "origin": "lecture",
+      "auditCode": "A13",
       "resourceCount": 3
     },
     {
@@ -447,6 +473,8 @@
       "sourceParts": [
         12
       ],
+      "origin": "lecture",
+      "auditCode": "A14",
       "resourceCount": 3
     },
     {
@@ -455,6 +483,8 @@
       "sourceParts": [
         13
       ],
+      "origin": "lecture",
+      "auditCode": "A15",
       "resourceCount": 3
     },
     {
@@ -463,7 +493,9 @@
       "sourceParts": [
         14
       ],
-      "resourceCount": 2
+      "origin": "lecture",
+      "auditCode": "A16",
+      "resourceCount": 3
     },
     {
       "id": "design-testing-patterns",
@@ -471,7 +503,9 @@
       "sourceParts": [
         15
       ],
-      "resourceCount": 2
+      "origin": "lecture",
+      "auditCode": "A17",
+      "resourceCount": 3
     },
     {
       "id": "unit-testing",
@@ -479,6 +513,8 @@
       "sourceParts": [
         15
       ],
+      "origin": "lecture",
+      "auditCode": "A18",
       "resourceCount": 3
     },
     {
@@ -487,7 +523,9 @@
       "sourceParts": [
         15
       ],
-      "resourceCount": 3
+      "origin": "lecture",
+      "auditCode": "A19",
+      "resourceCount": 4
     },
     {
       "id": "decorator-pattern",
@@ -495,6 +533,8 @@
       "sourceParts": [
         15
       ],
+      "origin": "lecture",
+      "auditCode": "A20",
       "resourceCount": 3
     },
     {
@@ -503,6 +543,8 @@
       "sourceParts": [
         16
       ],
+      "origin": "lecture",
+      "auditCode": "A21",
       "resourceCount": 3
     },
     {
@@ -511,6 +553,8 @@
       "sourceParts": [
         17
       ],
+      "origin": "lecture",
+      "auditCode": "A22",
       "resourceCount": 3
     },
     {
@@ -519,6 +563,8 @@
       "sourceParts": [
         18
       ],
+      "origin": "lecture",
+      "auditCode": "A23",
       "resourceCount": 3
     },
     {
@@ -527,6 +573,8 @@
       "sourceParts": [
         19
       ],
+      "origin": "lecture",
+      "auditCode": "A24",
       "resourceCount": 3
     },
     {
@@ -535,6 +583,8 @@
       "sourceParts": [
         20
       ],
+      "origin": "lecture",
+      "auditCode": "A25",
       "resourceCount": 3
     },
     {
@@ -543,7 +593,9 @@
       "sourceParts": [
         21
       ],
-      "resourceCount": 2
+      "origin": "lecture",
+      "auditCode": "A26",
+      "resourceCount": 3
     },
     {
       "id": "mvc-binding",
@@ -551,6 +603,8 @@
       "sourceParts": [
         22
       ],
+      "origin": "lecture",
+      "auditCode": "A27",
       "resourceCount": 3
     },
     {
@@ -559,6 +613,8 @@
       "sourceParts": [
         23
       ],
+      "origin": "lecture",
+      "auditCode": "A28",
       "resourceCount": 4
     },
     {
@@ -567,14 +623,18 @@
       "sourceParts": [
         23
       ],
+      "origin": "lecture",
+      "auditCode": "A29",
       "resourceCount": 4
     },
     {
       "id": "efcore-migrations",
-      "title": "EF Core Migrations và LINQ to Entities",
+      "title": "EF Core Migrations và tiến hóa schema",
       "sourceParts": [
         24
       ],
+      "origin": "lecture",
+      "auditCode": "A30",
       "resourceCount": 4
     },
     {
@@ -583,6 +643,8 @@
       "sourceParts": [
         25
       ],
+      "origin": "lecture",
+      "auditCode": "A31",
       "resourceCount": 4
     },
     {
@@ -591,6 +653,8 @@
       "sourceParts": [
         26
       ],
+      "origin": "lecture",
+      "auditCode": "A32",
       "resourceCount": 4
     },
     {
@@ -599,6 +663,8 @@
       "sourceParts": [
         27
       ],
+      "origin": "lecture",
+      "auditCode": "A33",
       "resourceCount": 3
     },
     {
@@ -607,7 +673,9 @@
       "sourceParts": [
         28
       ],
-      "resourceCount": 3
+      "origin": "lecture",
+      "auditCode": "A34",
+      "resourceCount": 4
     },
     {
       "id": "dotnet-reflection",
@@ -615,6 +683,8 @@
       "sourceParts": [
         29
       ],
+      "origin": "lecture",
+      "auditCode": "A35",
       "resourceCount": 3
     },
     {
@@ -623,6 +693,8 @@
       "sourceParts": [
         30
       ],
+      "origin": "lecture",
+      "auditCode": "A36",
       "resourceCount": 3
     },
     {
@@ -631,6 +703,8 @@
       "sourceParts": [
         31
       ],
+      "origin": "lecture",
+      "auditCode": "A37",
       "resourceCount": 4
     },
     {
@@ -639,6 +713,8 @@
       "sourceParts": [
         32
       ],
+      "origin": "lecture",
+      "auditCode": "A38",
       "resourceCount": 3
     },
     {
@@ -647,6 +723,8 @@
       "sourceParts": [
         33
       ],
+      "origin": "lecture",
+      "auditCode": "A39",
       "resourceCount": 3
     },
     {
@@ -655,6 +733,8 @@
       "sourceParts": [
         34
       ],
+      "origin": "lecture",
+      "auditCode": "A40",
       "resourceCount": 3
     },
     {
@@ -663,6 +743,8 @@
       "sourceParts": [
         35
       ],
+      "origin": "lecture",
+      "auditCode": "A41",
       "resourceCount": 4
     },
     {
@@ -671,6 +753,8 @@
       "sourceParts": [
         36
       ],
+      "origin": "lecture",
+      "auditCode": "A42",
       "resourceCount": 3
     },
     {
@@ -679,7 +763,9 @@
       "sourceParts": [
         37
       ],
-      "resourceCount": 4
+      "origin": "lecture",
+      "auditCode": "A43",
+      "resourceCount": 3
     },
     {
       "id": "http-headers",
@@ -687,7 +773,9 @@
       "sourceParts": [
         38
       ],
-      "resourceCount": 4
+      "origin": "lecture",
+      "auditCode": "A44",
+      "resourceCount": 3
     },
     {
       "id": "http-response",
@@ -695,6 +783,8 @@
       "sourceParts": [
         39
       ],
+      "origin": "lecture",
+      "auditCode": "A45",
       "resourceCount": 4
     },
     {
@@ -703,6 +793,8 @@
       "sourceParts": [
         40
       ],
+      "origin": "lecture",
+      "auditCode": "A46",
       "resourceCount": 3
     },
     {
@@ -711,7 +803,116 @@
       "sourceParts": [
         41
       ],
+      "origin": "lecture",
+      "auditCode": "A47",
+      "resourceCount": 4
+    },
+    {
+      "id": "csharp-value-modeling",
+      "title": "Struct, record, immutability và equality",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N01",
+      "resourceCount": 3
+    },
+    {
+      "id": "dotnet-memory-gc",
+      "title": "CLR, GC và quyền sở hữu tài nguyên",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N02",
+      "resourceCount": 3
+    },
+    {
+      "id": "csharp-strings-unicode",
+      "title": "String, Unicode và so sánh văn bản",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N03",
+      "resourceCount": 2
+    },
+    {
+      "id": "dotnet-dates-numbers-culture",
+      "title": "Ngày giờ, số tiền và hợp đồng dữ liệu",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N04",
+      "resourceCount": 3
+    },
+    {
+      "id": "aspnet-web-api-design",
+      "title": "Web API, REST và hợp đồng HTTP",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N05",
+      "resourceCount": 3
+    },
+    {
+      "id": "aspnet-configuration-observability",
+      "title": "Configuration, Options, logging và xử lý lỗi",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N06",
+      "resourceCount": 4
+    },
+    {
+      "id": "efcore-transactions-concurrency",
+      "title": "Transaction, isolation và optimistic concurrency",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N07",
+      "resourceCount": 2
+    },
+    {
+      "id": "efcore-query-performance",
+      "title": "Tối ưu truy vấn EF Core và SQL",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N08",
+      "resourceCount": 4
+    },
+    {
+      "id": "aspnet-identity-api-security",
+      "title": "Identity, token và bảo vệ endpoint",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N09",
+      "resourceCount": 4
+    },
+    {
+      "id": "aspnet-integration-testing",
+      "title": "Kiểm thử tích hợp ASP.NET Core và EF Core",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N10",
+      "resourceCount": 3
+    },
+    {
+      "id": "dotnet-background-workers",
+      "title": "BackgroundService, Channel và shutdown",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N11",
+      "resourceCount": 4
+    },
+    {
+      "id": "dotnet-delivery-basics",
+      "title": "Build, publish và triển khai .NET",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "N12",
       "resourceCount": 4
     }
-  ]
+  ],
+  "review": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  }
 }

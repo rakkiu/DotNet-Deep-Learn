@@ -1,7 +1,7 @@
 {
   "id": "tcp-sockets",
   "title": "TCP, Socket và Endpoint",
-  "description": "TCP là giao thức vận chuyển cung cấp luồng byte có thứ tự và cơ chế truyền tin cậy giữa hai đầu kết nối. Socket là API để ứng dụng dùng khả năng mạng của hệ điều hành. Endpoint gồm địa chỉ IP và port;…",
+  "description": "TCP là giao thức vận chuyển cung cấp luồng byte có thứ tự và cơ chế truyền tin cậy giữa hai đầu kết nối. Socket là API để ứng dụng dùng khả năng mạng của hệ điều hành. Endpoint gồm địa chỉ IP và port; HTTP là giao thức tầng ứng dụng có thể chạy trên kết nối phù hợp, không đồng nghĩa với TCP.",
   "category": "network",
   "kind": "Giao thức mạng / API hệ điều hành",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "TCP là giao thức vận chuyển cung cấp luồng byte có thứ tự và cơ chế truyền tin cậy giữa hai đầu kết nối. Socket là API để ứng dụng dùng khả năng mạng của hệ điều hành. Endpoint gồm địa chỉ IP và port; HTTP là giao thức tầng ứng dụng có thể chạy trên kết nối phù hợp, không đồng nghĩa với TCP."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Một Read/Receive không bảo đảm nhận đủ message; Socket.Send cũng có thể gửi một phần. ReadExactly báo lỗi nếu stream kết thúc sớm. Nếu thay bằng tên tiếng Việt, tính số byte UTF-8 và framing phải đổi; string.Length không phải số byte.",
         "Fixture chỉ là một kết nối cục bộ, không có TLS hay giao thức chat hoàn chỉnh. Server thật cần timeout, cancellation, giới hạn số client, xử lý disconnect và kiểm soát bộ nhớ. Không mở listener công khai chỉ để làm bài tập."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Server listener bind/listen; accept tạo kết nối riêng, client connect tới endpoint đó. Loopback chỉ máy hiện tại, all interfaces mở phạm vi khác. TCP giữ thứ tự byte, không giữ ranh giới Write. Length-prefix hoặc delimiter là giao ước ứng dụng; tính byte UTF-8, không dùng string.Length cho framing.",
+        "Read với yêu cầu dương trả 0 khi peer kết thúc gửi bình thường; disconnect bất thường có thể ném lỗi. ReadExactlyAsync nhận đủ hoặc báo EOF sớm. Socket.SendAsync mức thấp có thể gửi một phần và cần lặp số byte thực; không áp yêu cầu đó máy móc vào contract Stream.WriteAsync."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Giới hạn message trước cấp phát, số client, timeout/token và lượng dữ liệu đang đệm để giữ backpressure. Half-close kết thúc một chiều gửi không nhất thiết đóng cả hai chiều. TCP tin cậy byte không chứng minh transaction nghiệp vụ được thực hiện đúng một lần; cần acknowledgment/idempotency ở tầng ứng dụng. TLS bảo vệ kênh riêng. HTTP/3 dùng QUIC, không phải mọi HTTP đều trên TCP."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "using System.Net;\nusing System.Net.Sockets;\nusing System.Text;\nusing var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));\nvar token = timeout.Token;\nvar listener = new TcpListener(IPAddress.Loopback, 0);\nlistener.Start();\ntry\n{\n    int port = ((IPEndPoint)listener.LocalEndpoint).Port;\n    using var client = new TcpClient();\n    await client.ConnectAsync(IPAddress.Loopback, port, token);\n    using var server = await listener.AcceptTcpClientAsync(token);\n    byte[] payload = Encoding.UTF8.GetBytes(\"An\");\n    await client.GetStream().WriteAsync(payload, token);\n    byte[] received = new byte[2];\n    await server.GetStream().ReadExactlyAsync(received, token);\n    Console.WriteLine(Encoding.UTF8.GetString(received));\n}\nfinally { listener.Stop(); }",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "An",
-        "steps": [
-          "Listener bind loopback với port được OS cấp.",
-          "Client connect, server accept được kết nối tương ứng.",
-          "Client gửi hai byte ASCII, ReadExactlyAsync chờ đủ hai byte rồi decode."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Net;\nusing System.Net.Sockets;\nusing System.Text;\nusing var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));\nvar token = timeout.Token;\nvar listener = new TcpListener(IPAddress.Loopback, 0);\nlistener.Start();\ntry\n{\n    int port = ((IPEndPoint)listener.LocalEndpoint).Port;\n    using var client = new TcpClient();\n    await client.ConnectAsync(IPAddress.Loopback, port, token);\n    using var server = await listener.AcceptTcpClientAsync(token);\n    byte[] payload = Encoding.UTF8.GetBytes(\"An\");\n    await client.GetStream().WriteAsync(payload, token);\n    byte[] received = new byte[2];\n    await server.GetStream().ReadExactlyAsync(received, token);\n    Console.WriteLine(Encoding.UTF8.GetString(received));\n}\nfinally { listener.Stop(); }",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "An",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Listener bind loopback với port được OS cấp. Client connect, server accept được kết nối tương ứng. Client gửi hai byte ASCII, ReadExactlyAsync chờ đủ hai byte rồi decode.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "length-framing",
+          "title": "Hai message tiếng Việt và các lỗi framing",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Buffers.Binary;using System.Net;using System.Net.Sockets;using System.Text;\nusing var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(5));var token=timeout.Token;var listener=new TcpListener(IPAddress.Loopback,0);listener.Start();\ntry{using var client=new TcpClient();await client.ConnectAsync(IPAddress.Loopback,((IPEndPoint)listener.LocalEndpoint).Port,token);using var server=await listener.AcceptTcpClientAsync(token);\nusing var combined=new MemoryStream();await Write(combined,\"Chào\",token);await Write(combined,\"An\",token);await client.GetStream().WriteAsync(combined.ToArray(),token);\nConsole.WriteLine(await Read(server.GetStream(),token));Console.WriteLine(await Read(server.GetStream(),token));\nusing var tooLarge=new MemoryStream(new byte[]{0,0,1,0});try{await Read(tooLarge,token);}catch(InvalidDataException){Console.WriteLine(\"oversize\");}\nusing var shortBody=new MemoryStream(new byte[]{0,0,0,2,65});try{await Read(shortBody,token);}catch(EndOfStreamException){Console.WriteLine(\"EOF payload\");}\nusing var cancel=new CancellationTokenSource();var waiting=Read(server.GetStream(),cancel.Token);cancel.Cancel();try{await waiting;}catch(OperationCanceledException){Console.WriteLine(\"canceled\");}\n}finally{listener.Stop();}\nstatic async Task Write(Stream stream,string text,CancellationToken t){byte[] body=Encoding.UTF8.GetBytes(text);byte[] h=new byte[4];BinaryPrimitives.WriteInt32BigEndian(h,body.Length);await stream.WriteAsync(h,t);await stream.WriteAsync(body,t);}\nstatic async Task<string> Read(Stream stream,CancellationToken t){byte[] h=new byte[4];await stream.ReadExactlyAsync(h,t);int n=BinaryPrimitives.ReadInt32BigEndian(h);if(n<0||n>128)throw new InvalidDataException();byte[] body=new byte[n];await stream.ReadExactlyAsync(body,t);return Encoding.UTF8.GetString(body);}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Chào\nAn\noversize\nEOF payload\ncanceled",
+          "explanation": "Một Write gửi cả hai frame nhưng hai Read vẫn tách theo length-prefix. Bind loopback port tự chọn, resource đều có owner và token.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +169,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Một Write có tương ứng một Read không?",
+          "answer": "Không, TCP là byte stream.",
+          "explanation": "Framing phải do giao thức ứng dụng xác định.",
+          "misconception": "OS giữ nguyên message boundary của Write.",
+          "followUp": "Length-prefix cần đếm theo đơn vị nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Vì sao kiểm tra length trước new byte[n]?",
+          "answer": "Để chặn độ dài âm/quá mức và tránh allocation theo input tùy ý.",
+          "explanation": "Network input không được tin cậy.",
+          "misconception": "ReadExactly tự kiểm soát mọi quota.",
+          "followUp": "Một frame thiếu payload nên báo lỗi nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Listener khác socket accept ở đâu?",
+          "answer": "Listener nhận yêu cầu, mỗi accept đại diện một kết nối.",
+          "explanation": "Một server có thể có nhiều connection độc lập.",
+          "misconception": "Accept thay listener bằng client duy nhất.",
+          "followUp": "Loopback khác all interfaces ra sao?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "TCP bảo đảm nghiệp vụ chạy đúng một lần không?",
+          "answer": "Không, chỉ xử lý tầng vận chuyển byte theo hợp đồng.",
+          "explanation": "Retry sau mất kết nối có thể lặp tác dụng phụ nếu thiếu idempotency.",
+          "misconception": "Không mất packet tức không có duplicate nghiệp vụ.",
+          "followUp": "Acknowledgment ứng dụng cần nói rõ điều gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Socket.SendAsync có thể gửi một phần thì Stream.WriteAsync có phải lặp y hệt không?",
+          "answer": "Không được suy máy móc, phải đọc contract từng API.",
+          "explanation": "Socket trả số byte thực gửi; Stream abstraction có hợp đồng khác.",
+          "misconception": "Mọi API ghi mạng đều cùng kiểu trả về.",
+          "followUp": "HTTP/3 dùng transport nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "tcp classes",
+          "title": "TCP overview",
           "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/sockets/tcp-classes"
         },
         {
-          "title": "socket services",
+          "title": "Use Sockets to send and receive data over TCP",
           "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/sockets/socket-services"
         }
       ],
@@ -139,5 +237,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A42",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đọc message length-prefix qua byte stream và chặn độ dài quá mức.",
+    "Xử lý EOF/hủy/backpressure mà không suy từ packet boundary."
+  ],
+  "prerequisiteIds": [
+    "dotnet-streams",
+    "async-await"
+  ],
+  "relatedIds": []
 }

@@ -1,7 +1,7 @@
 {
   "id": "aspnet-authorization",
   "title": "Authentication, Authorization và Identity",
-  "description": "Authentication xác định request đại diện cho ai; authorization quyết định danh tính đó được làm gì. Cookie authentication là một cơ chế mang phiên đăng nhập; ASP.NET Core Identity là hệ thống quản lý …",
+  "description": "Authentication xác định request đại diện cho ai; authorization quyết định danh tính đó được làm gì. Cookie authentication là một cơ chế mang phiên đăng nhập; ASP.NET Core Identity là hệ thống quản lý user, password, role, token và các luồng tài khoản. Identity không đồng nghĩa mọi hình thức xác thực.",
   "category": "web",
   "kind": "Cơ chế bảo mật / thư viện danh tính",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Authentication xác định request đại diện cho ai; authorization quyết định danh tính đó được làm gì. Cookie authentication là một cơ chế mang phiên đăng nhập; ASP.NET Core Identity là hệ thống quản lý user, password, role, token và các luồng tài khoản. Identity không đồng nghĩa mọi hình thức xác thực."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Cookie authentication không tự xác minh mật khẩu hoặc cung cấp trang đăng ký. Ticket được bảo vệ bằng Data Protection; cấu hình scheme, HTTPS, cookie flags và vòng đời khóa đều quan trọng. Không tạo claims quyền hạn chỉ từ dữ liệu user tự khai.",
         "Identity hỗ trợ quản lý user, hash mật khẩu, token và các luồng đăng nhập nhưng cần cấu hình store, UI/endpoints và chính sách. [Authorize] mặc định yêu cầu user authenticated; resource-based policy còn kiểm tra đối tượng cụ thể."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,90 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "ClaimsPrincipal đại diện danh tính, scheme chọn handler. Authentication dựng principal từ thông tin đã xác minh; authorization đánh giá policy/role/resource. Challenge yêu cầu xác thực, forbid từ chối người đã có danh tính nhưng thiếu quyền; không suy response chỉ từ việc có chữ Authorize.",
+        "Console fixture cũ chỉ đánh giá RequireRole trên user giả, không kiểm tra password hoặc cookie. WebLab có Identity store SQLite và API framework; bộ integration test thêm TestAuthHandler chỉ trong project test để tạo danh tính kiểm tra policy/owner, tuyệt đối không mở endpoint client tự chọn role ở production."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "ASP.NET Core 10 known API endpoints dùng cookie mặc định trả 401/403 thay redirect login; web page hoặc handler tùy chỉnh có thể khác. Bearer/JWT validation cần signature, issuer, audience, lifetime; JWT là định dạng, không đồng nghĩa OAuth2/OIDC hoặc tự mã hóa. Resource ownership phải xét object/owner server tin cậy để chống IDOR, ngay cả user có role phù hợp."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thêm FrameworkReference vào .csproj theo hướng dẫn bên dưới\n# Thay Program.cs rồi chạy\ndotnet run",
-        "code": "using Microsoft.AspNetCore.Authorization;\nusing Microsoft.Extensions.DependencyInjection;\nusing System.Security.Claims;\nvar services = new ServiceCollection();\nservices.AddLogging();\nservices.AddAuthorization(options => options.AddPolicy(\"Manage\", p => p.RequireRole(\"Admin\")));\nusing var provider = services.BuildServiceProvider();\nvar authorization = provider.GetRequiredService<IAuthorizationService>();\nstring role = \"Admin\";\nvar user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, role) }, \"Fixture\"));\nConsole.WriteLine((await authorization.AuthorizeAsync(user, null, \"Manage\")).Succeeded);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "True",
-        "steps": [
-          "DI tạo IAuthorizationService cùng policy Manage.",
-          "Fixture tạo user có role Admin.",
-          "AuthorizeAsync đánh giá RequireRole và trả Succeeded = true."
-        ],
-        "request": null,
-        "note": "Thêm <ItemGroup><FrameworkReference Include=\"Microsoft.AspNetCore.App\" /></ItemGroup> bên trong <Project> của .csproj. Đây là console dùng các thư viện framework để cô lập cơ chế, chưa phải website đăng nhập hay server hoàn chỉnh."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n  <ItemGroup><FrameworkReference Include=\"Microsoft.AspNetCore.App\" /></ItemGroup>\n</Project>",
+            "Program.cs": "using Microsoft.AspNetCore.Authorization;\nusing Microsoft.Extensions.DependencyInjection;\nusing System.Security.Claims;\nvar services = new ServiceCollection();\nservices.AddLogging();\nservices.AddAuthorization(options => options.AddPolicy(\"Manage\", p => p.RequireRole(\"Admin\")));\nusing var provider = services.BuildServiceProvider();\nvar authorization = provider.GetRequiredService<IAuthorizationService>();\nstring role = \"Admin\";\nvar user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, role) }, \"Fixture\"));\nConsole.WriteLine((await authorization.AuthorizeAsync(user, null, \"Manage\")).Succeeded);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True",
+          "explanation": "Console fixture chỉ đánh giá policy với danh tính giả; không xác minh password/cookie. DI tạo IAuthorizationService cùng policy Manage. Fixture tạo user có role Admin. AuthorizeAsync đánh giá RequireRole và trả Succeeded = true.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "authorization-http",
+          "title": "Anonymous, role, owner và endpoint công khai",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/WebLab/WebLab.csproj -- --urls http://127.0.0.1:5090",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "GET",
+              "path": "/admin",
+              "status": 401,
+              "headers": {}
+            },
+            {
+              "method": "GET",
+              "path": "/",
+              "status": 200,
+              "headers": {}
+            }
+          ],
+          "expected": "Trong integration test: /admin không có identity →401; Reader →403; Admin →200. /mine/alice với user bob →403, alice →200. / luôn 200.",
+          "explanation": "Danh tính Reader/Admin/alice/bob do test-only handler đặt trong TestServer, không phải HTTP header được production chấp nhận. Identity signup/login thật được kiểm tra riêng ở bài mở rộng.",
+          "verification": "lab-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "WebApp/\n├── WebApp.csproj\n├── Program.cs            # host, services, pipeline, routes\n├── appsettings.json      # cấu hình theo môi trường\n├── Controllers/          # action nhận request\n├── Models/               # input model / view model\n├── Views/                # Razor .cshtml (nếu dùng MVC)\n│   └── Shared/_Layout.cshtml\n├── wwwroot/              # CSS, JS và tài nguyên công khai\n└── Properties/launchSettings.json # chạy local",
-        "note": "Đây là quy ước MVC. API thuần có thể không có Views; Minimal API có thể bắt đầu từ Program.cs. Khi chia class ra file, thêm namespace/using nhất quán. Không đặt cấu hình nhạy cảm dưới wwwroot."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,18 +180,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Console ClaimsPrincipal fixture có xác minh password không?",
+          "answer": "Không, nó chỉ cung cấp principal giả để xem policy.",
+          "explanation": "Authentication cần handler/store/credential flow riêng.",
+          "misconception": "Role Admin trong object chứng minh đã đăng nhập thật.",
+          "followUp": "WebLab bổ sung bước nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "401 khác 403 theo hợp đồng API ở đây?",
+          "answer": "401 chưa được xác thực, 403 đã xác thực nhưng thiếu quyền.",
+          "explanation": "Handler và loại endpoint quyết định chi tiết challenge/forbid.",
+          "misconception": "Mọi cookie app luôn redirect 302.",
+          "followUp": ".NET 10 known API endpoint thay đổi gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Có role Admin có tự được sửa mọi resource không?",
+          "answer": "Không nếu nghiệp vụ còn yêu cầu ownership/policy cụ thể.",
+          "explanation": "Role không thay kiểm tra quyền trên object.",
+          "misconception": "Ẩn nút UI đủ chống truy cập ID người khác.",
+          "followUp": "Server lấy OwnerId tin cậy từ đâu?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Test auth handler có được đăng ký mặc định trong app production không?",
+          "answer": "Không, chỉ trong test ConfigureTestServices.",
+          "explanation": "Đó là auth bypass có chủ đích để kiểm tra policy, phải cách ly.",
+          "misconception": "Gửi header chọn role là cách login chuẩn.",
+          "followUp": "Bộ test bảo vệ ranh giới này thế nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "JWT có cùng nghĩa OAuth và có tự mã hóa không?",
+          "answer": "Không; JWT là format, OAuth2 là framework ủy quyền, OIDC bổ sung danh tính.",
+          "explanation": "Validation và token storage cần thiết kế theo kiến trúc.",
+          "misconception": "Đọc payload được nghĩa token luôn giả.",
+          "followUp": "Signature/issuer/audience/lifetime được kiểm tra nhằm mục đích gì?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "cookie",
+          "title": "Cookie authentication và hành vi API .NET 10",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0"
         },
         {
-          "title": "introduction",
-          "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authorization/introduction?view=aspnetcore-10.0"
+          "title": "Authorization theo policy và tài nguyên",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authorization/resourcebased?view=aspnetcore-10.0"
         },
         {
-          "title": "identity",
+          "title": "Introduction to Identity on ASP.NET Core",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0"
         }
       ],
@@ -143,5 +252,31 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A32",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Phân biệt authentication, role/policy và quyền trên resource.",
+    "Quan sát 401/403 và phạm vi fixture test với Identity thật."
+  ],
+  "prerequisiteIds": [
+    "http-request-line",
+    "dependency-injection",
+    "async-await"
+  ],
+  "relatedIds": [
+    "aspnet-identity-api-security"
+  ]
 }

@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build --configLoader native",
     "preview": "vite preview --configLoader native --host 0.0.0.0",
     "test": "vitest run --configLoader native",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "prebuild": "node ../scripts/package-examples.mjs"
   },
   "dependencies": {
     "@fontsource/be-vietnam-pro": "5.3.0",

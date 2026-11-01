@@ -1,3 +1,5 @@
+import { SectionBody } from "./Content";
+import { Paths, Guide } from "./Paths";
 import { useEffect, useRef, useState } from "react";
 import {
   Link,
@@ -10,16 +12,12 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import {
-  ArrowDown,
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  Check,
   ChevronDown,
   ChevronRight,
   Code2,
-  Copy,
-  ExternalLink,
   Layers,
   List,
   Menu,
@@ -28,16 +26,16 @@ import {
   Sun,
   X,
 } from "lucide-react";
-import Prism from "prismjs";
-import "prismjs/components/prism-csharp";
-import "prismjs/components/prism-sql";
-import "prismjs/components/prism-json";
 import {
   curriculum,
   matchSnippet,
   searchLessons,
   type Lesson,
-  type Section,
+  questionsOf,
+  byId,
+  orderedLessons,
+  orderLabels,
+  type ReadOrder,
 } from "./theory";
 const { categories, lessons, parts } = curriculum;
 const categoryOf = (id: string) => categories.find((c) => c.id === id)!;
@@ -185,6 +183,27 @@ export default function App() {
             <Layers size={17} />
             Theo bài giảng<span>{parts.length}</span>
           </Link>
+          <Link
+            className={`side-top ${location.pathname === "/paths/foundation" ? "selected" : ""}`}
+            to="/paths/foundation"
+          >
+            <BookOpen size={17} />
+            Học nền tảng
+          </Link>
+          <Link
+            className={`side-top ${location.pathname === "/paths/interview" ? "selected" : ""}`}
+            to="/paths/interview"
+          >
+            <Layers size={17} />
+            Ôn phỏng vấn
+          </Link>
+          <Link
+            className={`side-top ${location.pathname === "/guide" ? "selected" : ""}`}
+            to="/guide"
+          >
+            <Code2 size={17} />
+            Chạy mẫu & debug
+          </Link>
           <div className="sidebar-label syllabus-label">CHỦ ĐỀ</div>
           <nav aria-label="Chủ đề kiến thức">
             {categories.map((c) => (
@@ -251,7 +270,11 @@ export default function App() {
                 ? categoryOf(activeLesson.category).title
                 : location.pathname === "/sources"
                   ? "Theo bài giảng"
-                  : "Tổng quan"}
+                  : location.pathname.includes("/paths/")
+                    ? "Lộ trình đọc"
+                    : location.pathname === "/guide"
+                      ? "Chạy mẫu & debug"
+                      : "Tổng quan"}
             </span>
           </div>
           <form
@@ -285,6 +308,8 @@ export default function App() {
             <Route path="/" element={<Library />} />
             <Route path="/read/:id" element={<Reader />} />
             <Route path="/sources" element={<Sources />} />
+            <Route path="/paths/:mode" element={<Paths />} />
+            <Route path="/guide" element={<Guide />} />
             <Route path="/lessons/:id/:section?" element={<LegacyLink />} />
             <Route path="/lessons" element={<Navigate to="/" replace />} />
             {["review", "progress", "data", "bookmarks"].map((p) => (
@@ -324,7 +349,8 @@ function Library() {
   const [params, setParams] = useSearchParams();
   const query = params.get("q") ?? "",
     category = params.get("category") ?? "",
-    filtered = searchLessons(query, category);
+    origin = params.get("origin") ?? "",
+    filtered = searchLessons(query, category, origin);
   const set = (key: string, value: string) => {
     const p = new URLSearchParams(params);
     if (value) p.set(key, value);
@@ -333,7 +359,7 @@ function Library() {
   };
   return (
     <div className="library page-pad">
-      {!query && !category && (
+      {!query && !category && !origin && (
         <section className="hero">
           <div className="hero-copy">
             <div className="eyebrow">
@@ -350,23 +376,14 @@ function Library() {
               <br className="wide-break" /> hoạt động ra sao và khi nào nên
               dùng.
             </p>
-            <Link className="button-primary" to="/read/dotnet-first-program">
-              Bắt đầu với .NET
+            <Link className="button-primary" to="/paths/foundation">
+              Học nền tảng
               <ArrowRight size={17} />
             </Link>
-            <a
-              className="text-button"
-              href="#catalog"
-              onClick={(e) => {
-                e.preventDefault();
-                document
-                  .getElementById("catalog")
-                  ?.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              Khám phá thư viện
-              <ArrowDown size={15} />
-            </a>
+            <Link className="text-button" to="/paths/interview">
+              Ôn phỏng vấn
+              <ArrowRight size={15} />
+            </Link>
           </div>
           <div className="stack-map" aria-label="Bản đồ vai trò công nghệ">
             <div className="map-label">
@@ -401,12 +418,15 @@ function Library() {
           <span>phần bài giảng</span>
         </div>
         <div>
-          <b>11</b>
-          <span>góc nhìn mỗi bài</span>
+          <b>{lessons.filter((l) => l.origin === "extension").length}</b>
+          <span>bài mở rộng phỏng vấn</span>
         </div>
         <div className="stats-note">
           <BookOpen size={17} />
-          <span>Đọc theo thứ tự hoặc mở ngay điều bạn cần.</span>
+          <span>
+            {lessons.reduce((n, l) => n + questionsOf(l).length, 0)} câu hỏi có
+            đáp án để tự đối chiếu.
+          </span>
         </div>
       </div>
       <section id="catalog" className="catalog">
@@ -457,6 +477,22 @@ function Library() {
             </button>
           ))}
         </div>
+        <div className="origin-filter" aria-label="Lọc nguồn nội dung">
+          {[
+            ["", "Toàn bộ"],
+            ["lecture", "Trong bài giảng"],
+            ["extension", "Mở rộng để ôn phỏng vấn"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              className={origin === value ? "chosen" : ""}
+              aria-pressed={origin === value}
+              onClick={() => set("origin", value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         {query && (
           <p className="search-info">
             Kết quả trong toàn bộ nội dung cho “{query}”.
@@ -499,14 +535,20 @@ function Library() {
                         >
                           <div className="card-meta">
                             <span>{l.kind}</span>
-                            <span>Phần {l.sourceParts.join(", ")}</span>
+                            <span>
+                              {l.origin === "extension"
+                                ? "Mở rộng phỏng vấn"
+                                : `Phần ${l.sourceParts.join(", ")}`}
+                            </span>
                           </div>
                           <h4>{l.title}</h4>
                           <p>
                             {query ? matchSnippet(l, query) : l.description}
                           </p>
                           <div className="card-bottom">
-                            <span>11 mục giải thích</span>
+                            <span>
+                              {l.sections.length} mục · ~{l.minutes} phút
+                            </span>
                             <span>
                               Đọc bài
                               <ArrowRight size={15} />
@@ -552,27 +594,39 @@ function Library() {
   );
 }
 function Reader() {
-  const { id } = useParams(),
-    l = lessons.find((x) => x.id === id);
+  const { id } = useParams();
+  const l = byId.get(id ?? "");
+  const [params, setParams] = useSearchParams();
   const [large, setLarge] = useState(false),
     [active, setActive] = useState("identity");
   useEffect(() => {
-    setActive("identity");
+    setActive(l?.sections[0].id ?? "identity");
     const observer = new IntersectionObserver(
       (entries) => {
-        const v = entries.filter((e) => e.isIntersecting);
-        if (v.length) setActive(v[0].target.id);
+        const visible = entries.filter((e) => e.isIntersecting);
+        if (visible.length) setActive(visible[0].target.id);
       },
       { rootMargin: "-90px 0px -65% 0px" },
     );
     document
       .querySelectorAll(".article-section")
-      .forEach((s) => observer.observe(s));
+      .forEach((section) => observer.observe(section));
     return () => observer.disconnect();
-  }, [id]);
+  }, [id, l]);
   if (!l) return <Missing />;
-  const index = lessons.indexOf(l),
+  const requested = params.get("order") as ReadOrder;
+  const order: ReadOrder =
+    requested in orderLabels &&
+    !(requested === "lecture" && l.origin === "extension")
+      ? requested
+      : l.origin === "lecture"
+        ? "lecture"
+        : "topic";
+  const sequence = orderedLessons(l, order),
+    index = sequence.findIndex((x) => x.id === l.id),
     cat = categoryOf(l.category);
+  const lessonLink = (lesson: Lesson) =>
+    `/read/${lesson.id}?order=${order}${order === "interview" ? "#questions" : ""}`;
   return (
     <div className={`reader-layout page-pad ${large ? "large-type" : ""}`}>
       <article className="reader-article">
@@ -583,7 +637,10 @@ function Reader() {
         <header className="article-header">
           <div className="eyebrow">
             <span />
-            PHẦN {l.sourceParts.join(", ")} TRONG BÀI GIẢNG
+            {l.auditCode} ·{" "}
+            {l.origin === "extension"
+              ? "MỞ RỘNG ĐỂ ÔN PHỎNG VẤN"
+              : `PHẦN ${l.sourceParts.join(", ")} TRONG BÀI GIẢNG`}
           </div>
           <div className="article-kind">{l.kind}</div>
           <h1>{l.title}</h1>
@@ -591,9 +648,10 @@ function Reader() {
           <div className="article-facts">
             <span>
               <BookOpen size={15} />
-              11 mục giải thích
+              {l.sections.length} mục giải thích
             </span>
             <span>Khoảng {l.minutes} phút đọc</span>
+            <span>{questionsOf(l).length} câu hỏi đối chiếu</span>
             <button
               aria-pressed={large}
               onClick={() => setLarge((v) => !v)}
@@ -602,10 +660,60 @@ function Reader() {
               A<span className="larger-a">A</span>
             </button>
           </div>
+          <details className="version-context">
+            <summary>Bối cảnh phiên bản · rà soát {l.reviewedAt}</summary>
+            <p>
+              SDK {l.version.sdk} · {l.version.framework} · {l.version.language}{" "}
+              · runtime/ASP.NET Core {l.version.runtime}. EF Core{" "}
+              {l.version.efCore} khi bài dùng EF; xUnit {l.version.xunit}, Test
+              SDK {l.version.testSdk}, runner {l.version.xunitRunner} khi bài
+              dùng test. Phiên bản ổn định được ghi rõ cho các mẫu, không dùng
+              preview.
+            </p>
+            <Link to="/guide">Cách dựng môi trường và giới hạn kiểm chứng</Link>
+          </details>
         </header>
+        <div className="learning-goals">
+          <span>ĐỌC XONG, BẠN CÓ THỂ</span>
+          <ul>
+            {l.goals.map((goal) => (
+              <li key={goal}>{goal}</li>
+            ))}
+          </ul>
+        </div>
         <div className="prerequisite">
           <span>TRƯỚC KHI ĐỌC</span>
           <p>{l.prerequisites.join(" · ")}</p>
+          {l.prerequisiteIds.length > 0 && (
+            <div className="related-links">
+              {l.prerequisiteIds.map((id) => (
+                <Link key={id} to={`/read/${id}`}>
+                  {byId.get(id)!.title}
+                  <ArrowRight size={13} />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="reading-order">
+          <label htmlFor="reading-order">Bài trước / tiếp theo đi theo</label>
+          <select
+            id="reading-order"
+            value={order}
+            onChange={(e) => {
+              const next = new URLSearchParams(params);
+              next.set("order", e.target.value);
+              setParams(next, { replace: true });
+            }}
+          >
+            {Object.entries(orderLabels)
+              .filter(([key]) => key !== "lecture" || l.origin === "lecture")
+              .map(([key, label]) => (
+                <option value={key} key={key}>
+                  {label}
+                </option>
+              ))}
+          </select>
         </div>
         <details className="mobile-toc">
           <summary>
@@ -615,23 +723,38 @@ function Reader() {
           </summary>
           <Toc lesson={l} active={active} />
         </details>
-        {l.sections.map((s, i) => (
+        {l.sections.map((section, i) => (
           <section
-            key={s.id}
-            id={s.id}
+            key={section.id}
+            id={section.id}
             className="article-section"
             tabIndex={-1}
           >
             <div className="section-kicker">
-              {i === 0 || l.sections[i - 1].group !== s.group ? s.group : ""}
+              {i === 0 || l.sections[i - 1].group !== section.group
+                ? section.group
+                : ""}
             </div>
             <h2>
               <span>{two(i + 1)}</span>
-              {s.title}
+              {section.title}
             </h2>
-            <SectionBody section={s} />
+            <SectionBody section={section} />
           </section>
         ))}
+        {l.relatedIds.length > 0 && (
+          <section className="related-reading">
+            <h2>Đọc nối tiếp theo khái niệm</h2>
+            <div className="related-links">
+              {l.relatedIds.map((id) => (
+                <Link key={id} to={`/read/${id}`}>
+                  {byId.get(id)!.title}
+                  <ArrowRight size={14} />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
         <div className="article-end">
           <BookOpen size={20} />
           <p>
@@ -639,37 +762,43 @@ function Reader() {
             Có thể mở lại bất kỳ mục nào khi cần tra cứu.
           </p>
         </div>
+        <p className="pagination-order">
+          Đang đi theo: <strong>{orderLabels[order]}</strong> · {index + 1}/
+          {sequence.length} bài
+        </p>
         <nav className="article-pagination" aria-label="Bài liền kề">
           {index > 0 ? (
-            <Link to={`/read/${lessons[index - 1].id}`}>
+            <Link to={lessonLink(sequence[index - 1])}>
               <span>
                 <ArrowLeft size={14} />
                 Bài trước
               </span>
-              <strong>{lessons[index - 1].title}</strong>
+              <strong>{sequence[index - 1].title}</strong>
             </Link>
           ) : (
             <span />
           )}
-          {index < lessons.length - 1 && (
-            <Link to={`/read/${lessons[index + 1].id}`}>
+          {index >= 0 && index < sequence.length - 1 && (
+            <Link to={lessonLink(sequence[index + 1])}>
               <span>
                 Bài tiếp theo
                 <ArrowRight size={14} />
               </span>
-              <strong>{lessons[index + 1].title}</strong>
+              <strong>{sequence[index + 1].title}</strong>
             </Link>
           )}
         </nav>
       </article>
       <aside className="desktop-toc">
         <div className="toc-inner">
-          <div className="sidebar-label">TRONG BÀI NÀY</div>
+          <div className="sidebar-label">
+            TRONG BÀI NÀY · {l.sections.length} MỤC
+          </div>
           <Toc lesson={l} active={active} />
           <div className="toc-foot">
-            Một kiến thức, nhìn từ bản chất
+            {orderLabels[order]}
             <br />
-            đến cách sử dụng.
+            <Link to="/guide">Hướng dẫn chạy mẫu</Link>
           </div>
         </div>
       </aside>
@@ -677,192 +806,21 @@ function Reader() {
   );
 }
 function Toc({ lesson, active }: { lesson: Lesson; active: string }) {
+  const location = useLocation();
   return (
     <nav aria-label="Các mục trong bài">
-      {lesson.sections.map((s, i) => (
+      {lesson.sections.map((section, i) => (
         <Link
-          key={s.id}
-          to={`/read/${lesson.id}#${s.id}`}
-          className={s.id === active ? "toc-active" : ""}
-          aria-current={s.id === active ? "location" : undefined}
+          key={section.id}
+          to={`/read/${lesson.id}${location.search}#${section.id}`}
+          className={section.id === active ? "toc-active" : ""}
+          aria-current={section.id === active ? "location" : undefined}
         >
           <span>{two(i + 1)}</span>
-          {s.title}
+          {section.title}
         </Link>
       ))}
     </nav>
-  );
-}
-function SectionBody({ section: s }: { section: Section }) {
-  return (
-    <>
-      {s.paragraphs?.map((p, i) => (
-        <p key={i}>{p}</p>
-      ))}
-      {s.definitions && (
-        <dl className="definitions">
-          {s.definitions.map((d) => (
-            <div key={d.term}>
-              <dt>{d.term}</dt>
-              <dd>
-                <p>{d.meaning}</p>
-                <div className="definition-example">
-                  <span>Ví dụ</span>
-                  {d.example}
-                </div>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {s.hello && (
-        <>
-          <p>{s.hello.note}</p>
-          <CodeBlock
-            code={s.hello.setup}
-            language="shell"
-            label="Terminal · khởi tạo"
-          />
-          <CodeBlock
-            code={s.hello.code}
-            language={s.hello.language}
-            label={s.hello.file}
-          />
-          {Object.entries(s.hello.files).map(([name, code]) => (
-            <CodeBlock
-              key={name}
-              code={code}
-              language={name.endsWith("cshtml") ? "markup" : "csharp"}
-              label={name}
-            />
-          ))}
-          {s.hello.request && (
-            <div className="request-example">
-              <b>Request minh họa</b>
-              <CodeBlock
-                code={`${s.hello.request.method} http://localhost:5090${s.hello.request.path}${s.hello.request.body ? "\nContent-Type: application/json\n\n" + JSON.stringify(s.hello.request.body, null, 2) : ""}`}
-                language="plain"
-                label="HTTP"
-              />
-            </div>
-          )}
-          <div className="output">
-            <span>KẾT QUẢ ĐƯỢC GIẢI THÍCH</span>
-            <pre>{s.hello.output}</pre>
-          </div>
-          <ol className="explanation-steps">
-            {s.hello.steps.map((step, i) => (
-              <li key={i}>{step}</li>
-            ))}
-          </ol>
-        </>
-      )}
-      {s.structure && (
-        <>
-          <CodeBlock
-            code={s.structure.code}
-            language="plain"
-            label="Bố cục tham khảo"
-          />
-          <p>{s.structure.note}</p>
-        </>
-      )}
-      {s.links && (
-        <>
-          <p>
-            Đọc tài liệu chính thức để tra API, điều kiện sử dụng và khác biệt
-            theo phiên bản. Khi gặp lỗi, kèm phiên bản SDK/package, thông báo
-            lỗi và ví dụ tối thiểu để cộng đồng có đủ ngữ cảnh.
-          </p>
-          <div className="resource-links">
-            {s.links.map((link) => (
-              <a
-                key={link.url}
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <span>
-                  <small>{new URL(link.url).hostname}</small>
-                  {link.title}
-                </span>
-                <ExternalLink size={16} />
-              </a>
-            ))}
-            <a href={s.community} target="_blank" rel="noreferrer">
-              <span>
-                <small>CỘNG ĐỒNG HỎI ĐÁP</small>Stack Overflow · chủ đề liên
-                quan
-              </span>
-              <ExternalLink size={16} />
-            </a>
-          </div>
-        </>
-      )}
-    </>
-  );
-}
-function CodeBlock({
-  code,
-  language,
-  label,
-}: {
-  code: string;
-  language: string;
-  label: string;
-}) {
-  const [copied, setCopied] = useState(false),
-    [error, setError] = useState(false),
-    timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-    },
-    [],
-  );
-  const grammar = Prism.languages[language];
-  return (
-    <div className="code-block">
-      <div className="code-toolbar">
-        <span>
-          <Code2 size={14} />
-          {label}
-        </span>
-        <button
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(code);
-              setCopied(true);
-              setError(false);
-              if (timer.current) clearTimeout(timer.current);
-              timer.current = setTimeout(() => setCopied(false), 1800);
-            } catch {
-              setError(true);
-            }
-          }}
-          aria-label={`Sao chép ${label}`}
-        >
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-          <span aria-live="polite">{copied ? "Đã chép" : "Sao chép"}</span>
-        </button>
-      </div>
-      <pre tabIndex={0} aria-label={`Mã ${label}`}>
-        {grammar ? (
-          <code
-            dangerouslySetInnerHTML={{
-              __html: Prism.highlight(code, grammar, language),
-            }}
-          />
-        ) : (
-          <code>{code}</code>
-        )}
-      </pre>
-      {error && (
-        <div className="copy-error" role="status">
-          Không truy cập được clipboard. Bạn có thể chọn đoạn mã để sao chép.
-        </div>
-      )}
-    </div>
   );
 }
 function Sources() {
@@ -871,8 +829,11 @@ function Sources() {
       <div className="eyebrow">ĐỌC CÓ NGUỒN, HỌC CÓ BỐI CẢNH</div>
       <h1>Theo bài giảng của thầy</h1>
       <p className="page-intro">
-        {lessons.length} bài lý thuyết được sắp từ {parts.length} phần trong tài
-        liệu <strong>{curriculum.sourceDocument}</strong>.
+        {lessons.filter((l) => l.origin === "lecture").length} bài trong bài
+        giảng được sắp từ {parts.length} phần trong tài liệu{" "}
+        <strong>{curriculum.sourceDocument}</strong>. Thêm{" "}
+        {lessons.filter((l) => l.origin === "extension").length} bài mở rộng để
+        ôn phỏng vấn, được đánh dấu riêng và không gán số phần bài giảng.
       </p>
       <div className="source-note">
         <BookOpen size={22} />
@@ -903,6 +864,22 @@ function Sources() {
             </div>
           </section>
         ))}
+      </div>
+      <h2 className="coverage-heading">Mở rộng để ôn phỏng vấn</h2>
+      <p>
+        Các bài N01–N12 bổ sung kiến thức theo yêu cầu rà soát; không được coi
+        là phần thầy đã dạy.
+      </p>
+      <div className="extension-list">
+        {lessons
+          .filter((l) => l.origin === "extension")
+          .map((l) => (
+            <Link key={l.id} to={`/read/${l.id}`}>
+              <span>{l.auditCode}</span>
+              {l.title}
+              <ArrowRight size={15} />
+            </Link>
+          ))}
       </div>
     </div>
   );

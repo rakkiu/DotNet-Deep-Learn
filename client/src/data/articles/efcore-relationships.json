@@ -1,7 +1,7 @@
 {
   "id": "efcore-relationships",
   "title": "EF Core — quan hệ và tải dữ liệu",
-  "description": "Relationship biểu diễn quan hệ giữa entity: một-một, một-nhiều và nhiều-nhiều. Foreign key là giá trị liên kết ở database; navigation property là cách đi từ object này sang object liên quan trong C#. …",
+  "description": "Relationship biểu diễn quan hệ giữa entity: một-một, một-nhiều và nhiều-nhiều. Foreign key là giá trị liên kết ở database; navigation property là cách đi từ object này sang object liên quan trong C#. Hai thứ có liên hệ nhưng không phải cùng một trường dữ liệu.",
   "category": "data",
   "kind": "Ánh xạ dữ liệu quan hệ",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Relationship biểu diễn quan hệ giữa entity: một-một, một-nhiều và nhiều-nhiều. Foreign key là giá trị liên kết ở database; navigation property là cách đi từ object này sang object liên quan trong C#. Hai thứ có liên hệ nhưng không phải cùng một trường dữ liệu."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Include không luôn tạo đúng một SQL: collection include có thể dùng split query. Lazy loading cần cấu hình, không tự bật chỉ vì có navigation. null! chỉ tắt cảnh báo tại dòng khai báo, không tạo Department runtime.",
         "Many-to-many có thể dùng skip navigation và join entity ngầm; khi quan hệ có dữ liệu riêng như ngày đăng ký, hãy cân nhắc join entity tường minh. Projection chỉ lấy cột cần dùng thường tiết kiệm hơn tải toàn bộ graph."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,87 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Principal là phía được tham chiếu; dependent có FK. Required/optional thể hiện bằng FK/nullability và mapping, không chỉ có navigation. Một-một cần ràng buộc duy nhất trên FK thích hợp; nhiều-nhiều có bảng join, có thể dùng explicit Enrollment khi quan hệ mang RegisteredAt.",
+        "Fluent API trong DataLab định nghĩa PK join, FK, one-to-one Profile và DeleteBehavior.Restrict cho khoa. Navigation chưa load không chứng minh không có dữ liệu. Eager Include tải theo truy vấn; explicit loading do code gọi; lazy loading cần proxy/ILazyLoader và cấu hình thực, không tự xảy ra với mọi virtual property."
+      ],
+      "diagrams": [
+        {
+          "caption": "Quan hệ trong DataLab",
+          "steps": [
+            "Department.Id (principal) ← Student.DepartmentId (required, Restrict)",
+            "Student.Id ← Profile.StudentId (unique, một-một)",
+            "Student ↔ Enrollment(RegisteredAt) ↔ Course (nhiều-nhiều)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "N+1 làm tăng round-trip; Include nhiều collection có thể cartesian explosion. AsSplitQuery đổi sang nhiều lệnh với trade-off network và nhất quán nếu dữ liệu đổi giữa các query; không luôn tốt hơn. Filtered Include với tracking fixup có thể làm graph chứa phần tử đã track ngoài filter. Projection DTO giúp chỉ lấy dữ liệu UI cần và tránh vòng lặp serializer."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\ndotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 10.0.0\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "using Microsoft.EntityFrameworkCore;\nusing Microsoft.Data.Sqlite;\nusing var connection = new SqliteConnection(\"Data Source=:memory:\");\nconnection.Open();\nvar options = new DbContextOptionsBuilder<School>().UseSqlite(connection).Options;\nusing var db = new School(options);\ndb.Database.EnsureCreated();\ndb.Departments.Add(new Department { Name = \"CNTT\", Students = new List<Student> {\n    new() { Name = \"An\", Score = 8 }, new() { Name = \"Chi\", Score = 5 }\n}});\ndb.SaveChanges();\ndb.ChangeTracker.Clear();\nvar students = db.Students.Include(s => s.Department).Where(s => s.Score >= 8).OrderBy(s => s.Id).ToList();\nConsole.WriteLine(string.Join(\", \", students.Select(s => s.Name + \":\" + s.Department.Name)));\nclass Department\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public ICollection<Student> Students { get; set; } = new List<Student>();\n}\nclass Student\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public int Score { get; set; }\n    public int DepartmentId { get; set; }\n    public Department Department { get; set; } = null!;\n}\nclass School(DbContextOptions<School> options) : DbContext(options)\n{\n    public DbSet<Student> Students => Set<Student>();\n    public DbSet<Department> Departments => Set<Department>();\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "An:CNTT",
-        "steps": [
-          "SaveChanges lưu một khoa và hai sinh viên với khóa ngoại tương ứng.",
-          "Clear bỏ các object tracked để tránh nhầm relationship fix-up với Include.",
-          "Truy vấn chọn An vì điểm 8 và tải Department; output là An:CNTT."
-        ],
-        "request": null,
-        "note": "Ví dụ sử dụng SQLite in-memory để không phụ thuộc SQL Server. EnsureCreated chỉ tạo schema cho ví dụ độc lập này; mục Migrations có luồng riêng cho database được quản lý bằng migration. Package 10.0.0 là mốc minh họa tương thích .NET 10, không phải khuyến nghị bỏ qua các bản vá."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.EntityFrameworkCore.Sqlite\" Version=\"10.0.14\" />\n  </ItemGroup>\n</Project>",
+            "Program.cs": "using Microsoft.EntityFrameworkCore;\nusing Microsoft.Data.Sqlite;\nusing var connection = new SqliteConnection(\"Data Source=:memory:\");\nconnection.Open();\nvar options = new DbContextOptionsBuilder<School>().UseSqlite(connection).Options;\nusing var db = new School(options);\ndb.Database.EnsureCreated();\ndb.Departments.Add(new Department { Name = \"CNTT\", Students = new List<Student> {\n    new() { Name = \"An\", Score = 8 }, new() { Name = \"Chi\", Score = 5 }\n}});\ndb.SaveChanges();\ndb.ChangeTracker.Clear();\nvar students = db.Students.Include(s => s.Department).Where(s => s.Score >= 8).OrderBy(s => s.Id).ToList();\nConsole.WriteLine(string.Join(\", \", students.Select(s => s.Name + \":\" + s.Department.Name)));\nclass Department\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public ICollection<Student> Students { get; set; } = new List<Student>();\n}\nclass Student\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public int Score { get; set; }\n    public int DepartmentId { get; set; }\n    public Department Department { get; set; } = null!;\n}\nclass School(DbContextOptions<School> options) : DbContext(options)\n{\n    public DbSet<Student> Students => Set<Student>();\n    public DbSet<Department> Departments => Set<Department>();\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "An:CNTT",
+          "explanation": "Ví dụ sử dụng SQLite in-memory để không phụ thuộc SQL Server. EnsureCreated chỉ tạo schema cho ví dụ độc lập này; mục Migrations có luồng riêng cho database được quản lý bằng migration. Package 10.0.0 là mốc minh họa tương thích .NET 10, không phải khuyến nghị bỏ qua các bản vá. SaveChanges lưu một khoa và hai sinh viên với khóa ngoại tương ứng. Clear bỏ các object tracked để tránh nhầm relationship fix-up với Include. Truy vấn chọn An vì điểm 8 và tải Department; output là An:CNTT.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "relationships-loading",
+          "title": "Join có payload, split và Restrict",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/DataLab/DataLab.csproj",
+          "project": "examples/DataLab/DataLab.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "join-payload:2026; split-has-multiple-commands:True; restrict:blocked; projection-read-commands:1.",
+          "explanation": "DataLab Clear tracker trước query đồ thị; projection Name/Department đủ cho UI nhỏ. Delete trực tiếp khoa còn sinh viên bị FK SQLite chặn; không xóa dữ liệu thật.",
+          "verification": "lab-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "School/\n├── School.csproj         # provider và EF Design packages\n├── Program.cs            # đăng ký context / điểm chạy\n├── Models/Student.cs     # entity\n├── Data/SchoolContext.cs # DbContext và mapping\n├── Migrations/           # migration và model snapshot\n└── appsettings.json      # cấu hình; không chứa secret thật",
-        "note": "Tên thư mục là quy ước gợi ý; EF không bắt buộc entity ở Models. Ví dụ gọn có thể khai báo type trong Program.cs để dễ đọc. Secret dùng biến môi trường hoặc cơ chế secret phù hợp, không gửi xuống trình duyệt."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,18 +177,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Navigation null có chứng minh không có dữ liệu liên quan?",
+          "answer": "Không, có thể chưa load hoặc bị filter.",
+          "explanation": "Cần biết loading strategy và state context.",
+          "misconception": "Mọi navigation null nghĩa DB không có hàng.",
+          "followUp": "Explicit loading khác lazy loading thế nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Many-to-many có ngày đăng ký nên lưu đâu?",
+          "answer": "Trong join entity Enrollment với hai FK và payload.",
+          "explanation": "Thuộc tính thuộc quan hệ, không riêng Student hay Course.",
+          "misconception": "Skip navigation loại bỏ nhu cầu bảng join.",
+          "followUp": "Join PK và duplicate enrollment được kiểm soát ra sao?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Quan hệ một-một cần khác một-nhiều ở ràng buộc nào?",
+          "answer": "Tính duy nhất của FK phía dependent theo mapping.",
+          "explanation": "Chỉ đổi tên navigation không làm DB bảo đảm một-một.",
+          "misconception": "Có property đơn là đủ unique.",
+          "followUp": "Required khác optional xét FK thế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Split query luôn tốt hơn Include một SQL?",
+          "answer": "Không, nó đổi lượng dữ liệu join lấy nhiều round-trip và rủi ro nhất quán.",
+          "explanation": "Cần xem cardinality, network và yêu cầu snapshot.",
+          "misconception": "Tách SQL tức luôn nhanh hơn.",
+          "followUp": "Khi dữ liệu đổi giữa các query phải cân nhắc gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Filtered Include có thể thấy dữ liệu ngoài filter vì sao?",
+          "answer": "Tracking relationship fixup có thể nối entity đã track trước đó.",
+          "explanation": "Dùng context sạch/no-tracking hoặc DTO theo mục đích.",
+          "misconception": "Filter luôn xóa mọi navigation cũ khỏi tracker.",
+          "followUp": "Vì sao giữ Clear trong demo seed rồi tải lại?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "relationships",
+          "title": "Introduction to relationships",
           "url": "https://learn.microsoft.com/en-us/ef/core/modeling/relationships"
         },
         {
-          "title": "related data",
+          "title": "Loading Related Data",
           "url": "https://learn.microsoft.com/en-us/ef/core/querying/related-data/"
         },
         {
-          "title": "single split queries",
+          "title": "Single vs. Split Queries",
           "url": "https://learn.microsoft.com/en-us/ef/core/querying/single-split-queries"
         }
       ],
@@ -143,5 +249,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A31",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đọc PK/FK và ba dạng quan hệ cùng payload join.",
+    "So sánh Include/projection/split query và các bẫy tracking."
+  ],
+  "prerequisiteIds": [
+    "csharp-collections",
+    "linq-basics"
+  ],
+  "relatedIds": []
 }

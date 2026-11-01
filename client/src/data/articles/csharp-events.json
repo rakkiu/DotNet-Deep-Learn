@@ -1,7 +1,7 @@
 {
   "id": "csharp-events",
   "title": "Delegate và event: ai được phát thông báo?",
-  "description": "Delegate là kiểu tham chiếu đại diện cho phương thức có chữ ký tương thích. Event giới hạn cách bên ngoài đăng ký nhận thông báo dựa trên delegate, thường theo mô hình publisher/subscriber. Chúng là c…",
+  "description": "Delegate là kiểu tham chiếu đại diện cho phương thức có chữ ký tương thích. Event giới hạn cách bên ngoài đăng ký nhận thông báo dựa trên delegate, thường theo mô hình publisher/subscriber. Chúng là cơ chế trong process, không phải message broker bền vững qua mạng.",
   "category": "architecture",
   "kind": "Cơ chế callback và thông báo",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Delegate là kiểu tham chiếu đại diện cho phương thức có chữ ký tương thích. Event giới hạn cách bên ngoài đăng ký nhận thông báo dựa trên delegate, thường theo mô hình publisher/subscriber. Chúng là cơ chế trong process, không phải message broker bền vững qua mạng."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Event không tự tạo thread và không phải hàng đợi bền vững. Một subscriber ném lỗi có thể làm các subscriber sau không được gọi theo cách invoke thông thường. Giữ tham chiếu handler để hủy đăng ký, tránh publisher sống lâu giữ subscriber ngoài ý muốn.",
         "Event phù hợp thông báo thay đổi trong tiến trình; method call hoặc trả kết quả thường đơn giản hơn cho quan hệ một caller–một callee. Với xử lý bất đồng bộ cần quyết định cách await/quan sát lỗi, không dùng async void tùy tiện ngoài event handler."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Delegate có thể chứa invocation list; Action/Func và method group phải khớp chữ ký. Event giới hạn bên ngoài chỉ subscribe/unsubscribe theo contract, khác public delegate field cho phép gán/invoke tùy ý. Handler mặc định chạy đồng bộ trên thread phát.",
+        "Lưu delegate dùng để += rồi dùng chính nó khi -=. Viết lại một lambda trông giống nhau không bảo đảm tạo đúng delegate tương đương để gỡ; closure có target/lifetime riêng. Sau hủy, handler không nhận lần phát tiếp theo."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Publisher sống lâu có thể giữ subscriber/closure reachable; IDisposable subscription hoặc -= đúng vòng đời tránh retention. Multicast invoke thông thường dừng tại exception chưa xử lý; muốn tiếp tục phải iterate và có policy rõ. Multicast delegate trả Task không tự await/gom mọi Task; thiết kế async event phải duyệt invocation list, await và xử lý cancel/error có chủ đích. ?.Invoke chỉ giúp lời gọi khi snapshot null, không chứng minh toàn hệ thống thread-safe."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "int received = 0;\nvar processor = new Processor();\nEventHandler handler = (_, _) => received++;\nprocessor.Completed += handler;\nprocessor.Run();\nConsole.WriteLine(received);\n\nclass Processor\n{\n    public event EventHandler? Completed;\n    public void Run() => Completed?.Invoke(this, EventArgs.Empty);\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "1",
-        "steps": [
-          "received ban đầu 0, sau đó handler được đăng ký một lần.",
-          "Run gọi Completed nếu có người nghe.",
-          "Handler tăng received thành 1; lời gọi event ở đây chạy đồng bộ."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int received = 0;\nvar processor = new Processor();\nEventHandler handler = (_, _) => received++;\nprocessor.Completed += handler;\nprocessor.Run();\nConsole.WriteLine(received);\n\nclass Processor\n{\n    public event EventHandler? Completed;\n    public void Run() => Completed?.Invoke(this, EventArgs.Empty);\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "1",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. received ban đầu 0, sau đó handler được đăng ký một lần. Run gọi Completed nếu có người nghe. Handler tăng received thành 1; lời gọi event ở đây chạy đồng bộ.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "event-lifecycle",
+          "title": "Hai subscriber, hủy và lỗi chặn phần sau",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var p=new Publisher();EventHandler first=(_,_)=>Console.WriteLine(\"first\");EventHandler second=(_,_)=>Console.WriteLine(\"second\");\np.Changed+=first;p.Changed+=second;p.Raise();p.Changed-=first;p.Raise();\nvar failed=new Publisher();failed.Changed+=(_,_)=>throw new InvalidOperationException();failed.Changed+=second;\ntry{failed.Raise();}catch(InvalidOperationException){Console.WriteLine(\"dừng trước second\");}\nclass Publisher {public event EventHandler? Changed;public void Raise()=>Changed?.Invoke(this,EventArgs.Empty);}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "first\nsecond\nsecond\ndừng trước second",
+          "explanation": "Thứ tự là thứ tự đăng ký trong invocation list thông thường, không scheduler. Publisher thứ hai không gọi handler sau lỗi chưa xử lý.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +169,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Event khác public delegate field ở quyền nào?",
+          "answer": "Code bên ngoài không tự invoke/gán đè event như delegate field công khai.",
+          "explanation": "Publisher kiểm soát nơi raise trong mô hình thông thường.",
+          "misconception": "Event tự chạy một thread khác.",
+          "followUp": "Handler chạy đồng bộ có thể chặn publisher không?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Sau -=first, Raise gọi ai?",
+          "answer": "Chỉ second ở mẫu.",
+          "explanation": "Cùng delegate đã đăng ký được gỡ khỏi list.",
+          "misconception": "-= luôn xóa mọi handler.",
+          "followUp": "Đăng ký trùng hai lần có hậu quả gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Subscriber đầu ném lỗi chưa xử lý thì subscriber sau có chạy?",
+          "answer": "Không với multicast invoke thông thường.",
+          "explanation": "Cần policy riêng nếu muốn tiếp tục qua lỗi.",
+          "misconception": "Event framework luôn cách ly lỗi từng subscriber.",
+          "followUp": "Muốn gom lỗi phải iterate thế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Vì sao publisher sống lâu có thể gây managed leak?",
+          "answer": "Nó giữ reference tới subscriber hoặc closure còn reachable.",
+          "explanation": "GC không thu object còn được graph reachable giữ.",
+          "misconception": "Có event là GC bị lỗi.",
+          "followUp": "Unsubscribe hoặc token Dispose giải quyết lifetime gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Multicast Func<Task> có tự chờ mọi handler không?",
+          "answer": "Không, lời gọi thường chỉ trả giá trị theo semantics multicast.",
+          "explanation": "Muốn await tất cả cần lấy invocation list và policy lỗi/hủy.",
+          "misconception": "Chỉ cần await eventDelegate() là gom mọi Task.",
+          "followUp": "Chờ tuần tự so với WhenAll đổi policy thế nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "delegates overview",
+          "title": "Introduction to delegates and events in C#",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/delegates-overview"
         },
         {
-          "title": "events",
+          "title": "Events (C# Programming Guide)",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/events/"
         }
       ],
@@ -139,5 +237,30 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A22",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đăng ký/hủy đúng delegate và quan sát invocation list.",
+    "Định nghĩa policy lỗi/async thay vì mặc định event tự xử lý."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": [
+    "dotnet-memory-gc"
+  ]
 }

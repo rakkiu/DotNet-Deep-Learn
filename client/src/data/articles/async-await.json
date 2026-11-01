@@ -1,7 +1,7 @@
 {
   "id": "async-await",
   "title": "async/await — cơ chế bất đồng bộ",
-  "description": "async/await là cú pháp viết luồng chờ tác vụ theo dạng tuần tự, thường với Task/Task<T>. Bất đồng bộ cho phép không block thread trong khi một API I/O phù hợp đang chờ. async không có nghĩa tự tạo thr…",
+  "description": "async/await là cú pháp viết luồng chờ tác vụ theo dạng tuần tự, thường với Task/Task<T>. Bất đồng bộ cho phép không block thread trong khi một API I/O phù hợp đang chờ. async không có nghĩa tự tạo thread, chạy song song hoặc tự làm phép tính nhanh hơn.",
   "category": "concurrency",
   "kind": "Tính năng ngôn ngữ",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "async/await là cú pháp viết luồng chờ tác vụ theo dạng tuần tự, thường với Task/Task<T>. Bất đồng bộ cho phép không block thread trong khi một API I/O phù hợp đang chờ. async không có nghĩa tự tạo thread, chạy song song hoặc tự làm phép tính nhanh hơn."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "async không tự tạo thread. Method trả Task có thể không có async khi chỉ chuyển tiếp Task. async void khó quan sát lỗi và chỉ nên dùng trong các ngữ cảnh event handler phù hợp. ConfigureAwait(false) không bảo đảm ép đổi thread.",
         "I/O-bound dùng API async tự nhiên; CPU-bound có thể cần Task.Run tùy host. Không bọc mọi truy vấn bằng Task.Run, không dùng .Result để biến async thành sync trên UI. Truyền cancellation xuyên qua chuỗi gọi và xử lý lỗi ở ranh giới rõ ràng."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Compiler sinh state machine lưu state/continuation. Task/Task<T> biểu diễn hoàn tất/kết quả; async void khó được caller quan sát, chủ yếu dành event handler phù hợp. Awaitable đã hoàn tất có thể đi tiếp đồng bộ; chưa hoàn tất có thể suspend và trả về caller.",
+        "Method nhận CancellationToken và truyền tới I/O; CancelAfter/linked token phối hợp timeout/caller shutdown. Cancel là yêu cầu hợp tác. return task chuyển Task cho caller; return await trong try/catch hoặc using có thể cần để boundary còn sống tới lúc thao tác thật kết thúc, không thay nhau vô điều kiện."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "UI SynchronizationContext khác ASP.NET Core mặc định; .Result có thể deadlock ở context cần trở lại và blocking nhiều vẫn có thể làm server starvation. ConfigureAwait(false) không ép đổi thread và không tự xóa ExecutionContext/AsyncLocal. TCS làm bridge nên cân nhắc RunContinuationsAsynchronously để tránh inline continuation ngoài dự kiến. ValueTask có hợp đồng sử dụng/await riêng, chỉ tối ưu sau đo, không thay mọi Task."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "var ready = new TaskCompletionSource();\nvar log = new List<string>();\nTask operation = RunAsync();\nlog.Add(\"caller\");\nready.SetResult();\nawait operation;\nConsole.WriteLine(string.Join(\",\", log));\nasync Task RunAsync()\n{\n    log.Add(\"start\");\n    await ready.Task;\n    log.Add(\"end\");\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "start,caller,end",
-        "steps": [
-          "RunAsync thêm start rồi dừng tại ready.Task chưa hoàn tất.",
-          "Caller thêm caller rồi SetResult.",
-          "Sau await, operation thêm end; Main chờ operation rồi mới đọc log."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var ready = new TaskCompletionSource();\nvar log = new List<string>();\nTask operation = RunAsync();\nlog.Add(\"caller\");\nready.SetResult();\nawait operation;\nConsole.WriteLine(string.Join(\",\", log));\nasync Task RunAsync()\n{\n    log.Add(\"start\");\n    await ready.Task;\n    log.Add(\"end\");\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "start,caller,end",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. RunAsync thêm start rồi dừng tại ready.Task chưa hoàn tất. Caller thêm caller rồi SetResult. Sau await, operation thêm end; Main chờ operation rồi mới đọc log.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "async-io-cleanup",
+          "title": "File I/O, token canceled và resource scope",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "string file=Path.Combine(Path.GetTempPath(),Guid.NewGuid()+\".txt\");\ntry{await File.WriteAllTextAsync(file,\"Chào\");Console.WriteLine(await Read(file,CancellationToken.None));using var cts=new CancellationTokenSource();cts.Cancel();try{await Read(file,cts.Token);}catch(OperationCanceledException){Console.WriteLine(\"canceled\");}\ntry{await RunFailing();}catch(InvalidOperationException){Console.WriteLine(\"observed\");}\nConsole.Write(\"before,\");await Task.CompletedTask;Console.WriteLine(\"after\");}\nfinally{File.Delete(file);}\nstatic async Task<string> Read(string file,CancellationToken token)=>await File.ReadAllTextAsync(file,token);\nstatic async Task RunFailing(){using var r=new Resource();await Task.FromException(new InvalidOperationException());}\nclass Resource:IDisposable{public void Dispose()=>Console.WriteLine(\"disposed\");}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Chào\ncanceled\ndisposed\nobserved\nbefore,after",
+          "explanation": "Không suy thread ID hoặc I/O chắc chắn suspend; output dựa await/lỗi/scope. File chỉ thuộc demo và được xóa cuối.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +169,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "await CompletedTask có luôn nhường thread không?",
+          "answer": "Không, awaitable đã hoàn tất có thể đi tiếp đồng bộ.",
+          "explanation": "Không có điều kiện pending bắt buộc suspend.",
+          "misconception": "Có await là luôn tạo thread mới.",
+          "followUp": "TCS pending thể hiện khác biệt bằng cách nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Method trả Task có bắt buộc thêm async không?",
+          "answer": "Không nếu chuyển tiếp task đúng contract.",
+          "explanation": "async cần khi dùng await/state machine theo cách đó.",
+          "misconception": "Tên Async buộc compiler tạo thread.",
+          "followUp": "Khi có using/try cần cân nhắc return await ra sao?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Token đã canceled có đảm bảo mọi I/O đã dừng ngay không?",
+          "answer": "Không với mọi API; nó là giao ước hợp tác.",
+          "explanation": "Phải truyền token tới thao tác có hỗ trợ và quan sát hoàn tất.",
+          "misconception": "Cancel giết ngay mọi background work.",
+          "followUp": "Dispose resource trước task kết thúc gây rủi ro gì?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "ConfigureAwait(false) có xóa AsyncLocal không?",
+          "answer": "Không tự làm vậy.",
+          "explanation": "Capture SynchronizationContext và flow ExecutionContext là các cơ chế khác.",
+          "misconception": "false nghĩa không context nào còn tồn tại.",
+          "followUp": "UI cập nhật control cần context nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Vì sao bridge TCS thường dùng RunContinuationsAsynchronously?",
+          "answer": "Để tránh continuation inline chạy bất ngờ trong ngữ cảnh hoàn tất nguồn.",
+          "explanation": "Nó giúp kiểm soát reentrancy, không bảo đảm thread ID cụ thể.",
+          "misconception": "Option này tự tạo thread riêng cho mọi callback.",
+          "followUp": "Có thể hoàn tất TCS dưới lock tạo nguy cơ gì?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "asynchronous programming",
+          "title": "Asynchronous programming with async and await",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/"
         },
         {
-          "title": "async scenarios",
+          "title": "Asynchronous programming scenarios",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-scenarios"
         }
       ],
@@ -139,5 +237,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A40",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Theo dấu completed/incomplete awaitable và đường lỗi/hủy.",
+    "Giữ using/try bao trùm toàn thời gian tác vụ cần quản lý."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "csharp-exceptions"
+  ],
+  "relatedIds": []
 }

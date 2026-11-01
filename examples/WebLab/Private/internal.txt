@@ -1,0 +1,1 @@
+This file is not under wwwroot and must not be served by static-file middleware.

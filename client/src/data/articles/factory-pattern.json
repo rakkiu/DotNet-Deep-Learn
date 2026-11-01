@@ -1,7 +1,7 @@
 {
   "id": "factory-pattern",
   "title": "Factory và Abstract Factory",
-  "description": "Factory gom quyết định tạo object sau một API có ý nghĩa. Abstract Factory cung cấp hợp đồng tạo một họ sản phẩm liên quan mà caller không gắn với lớp cụ thể. Một hàm switch trả implementation là simp…",
+  "description": "Factory gom quyết định tạo object sau một API có ý nghĩa. Abstract Factory cung cấp hợp đồng tạo một họ sản phẩm liên quan mà caller không gắn với lớp cụ thể. Một hàm switch trả implementation là simple factory, chưa tự động là Abstract Factory đầy đủ.",
   "category": "architecture",
   "kind": "Mẫu thiết kế khởi tạo",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Factory gom quyết định tạo object sau một API có ý nghĩa. Abstract Factory cung cấp hợp đồng tạo một họ sản phẩm liên quan mà caller không gắn với lớp cụ thể. Một hàm switch trả implementation là simple factory, chưa tự động là Abstract Factory đầy đủ."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -40,7 +40,7 @@
       "paragraphs": [
         "Không tạo factory cho mọi class chỉ có một constructor đơn giản. Không gọi simple factory là Abstract Factory nếu không có họ sản phẩm và contract tương ứng. Không để factory che giấu tác vụ I/O nặng hoặc quyền sở hữu IDisposable mà caller không biết."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -82,31 +82,105 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Simple factory gom logic chọn implementation, thường qua switch. Factory Method cho subclass thay đổi cách tạo sản phẩm qua một method mở rộng. Abstract Factory cung cấp nhiều product contracts của một họ; mỗi concrete factory tạo các sản phẩm cùng biến thể. Không gọi switch một sản phẩm là cả ba pattern."
+      ],
+      "tables": [
+        {
+          "caption": "Ba factory",
+          "headers": [
+            "Loại",
+            "Điểm thay đổi",
+            "Ví dụ"
+          ],
+          "rows": [
+            [
+              "Simple factory",
+              "Nhánh chọn loại ở một chỗ",
+              "SourceFactory.Create(memory/file)"
+            ],
+            [
+              "Factory Method",
+              "Subclass override method tạo product",
+              "DocumentCreator.CreateWriter"
+            ],
+            [
+              "Abstract Factory",
+              "Thay cả họ sản phẩm tương thích",
+              "Plain/Html tạo formatter và renderer"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Factory không tự quản lý lifetime nếu contract không quy định. Sản phẩm IDisposable phải có owner; factory tạo qua DI có thể trả đối tượng thuộc container, khác object caller phải dọn. Nếu tạo cần I/O thì API async phải công bố Task/token và failure, không giấu tác vụ dài trong constructor. Service locator ẩn trong factory làm dependency khó thấy; chỉ thêm lớp khi cần biến thể thật."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "ITextSource source = SourceFactory.Create(\"memory\");\nConsole.WriteLine(source.Read());\n\ninterface ITextSource { string Read(); }\nclass MemorySource : ITextSource\n{\n    public string Read() => \"Nội dung từ bộ nhớ\";\n}\nstatic class SourceFactory\n{\n    public static ITextSource Create(string kind) => kind switch\n    {\n        \"memory\" => new MemorySource(),\n        _ => throw new ArgumentException(\"Nguồn không hỗ trợ\", nameof(kind))\n    };\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Nội dung từ bộ nhớ",
-        "steps": [
-          "Đây là simple factory tối thiểu để thấy nơi chọn implementation, không phải một họ Abstract Factory hoàn chỉnh.",
-          "Caller chỉ biết ITextSource; factory quyết định class MemorySource. Với họ sản phẩm, tách interface factory và nhiều concrete factory tương ứng."
-        ],
-        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "ITextSource source = SourceFactory.Create(\"memory\");\nConsole.WriteLine(source.Read());\n\ninterface ITextSource { string Read(); }\nclass MemorySource : ITextSource\n{\n    public string Read() => \"Nội dung từ bộ nhớ\";\n}\nstatic class SourceFactory\n{\n    public static ITextSource Create(string kind) => kind switch\n    {\n        \"memory\" => new MemorySource(),\n        _ => throw new ArgumentException(\"Nguồn không hỗ trợ\", nameof(kind))\n    };\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Nội dung từ bộ nhớ",
+          "explanation": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới. Đây là simple factory tối thiểu để thấy nơi chọn implementation, không phải một họ Abstract Factory hoàn chỉnh. Caller chỉ biết ITextSource; factory quyết định class MemorySource. Với họ sản phẩm, tách interface factory và nhiều concrete factory tương ứng.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "abstract-families",
+          "title": "Hai contract và hai họ sản phẩm",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "foreach(IFamily family in new IFamily[]{new PlainFamily(),new HtmlFamily()})\n{var formatter=family.Formatter();var renderer=family.Renderer();Console.WriteLine(renderer.Render(formatter.Format(\"An\")));}\ntry{_ = SourceFactory.Create(\"unknown\");}catch(ArgumentException){Console.WriteLine(\"unsupported\");}\nConsole.WriteLine(SourceFactory.Create(\"memory\").Read());Console.WriteLine(SourceFactory.Create(\"file\").Read());\ninterface IFormatter{string Format(string value);}interface IRenderer{string Render(string value);}\ninterface IFamily{IFormatter Formatter();IRenderer Renderer();}\nclass PlainFamily:IFamily{public IFormatter Formatter()=>new PlainFormatter();public IRenderer Renderer()=>new PlainRenderer();}\nclass HtmlFamily:IFamily{public IFormatter Formatter()=>new HtmlFormatter();public IRenderer Renderer()=>new HtmlRenderer();}\nclass PlainFormatter:IFormatter{public string Format(string s)=>\"text:\"+s;}\nclass PlainRenderer:IRenderer{public string Render(string s)=>\"plain[\"+s+\"]\";}\nclass HtmlFormatter:IFormatter{public string Format(string s)=>System.Net.WebUtility.HtmlEncode(s);}\nclass HtmlRenderer:IRenderer{public string Render(string s)=>\"<p>\"+s+\"</p>\";}\ninterface ISource{string Read();}\nclass MemorySource:ISource{public string Read()=>\"memory\";}\nclass FileSource:ISource{public string Read()=>\"file fixture\";}\nstatic class SourceFactory{public static ISource Create(string kind)=>kind switch{\"memory\"=>new MemorySource(),\"file\"=>new FileSource(),_=>throw new ArgumentException(\"unsupported\")};}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "plain[text:An]\n<p>An</p>\nunsupported\nmemory\nfile fixture",
+          "explanation": "IFamily tạo cả formatter/renderer tương thích; caller không new từng sản phẩm. FileSource là fixture không đọc file; simple factory được đối chiếu riêng với họ hai sản phẩm.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -117,14 +191,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Switch trả một ISource là factory nào ở mẫu?",
+          "answer": "Simple factory.",
+          "explanation": "Nó tập trung lựa chọn một sản phẩm, chưa có họ nhiều contract.",
+          "misconception": "Mọi Create đều là Abstract Factory.",
+          "followUp": "Factory Method cần điểm override ở đâu?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Hai product contracts trong mẫu họ là gì?",
+          "answer": "IFormatter và IRenderer.",
+          "explanation": "Mỗi family tạo cặp phù hợp; caller chỉ dùng contract.",
+          "misconception": "Concrete renderer là factory.",
+          "followUp": "Sản phẩm nào chịu trách nhiệm encode HTML?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Input unknown nên xử lý ra sao?",
+          "answer": "Từ chối rõ bằng ArgumentException theo hợp đồng ví dụ.",
+          "explanation": "Không âm thầm chọn biến thể mặc định sai.",
+          "misconception": "Factory phải trả bất cứ thứ gì cho đủ non-null.",
+          "followUp": "Có thể dùng TryCreate khi lỗi input thường gặp không?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Factory trả IDisposable thì ai Dispose?",
+          "answer": "Phải quy định owner trong contract; không suy từ tên pattern.",
+          "explanation": "Caller-owned khác container-owned lifetime.",
+          "misconception": "Factory luôn tự dispose ngay sau Create.",
+          "followUp": "Factory async còn phải công bố điều gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Khi nào abstraction ba tầng trở thành quá mức?",
+          "answer": "Khi không có biến thể hay ranh giới tạo object đáng quản lý.",
+          "explanation": "Số lớp và gián tiếp cần đổi lấy thay đổi cụ thể dễ hơn.",
+          "misconception": "Càng nhiều factory càng dễ bảo trì.",
+          "followUp": "Một thay đổi họ sản phẩm mới tác động những file nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "learn.microsoft.com — constructor",
-          "url": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/constructor"
+          "title": "Ví dụ C# Abstract Factory với họ sản phẩm",
+          "url": "https://refactoring.guru/design-patterns/abstract-factory/csharp/example"
         },
         {
-          "title": "learn.microsoft.com — architectural principles",
+          "title": "Factory Method in C#",
+          "url": "https://refactoring.guru/design-patterns/factory-method/csharp/example"
+        },
+        {
+          "title": "Nguyên lý tổ chức phụ thuộc",
           "url": "https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles"
         }
       ],
@@ -133,5 +263,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A19",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Phân biệt ba dạng factory bằng trách nhiệm và điểm mở rộng.",
+    "Ghép đúng họ sản phẩm; xác định nơi quản lý tài nguyên."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": []
 }
