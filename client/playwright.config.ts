@@ -6,7 +6,7 @@ export default defineConfig({
   workers: 1,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:5089",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5089",
     trace: "retain-on-failure",
     reducedMotion: "reduce",
     launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
@@ -23,9 +23,11 @@ export default defineConfig({
     },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
-  webServer: {
-    command: "npm run preview -- --host 127.0.0.1 --port 5089 --strictPort",
-    url: "http://127.0.0.1:5089",
-    reuseExistingServer: false,
-  },
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: "npm run preview -- --host 127.0.0.1 --port 5089 --strictPort",
+        url: "http://127.0.0.1:5089",
+        reuseExistingServer: false,
+      },
 });

@@ -1,0 +1,143 @@
+{
+  "id": "dotnet-first-program",
+  "title": ".NET — nền tảng, SDK và runtime",
+  "description": ".NET là một nền tảng phát triển phần mềm gồm runtime, thư viện nền, trình biên dịch và bộ công cụ SDK. C# là ngôn ngữ dùng để diễn đạt chương trình; .NET là hệ sinh thái giúp xây dựng và thực thi chươ…",
+  "category": "foundation",
+  "kind": "Nền tảng phát triển",
+  "sourceParts": [
+    1
+  ],
+  "prerequisites": [
+    "Không cần biết C# trước; biết mở terminal và quản lý thư mục"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        ".NET là một nền tảng phát triển phần mềm gồm runtime, thư viện nền, trình biên dịch và bộ công cụ SDK. C# là ngôn ngữ dùng để diễn đạt chương trình; .NET là hệ sinh thái giúp xây dựng và thực thi chương trình đó. ASP.NET Core là framework web xây trên .NET, còn Visual Studio là công cụ làm việc với mã nguồn."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu làm việc trực tiếp với API hệ điều hành và bộ nhớ cấp thấp, lập trình viên phải tự xử lý nhiều việc lặp lại: cấp phát/giải phóng, đọc file, kết nối mạng, đồng bộ luồng và đóng gói thư viện. .NET cung cấp một mô hình kiểu dữ liệu và thư viện chung để các ứng dụng không phải tự xây lại toàn bộ nền móng này."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Giá trị chính là hệ thống kiểu chặt chẽ, thư viện chuẩn lớn, quản lý bộ nhớ tự động và bộ công cụ thống nhất. .NET hiện đại hỗ trợ Windows, Linux và macOS cho các loại ứng dụng phù hợp. Điều này giúp cùng một nhóm dùng C# cho console, API và tác vụ nền; không có nghĩa mọi ứng dụng GUI hay thư viện Windows đều tự chạy đa nền tảng."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không nên chuyển một chương trình đang ổn định chỉ vì tên phiên bản mới. Ứng dụng phụ thuộc Web Forms, COM hoặc thư viện riêng của Windows cần đánh giá tương thích trước khi chuyển. Với chương trình cực nhỏ yêu cầu bộ nhớ/startup rất hạn chế, hoặc code cần điều khiển phần cứng trực tiếp, phải đo và cân nhắc runtime hay Native AOT thay vì mặc định .NET phù hợp.",
+        "Solution là nhóm project để quản lý, không bắt buộc để chạy một project. C# hiện đại cho phép top-level statements và local function; không buộc người mới phải tự viết class cho mọi dòng lệnh. VS Code + SDK cũng là lựa chọn hợp lệ, Visual Studio for Mac đã ngừng hỗ trợ.",
+        "Visual Studio Community thuận tiện trên Windows; .NET SDK + VS Code phù hợp nhiều hệ điều hành. Thông thường compiler tạo IL và runtime dùng JIT; Native AOT là một lựa chọn khác, nên không đồng nhất mọi cách triển khai .NET với JIT."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Thông thường, Roslyn biên dịch file .cs thành IL kèm metadata trong assembly. Khi chạy, runtime nạp assembly, giải quyết kiểu và JIT biên dịch các phương thức cần dùng thành mã máy. Garbage Collector theo dõi object còn được tham chiếu và thu hồi bộ nhớ không còn cần; tài nguyên như file/socket vẫn cần Dispose. Native AOT là lối triển khai khác, biên dịch trước ra mã máy và có các giới hạn riêng về reflection/code động.",
+        "Cài .NET SDK bản được hỗ trợ, mở terminal và chạy dotnet --info để kiểm tra. Tạo thư mục riêng cho bài thử, chạy dotnet new console, thay Program.cs rồi dotnet run. File .csproj mô tả project và target framework; Solution chỉ giúp quản lý nhiều project.",
+        ".NET Framework 4.8.1 thuộc dòng Windows, vẫn có chính sách hỗ trợ gắn với Windows tương ứng. .NET Core là dòng đa nền tảng trước .NET 5; .NET Standard là bộ đặc tả API dùng chung, không phải runtime. Ví dụ bài học dùng .NET 10 thay vì yêu cầu cài phiên bản trong video."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "C#",
+          "meaning": "Ngôn ngữ diễn tả lệnh và kiểu dữ liệu; compiler kiểm tra và biên dịch mã nguồn.",
+          "example": "Console.WriteLine là lời gọi một phương thức bằng cú pháp C#."
+        },
+        {
+          "term": ".NET SDK và runtime",
+          "meaning": "SDK có công cụ build; runtime thực thi chương trình và cung cấp các dịch vụ nền.",
+          "example": "dotnet run build khi cần rồi chạy; chỉ cài runtime không đủ để biên dịch dự án."
+        },
+        {
+          "term": "Top-level statements",
+          "meaning": "Cách viết điểm vào Console không cần tự khai báo Program.Main trong mã nguồn.",
+          "example": "Ba lệnh trong ví dụ chạy từ trên xuống; compiler tạo điểm vào phù hợp."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "NuGet phân phối thư viện; MSBuild đọc .csproj để restore/build. ASP.NET Core dùng runtime và thư viện .NET để nhận HTTP; EF Core dùng database provider để nói chuyện với database. .NET Standard là hợp đồng API dùng chung giữa một số triển khai .NET, không phải runtime có thể cài để chạy ứng dụng."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "Console.WriteLine(\"Xin chào, An!\");\nConsole.Write(\"Tổng: \");\nConsole.WriteLine(2 + 3);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Xin chào, An!\nTổng: 5",
+        "steps": [
+          "Dòng 1 in lời chào và xuống dòng. Dấu ngoặc kép tạo chuỗi, không phải tên biến.",
+          "Write ở dòng 2 in nhãn nhưng không xuống dòng.",
+          "Dòng 3 tính 2 + 3 thành 5 rồi in trên cùng dòng nhãn."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Chạy dotnet --info để phân biệt SDK đã cài và runtime đã cài; lỗi thiếu SDK khác với lỗi thiếu target runtime. Khi build thất bại, đọc mã CSxxxx và file/dòng đầu tiên có lỗi. Khi chạy lỗi, đặt breakpoint trong Program.cs, xem Locals và Call Stack; không sửa bằng cách cài ngẫu nhiên nhiều SDK."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "introduction",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/introduction"
+        },
+        {
+          "title": "native aot",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

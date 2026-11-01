@@ -1,0 +1,143 @@
+{
+  "id": "memory-caching",
+  "title": "Cache: hit, miss, hết hạn và dữ liệu cũ",
+  "description": "Caching giữ bản sao kết quả để lần truy cập sau giảm tính toán hoặc I/O. IMemoryCache lưu trong process; IDistributedCache là abstraction cho bộ đệm chia sẻ qua hệ thống bên ngoài như Redis theo provi…",
+  "category": "data",
+  "kind": "Kỹ thuật tối ưu / thư viện bộ đệm",
+  "sourceParts": [
+    28
+  ],
+  "prerequisites": [
+    "Biết DI và decorator ở bài 15, 27"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Caching giữ bản sao kết quả để lần truy cập sau giảm tính toán hoặc I/O. IMemoryCache lưu trong process; IDistributedCache là abstraction cho bộ đệm chia sẻ qua hệ thống bên ngoài như Redis theo provider. Cache là dữ liệu phụ trợ, không mặc định là nguồn dữ liệu gốc."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Một trang liên tục đọc cùng danh mục khiến database xử lý lặp dù dữ liệu ít đổi. Trước cache, mỗi request đều trả chi phí query/tính toán đầy đủ. Lưu lại kết quả có thể giảm độ trễ và tải, đổi lại phải chấp nhận/quản lý dữ liệu cũ."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Cache có ích khi kết quả tốn công tạo, được tái dùng và có quy tắc hết hạn phù hợp. Decorator có thể thêm cache quanh service mà giữ caller ổn định. Memory cache đơn giản hơn distributed cache; distributed cache hữu ích khi nhiều instance cần chia sẻ, nhưng thêm network và vận hành."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không cache dữ liệu từng user bằng key chung. Không dùng cache cho số dư/quyền hạn cần nhất quán tức thời nếu chưa có chiến lược đồng bộ và vô hiệu hóa rõ. Không tăng TTL vô hạn để che query chậm; cache miss hoặc hệ thống cache hỏng vẫn phải được xử lý.",
+        "GetOrCreate của IMemoryCache không bảo đảm chỉ một factory chạy khi nhiều caller cùng miss. TTL không bảo đảm freshness; cần invalidation hoặc chấp nhận độ trễ đã định nghĩa. Memory cache không chia sẻ tự động giữa server.",
+        "Sliding expiration gia hạn khi truy cập; kết hợp absolute để có trần tuổi dữ liệu. Decorator có thể bọc service cùng interface để thêm cache nhưng vẫn phải giải quyết invalidation, lỗi nguồn và chống nhiều request cùng tải lại."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Cache-aside: tìm key, nếu hit trả bản sao; nếu miss tải từ nguồn, lưu với TTL rồi trả. Absolute expiration giới hạn theo mốc; sliding kéo dài theo truy cập và nên phối hợp giới hạn tối đa khi cần. Nhiều request cùng miss có thể cùng tải dữ liệu (stampede); GetOrCreate không mặc định bảo đảm chỉ một factory chạy cho mọi tình huống.",
+        "Cache-aside đọc cache trước, miss mới đọc nguồn và ghi cache. Distributed cache cho phép nhiều instance chia sẻ dữ liệu, nhưng cần serialization, key strategy, expiration và cách xử lý khi cache không khả dụng.",
+        "Bọc service bằng decorator có thể thêm caching mà giữ contract. Tuy nhiên, kết quả không được lẫn user/tenant, dữ liệu nhạy cảm phải có ranh giới phù hợp, và giá trị mutable có thể bị caller sửa nếu trả cùng reference."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Cache hit / miss",
+          "meaning": "Hit có giá trị dùng lại; miss cần đọc nguồn và có thể đưa kết quả vào cache.",
+          "example": "Hai lần Read cùng khóa student:1 chỉ tăng calls một lần khi chạy tuần tự."
+        },
+        {
+          "term": "Expiration",
+          "meaning": "Giới hạn thời gian giá trị được coi là dùng được trong cache.",
+          "example": "Absolute một phút đặt trần thời gian; không bảo đảm database không đổi trong phút đó."
+        },
+        {
+          "term": "Cache key",
+          "meaning": "Định danh dữ liệu được lưu, cần chứa đủ ngữ cảnh.",
+          "example": "student:1 khác student:2; dữ liệu theo user/tenant cần khóa phù hợp để tránh lẫn dữ liệu."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Key phải gồm chiều dữ liệu như tenant/user/locale nếu chúng thay đổi kết quả. Ghi database cần chính sách invalidate/update cache; lỗi ở giữa có thể tạo stale data. Distributed cache cần serialize dữ liệu và thiết kế timeout; không giữ DbContext hay object request trong cache."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thêm FrameworkReference vào .csproj theo hướng dẫn bên dưới\n# Thay Program.cs rồi chạy\ndotnet run",
+        "code": "using Microsoft.Extensions.Caching.Memory;\nusing var cache = new MemoryCache(new MemoryCacheOptions());\nint calls = 0;\nint Read(string key) => cache.GetOrCreate(key, entry => {\n    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);\n    return ++calls;\n});\nConsole.WriteLine(Read(\"student:1\"));\nConsole.WriteLine(Read(\"student:\" + 1));\nConsole.WriteLine(calls);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "1\n1\n1",
+        "steps": [
+          "Read đầu miss, factory tăng calls lên 1 và lưu số 1.",
+          "Read lần hai cùng key hit, trả lại 1.",
+          "calls vẫn 1 vì factory không được gọi lại trong chuỗi tuần tự này."
+        ],
+        "request": null,
+        "note": "Thêm <ItemGroup><FrameworkReference Include=\"Microsoft.AspNetCore.App\" /></ItemGroup> bên trong <Project> của .csproj. Đây là console dùng các thư viện framework để cô lập cơ chế, chưa phải website đăng nhập hay server hoàn chỉnh."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "ServicesDemo/\n├── ServicesDemo.csproj    # framework/package reference\n├── Program.cs            # composition root / đăng ký DI\n├── Contracts/            # interface theo nhu cầu\n├── Services/             # implementation\n└── Decorators/           # lớp bọc nếu thực sự cần",
+        "note": "Đăng ký lifetime tại Program.cs, không rải việc tạo container khắp service. Cấu hình TTL/endpoint có thể lấy từ options. Các thư mục này chỉ là gợi ý tổ chức, không phải yêu cầu của compiler."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Đo hit/miss, thời gian nguồn, số lần factory chạy và kích thước cache; đừng chỉ nhìn response nhanh trong lần thứ hai. Kiểm tra key collision, TTL, invalidation sau ghi và khác biệt giữa nhiều app instances. Log tên key theo cách không lộ dữ liệu nhạy cảm."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "memory",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-10.0"
+        },
+        {
+          "title": "distributed",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/distributed?view=aspnetcore-10.0"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

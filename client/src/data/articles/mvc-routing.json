@@ -1,0 +1,142 @@
+{
+  "id": "mvc-routing",
+  "title": "Routing: URL, HTTP method và tham số",
+  "description": "Routing ánh xạ request tới endpoint dựa trên đường dẫn, HTTP method và các ràng buộc liên quan. Trong MVC, endpoint thường là action của controller. Route parameter là một phần URL; nó khác query stri…",
+  "category": "web",
+  "kind": "Cơ chế định tuyến HTTP",
+  "sourceParts": [
+    21
+  ],
+  "prerequisites": [
+    "Biết controller, action và request/response ở bài 19–20"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Routing ánh xạ request tới endpoint dựa trên đường dẫn, HTTP method và các ràng buộc liên quan. Trong MVC, endpoint thường là action của controller. Route parameter là một phần URL; nó khác query string và khác dữ liệu form gửi trong body."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu tự đọc URL rồi viết chuỗi if để chọn hàm, code khó tổ chức và tạo link dễ sai khi đổi đường dẫn. Routing gom quy tắc chọn endpoint, đồng thời hỗ trợ tạo URL từ tên route/action thay vì rải chuỗi đường dẫn khắp view."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Attribute routing đặt hợp đồng API gần action; conventional routing phù hợp các trang MVC theo quy ước. Route constraint làm đường dẫn rõ hơn; link generation giảm hardcode. Lợi ích nằm ở tính nhất quán và kiểm soát hợp đồng, không phải tự bảo đảm URL có dữ liệu hợp lệ."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng route constraint để thay validation nghiệp vụ. Không cho GET gây tác dụng phụ như xóa bản ghi. Không dùng hai route mơ hồ có cùng độ ưu tiên mà chỉ khác tên tham số; tên biến không đủ để routing chọn.",
+        "Constraint :int phân biệt route; validation nghiệp vụ nên đưa ra lỗi có ý nghĩa thay vì lạm dụng route constraint. 404 không khớp URL khác với 405 method không được hỗ trợ ở tài nguyên khớp.",
+        "Conventional route tiện cho website MVC; attribute route thường rõ hơn cho API. Tránh URL phụ thuộc tên method nội bộ nếu muốn đổi implementation mà giữ API ổn định."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Endpoint routing so khớp mẫu route và policy/method để lấy tập ứng viên, sau đó chọn endpoint. {id:int} chấp nhận segment theo constraint int; {id?} cho phép bỏ qua. Model binding sau đó chuyển route value thành argument. Không khớp đường dẫn có thể thành 404; có path nhưng sai method có thể thành 405.",
+        "Route mặc định {controller=Home}/{action=Index}/{id?} có default cho controller/action và id tùy chọn. Query string ?page=2 không phải một path segment; model binding có thể lấy nó riêng.",
+        "Attribute routing kiểm soát URL độc lập tên file và tổ chức source. Với nhiều endpoint khớp, framework xét quy tắc độ ưu tiên và có thể báo ambiguous match; đừng dựa vào cảm giác endpoint “đứng trên” luôn thắng."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Attribute route",
+          "meaning": "Mẫu URL khai báo trên controller/action.",
+          "example": "products kết hợp {id:int} thành /products/5."
+        },
+        {
+          "term": "Route constraint",
+          "meaning": "Điều kiện để route khớp, không thay thế kiểm tra nghiệp vụ.",
+          "example": "/products/abc không khớp {id:int}; số -1 vẫn là int."
+        },
+        {
+          "term": "HTTP method",
+          "meaning": "Động từ chỉ loại thao tác, tham gia chọn endpoint.",
+          "example": "[HttpGet] không khai báo endpoint xử lý POST cùng URL."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Routing phải phối hợp authentication/authorization và middleware theo thứ tự đúng. View dùng asp-controller/asp-action/asp-route-id để tạo URL. Reverse proxy và PathBase có thể ảnh hưởng đường dẫn công khai, nên không tự ghép host từ dữ liệu không tin cậy."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new web -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs, tạo thêm các file được ghi bên dưới\ndotnet run --urls http://localhost:5090",
+        "code": "using Microsoft.AspNetCore.Mvc;\nvar builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddControllers();\nvar app = builder.Build();\napp.MapControllers();\napp.Run();\n[Route(\"products\")]\npublic class ProductsController : ControllerBase\n{\n    [HttpGet(\"{id:int}\")]\n    public string Get(int id) => id >= 5 ? \"Đạt ngưỡng\" : \"Dưới ngưỡng\";\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Đạt ngưỡng",
+        "steps": [
+          "GET /products/5 khớp mẫu và id được bind thành 5.",
+          "Action kiểm tra 5 >= 5, được true.",
+          "Response chứa Đạt ngưỡng; đây là logic bên trong action, sau routing."
+        ],
+        "request": {
+          "method": "GET",
+          "path": "/products/5"
+        },
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "WebApp/\n├── WebApp.csproj\n├── Program.cs            # host, services, pipeline, routes\n├── appsettings.json      # cấu hình theo môi trường\n├── Controllers/          # action nhận request\n├── Models/               # input model / view model\n├── Views/                # Razor .cshtml (nếu dùng MVC)\n│   └── Shared/_Layout.cshtml\n├── wwwroot/              # CSS, JS và tài nguyên công khai\n└── Properties/launchSettings.json # chạy local",
+        "note": "Đây là quy ước MVC. API thuần có thể không có Views; Minimal API có thể bắt đầu từ Program.cs. Khi chia class ra file, thêm namespace/using nhất quán. Không đặt cấu hình nhạy cảm dưới wwwroot."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Dùng curl hoặc tab Network kiểm tra URL và method thực gửi. Bật log Microsoft.AspNetCore.Routing ở mức phù hợp để xem endpoint được chọn. Với 404, phân biệt route không khớp với action đã chạy nhưng không tìm thấy resource."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "routing",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/routing?view=aspnetcore-10.0"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/asp.net-core",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

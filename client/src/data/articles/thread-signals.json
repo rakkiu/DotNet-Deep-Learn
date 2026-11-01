@@ -1,0 +1,147 @@
+{
+  "id": "thread-signals",
+  "title": "AutoResetEvent và ManualResetEvent",
+  "description": "EventWaitHandle là tín hiệu đồng bộ để thread chờ một điều kiện được thông báo. AutoResetEvent cho phép một waiter vượt qua mỗi trạng thái signaled rồi tự reset; ManualResetEvent giữ trạng thái mở cho…",
+  "category": "concurrency",
+  "kind": "Primitive đồng bộ hóa",
+  "sourceParts": [
+    31
+  ],
+  "prerequisites": [
+    "Biết tạo và chờ Thread ở bài 30"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "EventWaitHandle là tín hiệu đồng bộ để thread chờ một điều kiện được thông báo. AutoResetEvent cho phép một waiter vượt qua mỗi trạng thái signaled rồi tự reset; ManualResetEvent giữ trạng thái mở cho các waiter cho tới Reset. Event ở đây khác event/delegate trong C#."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Một thread liên tục kiểm tra bool trong vòng lặp vừa tốn CPU vừa có vấn đề nhìn thấy dữ liệu giữa thread. Tín hiệu chờ cho phép thread ngủ tới khi điều kiện được phát, tránh polling bận và biểu đạt quan hệ thứ tự giữa các công việc."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "API WaitOne/Set thể hiện rõ điểm chờ và điểm báo; manual event phù hợp cổng mở cho nhiều waiter, auto event phù hợp một số tình huống bàn giao. Với code async, primitive blocking thường kém phù hợp hơn TaskCompletionSource, SemaphoreSlim hoặc Channel."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng AutoResetEvent như hàng đợi đếm mọi thông điệp: nhiều Set khi đã signaled có thể không tích lũy thành nhiều tín hiệu. Không chặn UI thread bằng WaitOne. Không dùng Reset/Set thiếu giao ước vì dễ mất tín hiệu hoặc treo vô hạn.",
+        "Event không phải bộ đếm: gọi Set nhiều lần có thể gộp tín hiệu. Nếu mỗi phần tử công việc đều phải được xử lý, hãy cân nhắc Channel<T> hoặc hàng đợi và semaphore thay vì dùng event để đếm.",
+        "WaitOne giữ thread khi cần chờ; CancellationToken/timeouts giúp tránh treo. Event thông thường trong C# là cơ chế delegate khác với EventWaitHandle dùng đồng bộ."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "WaitOne kiểm tra trạng thái tín hiệu và có thể block thread. Set chuyển sang signaled; AutoResetEvent giải phóng tối đa một waiter rồi reset, còn ManualResetEvent để các waiter đi qua cho tới Reset. Trạng thái signal và dữ liệu công việc là hai vấn đề khác nhau: vẫn cần bảo vệ cấu trúc dữ liệu dùng chung.",
+        "ManualResetEvent giống một cổng mở/đóng chung, AutoResetEvent giống tín hiệu cho một lượt chờ. Không bảo đảm fairness hoặc chọn waiter theo thứ tự đăng ký.",
+        "Khi test đồng bộ hóa, kiểm soát điểm phát/chờ bằng primitive; Thread.Sleep chỉ chờ thời gian trôi qua, không chứng minh thread khác đã tới một trạng thái cần thiết."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Signal",
+          "meaning": "Trạng thái cho phép một hoặc nhiều caller vượt qua điểm chờ.",
+          "example": "Set chuyển event sang signaled."
+        },
+        {
+          "term": "AutoResetEvent",
+          "meaning": "Một lần chờ thành công tự đưa trạng thái về non-signaled.",
+          "example": "WaitOne đầu true, lần sau false khi chưa Set lại."
+        },
+        {
+          "term": "ManualResetEvent",
+          "meaning": "Giữ trạng thái signaled cho tới Reset.",
+          "example": "Hai lần WaitOne đều true sau Set nếu chưa Reset."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Producer có thể đưa dữ liệu vào queue có đồng bộ rồi báo consumer. Với nhiều phần tử cần backpressure, BlockingCollection hoặc Channel thường diễn đạt đầy đủ hơn. Handle cần Dispose và chờ cần timeout/cancellation phù hợp để shutdown không kẹt."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "using EventWaitHandle gate = new AutoResetEvent(false);\ngate.Set();\nConsole.WriteLine(gate.WaitOne(0));\nConsole.WriteLine(gate.WaitOne(0));",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "True\nFalse",
+        "steps": [
+          "Event bắt đầu false rồi Set thành signaled.",
+          "WaitOne(0) thử ngay, không chờ; lần đầu true.",
+          "AutoReset tiêu thụ tín hiệu nên lần thứ hai false."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Đánh dấu mọi vị trí WaitOne, Set, Reset cùng timestamp và thread ID. Kiểm tra trạng thái ban đầu và đường lỗi có bỏ qua Set không. Với deadlock, Pause và xem waiter nào đang đợi tín hiệu mà producer không còn khả năng phát."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "overview of synchronization primitives",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/overview-of-synchronization-primitives"
+        },
+        {
+          "title": "system.threading.autoresetevent",
+          "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.autoresetevent"
+        },
+        {
+          "title": "system.threading.manualresetevent",
+          "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.manualresetevent"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

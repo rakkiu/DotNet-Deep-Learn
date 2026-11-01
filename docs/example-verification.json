@@ -1,0 +1,238 @@
+{
+  "sdkTarget": "net10.0",
+  "results": [
+    {
+      "id": "dotnet-first-program",
+      "status": "ran",
+      "detail": "Xin chào, An!\r\nTổng: 5"
+    },
+    {
+      "id": "csharp-language",
+      "status": "ran",
+      "detail": "Xin chào Khôi, có 41 phần kiến thức."
+    },
+    {
+      "id": "visual-studio",
+      "status": "not-csharp"
+    },
+    {
+      "id": "csharp-types",
+      "status": "ran",
+      "detail": "2\r\n5"
+    },
+    {
+      "id": "csharp-arrays",
+      "status": "ran",
+      "detail": "8\r\n3"
+    },
+    {
+      "id": "csharp-control-flow",
+      "status": "ran",
+      "detail": "13"
+    },
+    {
+      "id": "csharp-methods",
+      "status": "ran",
+      "detail": "3"
+    },
+    {
+      "id": "csharp-exceptions",
+      "status": "ran",
+      "detail": "Sai định dạng\r\nĐã dọn dẹp"
+    },
+    {
+      "id": "dotnet-streams",
+      "status": "ran",
+      "detail": "A\r\n1\r\n3"
+    },
+    {
+      "id": "csharp-collections",
+      "status": "ran",
+      "detail": "3\r\nBình"
+    },
+    {
+      "id": "csharp-lambda",
+      "status": "ran",
+      "detail": "5\r\n8"
+    },
+    {
+      "id": "linq-basics",
+      "status": "ran",
+      "detail": "60, 80"
+    },
+    {
+      "id": "oop-classes",
+      "status": "ran",
+      "detail": "True\r\n150"
+    },
+    {
+      "id": "oop-polymorphism",
+      "status": "ran",
+      "detail": "Dog"
+    },
+    {
+      "id": "csharp-static",
+      "status": "ran",
+      "detail": "1\r\n0\r\n1"
+    },
+    {
+      "id": "oop-interfaces",
+      "status": "ran",
+      "detail": "An"
+    },
+    {
+      "id": "design-testing-patterns",
+      "status": "ran",
+      "detail": "Học C# | Ôn C#"
+    },
+    {
+      "id": "unit-testing",
+      "status": "compiled",
+      "detail": ""
+    },
+    {
+      "id": "factory-pattern",
+      "status": "ran",
+      "detail": "Nội dung từ bộ nhớ"
+    },
+    {
+      "id": "decorator-pattern",
+      "status": "ran",
+      "detail": "[Thông báo] Xin chào"
+    },
+    {
+      "id": "csharp-generics",
+      "status": "ran",
+      "detail": "12\r\n5"
+    },
+    {
+      "id": "csharp-events",
+      "status": "ran",
+      "detail": "1"
+    },
+    {
+      "id": "tasks-concurrency",
+      "status": "ran",
+      "detail": "False\r\n8"
+    },
+    {
+      "id": "aspnet-first-app",
+      "status": "compiled",
+      "detail": ""
+    },
+    {
+      "id": "mvc-views",
+      "status": "compiled",
+      "detail": ""
+    },
+    {
+      "id": "mvc-routing",
+      "status": "compiled",
+      "detail": ""
+    },
+    {
+      "id": "mvc-binding",
+      "status": "compiled",
+      "detail": ""
+    },
+    {
+      "id": "efcore-context",
+      "status": "ran",
+      "detail": "1"
+    },
+    {
+      "id": "relational-databases",
+      "status": "not-csharp"
+    },
+    {
+      "id": "efcore-migrations",
+      "status": "compiled",
+      "detail": ""
+    },
+    {
+      "id": "efcore-relationships",
+      "status": "ran",
+      "detail": "An:CNTT"
+    },
+    {
+      "id": "aspnet-authorization",
+      "status": "ran",
+      "detail": "True"
+    },
+    {
+      "id": "dependency-injection",
+      "status": "ran",
+      "detail": "True\r\nFalse"
+    },
+    {
+      "id": "memory-caching",
+      "status": "ran",
+      "detail": "1\r\n1\r\n1"
+    },
+    {
+      "id": "dotnet-reflection",
+      "status": "ran",
+      "detail": "An"
+    },
+    {
+      "id": "dotnet-threads",
+      "status": "ran",
+      "detail": "7"
+    },
+    {
+      "id": "thread-signals",
+      "status": "ran",
+      "detail": "True\r\nFalse"
+    },
+    {
+      "id": "semaphore-limits",
+      "status": "ran",
+      "detail": "True\r\nTrue\r\n0"
+    },
+    {
+      "id": "thread-lock",
+      "status": "ran",
+      "detail": "200"
+    },
+    {
+      "id": "async-await",
+      "status": "ran",
+      "detail": "start,caller,end"
+    },
+    {
+      "id": "task-composition",
+      "status": "ran",
+      "detail": "False\r\n10,20"
+    },
+    {
+      "id": "tcp-sockets",
+      "status": "ran",
+      "detail": "An"
+    },
+    {
+      "id": "http-request-line",
+      "status": "ran",
+      "detail": "200"
+    },
+    {
+      "id": "http-headers",
+      "status": "ran",
+      "detail": "True\r\nclose"
+    },
+    {
+      "id": "http-response",
+      "status": "ran",
+      "detail": "5\r\nHTTP/1.1 200 OK\\r\\nContent-Type: text/plain; charset=utf-8\\r\\nContent-Length: 5\\r\\n\\r\\nChào"
+    },
+    {
+      "id": "aspnet-middleware",
+      "status": "compiled",
+      "detail": ""
+    },
+    {
+      "id": "httpclient-json",
+      "status": "ran",
+      "detail": "An"
+    }
+  ]
+}

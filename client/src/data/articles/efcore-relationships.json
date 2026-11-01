@@ -1,0 +1,147 @@
+{
+  "id": "efcore-relationships",
+  "title": "EF Core — quan hệ và tải dữ liệu",
+  "description": "Relationship biểu diễn quan hệ giữa entity: một-một, một-nhiều và nhiều-nhiều. Foreign key là giá trị liên kết ở database; navigation property là cách đi từ object này sang object liên quan trong C#. …",
+  "category": "data",
+  "kind": "Ánh xạ dữ liệu quan hệ",
+  "sourceParts": [
+    25
+  ],
+  "prerequisites": [
+    "Biết entity, khóa chính và truy vấn EF ở bài 23–24"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Relationship biểu diễn quan hệ giữa entity: một-một, một-nhiều và nhiều-nhiều. Foreign key là giá trị liên kết ở database; navigation property là cách đi từ object này sang object liên quan trong C#. Hai thứ có liên hệ nhưng không phải cùng một trường dữ liệu."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu chỉ có danh sách object rời nhau, code phải tự ghép sinh viên với khoa và bảo đảm không tham chiếu tới khoa không tồn tại. Database dùng key/constraint bảo vệ tính toàn vẹn; ORM cần mapping để biết cách materialize và lưu các mối liên hệ đó."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Mapping rõ giảm SQL join/ghép object thủ công và giúp diễn đạt aggregate theo nhu cầu. Include và projection hỗ trợ tải dữ liệu cần thiết. So với lazy loading vô tội vạ, truy vấn có chủ đích dễ kiểm soát số query và lượng dữ liệu hơn."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không Include toàn bộ graph chỉ để hiển thị vài cột. Không bật lazy loading rồi truy cập navigation trong vòng lặp lớn mà không theo dõi N+1. Không dựa vào cascade delete mặc định khi quan hệ có dữ liệu cần giữ hoặc nhiều đường cascade phức tạp.",
+        "Include không luôn tạo đúng một SQL: collection include có thể dùng split query. Lazy loading cần cấu hình, không tự bật chỉ vì có navigation. null! chỉ tắt cảnh báo tại dòng khai báo, không tạo Department runtime.",
+        "Many-to-many có thể dùng skip navigation và join entity ngầm; khi quan hệ có dữ liệu riêng như ngày đăng ký, hãy cân nhắc join entity tường minh. Projection chỉ lấy cột cần dùng thường tiết kiệm hơn tải toàn bộ graph."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "EF xác định principal/dependent, khóa chính/khóa ngoại và navigation qua convention hoặc Fluent API. Eager loading tải liên quan trong query được cấu hình, có thể dùng một hoặc nhiều SQL query tùy split-query. Explicit loading được gọi chủ động; lazy loading chỉ hoạt động khi cấu hình cơ chế tương ứng, không phải mọi navigation tự truy vấn.",
+        "Quan hệ một-nhiều dùng foreign key phía nhiều và collection phía một. Một-một cần xác định dependent và uniqueness; many-to-many có bảng liên kết dù model không khai báo class join tường minh.",
+        "Eager loading dùng Include; explicit loading là chủ động Load khi cần; lazy loading tải khi truy cập sau khi đã bật cơ chế phù hợp. Kiểm tra SQL và round-trips để tránh N+1 hoặc cartesian explosion khi include nhiều collection."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Khóa ngoại",
+          "meaning": "Giá trị liên kết một hàng tới khóa của hàng liên quan.",
+          "example": "Student.DepartmentId trỏ tới Department.Id."
+        },
+        {
+          "term": "Navigation",
+          "meaning": "Thuộc tính object/collection để đi qua quan hệ trong model C#.",
+          "example": "Student.Department và Department.Students là hai phía của quan hệ."
+        },
+        {
+          "term": "Eager loading",
+          "meaning": "Tải dữ liệu liên quan cùng thao tác truy vấn bằng Include hoặc projection phù hợp.",
+          "example": "Include(s => s.Department) cho phép đọc tên khoa sau khi materialize."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Database constraint bảo vệ dữ liệu ngay cả ngoài app; EF relationship fixup đồng bộ các navigation/key được track theo cơ chế của context. API nên trả DTO tránh vòng lặp serialize và tránh lộ dữ liệu liên quan không được phép. Many-to-many có join table; có thể cần entity tường minh nếu quan hệ có thêm thuộc tính."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\ndotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 10.0.0\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "using Microsoft.EntityFrameworkCore;\nusing Microsoft.Data.Sqlite;\nusing var connection = new SqliteConnection(\"Data Source=:memory:\");\nconnection.Open();\nvar options = new DbContextOptionsBuilder<School>().UseSqlite(connection).Options;\nusing var db = new School(options);\ndb.Database.EnsureCreated();\ndb.Departments.Add(new Department { Name = \"CNTT\", Students = new List<Student> {\n    new() { Name = \"An\", Score = 8 }, new() { Name = \"Chi\", Score = 5 }\n}});\ndb.SaveChanges();\ndb.ChangeTracker.Clear();\nvar students = db.Students.Include(s => s.Department).Where(s => s.Score >= 8).OrderBy(s => s.Id).ToList();\nConsole.WriteLine(string.Join(\", \", students.Select(s => s.Name + \":\" + s.Department.Name)));\nclass Department\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public ICollection<Student> Students { get; set; } = new List<Student>();\n}\nclass Student\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public int Score { get; set; }\n    public int DepartmentId { get; set; }\n    public Department Department { get; set; } = null!;\n}\nclass School(DbContextOptions<School> options) : DbContext(options)\n{\n    public DbSet<Student> Students => Set<Student>();\n    public DbSet<Department> Departments => Set<Department>();\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "An:CNTT",
+        "steps": [
+          "SaveChanges lưu một khoa và hai sinh viên với khóa ngoại tương ứng.",
+          "Clear bỏ các object tracked để tránh nhầm relationship fix-up với Include.",
+          "Truy vấn chọn An vì điểm 8 và tải Department; output là An:CNTT."
+        ],
+        "request": null,
+        "note": "Ví dụ sử dụng SQLite in-memory để không phụ thuộc SQL Server. EnsureCreated chỉ tạo schema cho ví dụ độc lập này; mục Migrations có luồng riêng cho database được quản lý bằng migration. Package 10.0.0 là mốc minh họa tương thích .NET 10, không phải khuyến nghị bỏ qua các bản vá."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "School/\n├── School.csproj         # provider và EF Design packages\n├── Program.cs            # đăng ký context / điểm chạy\n├── Models/Student.cs     # entity\n├── Data/SchoolContext.cs # DbContext và mapping\n├── Migrations/           # migration và model snapshot\n└── appsettings.json      # cấu hình; không chứa secret thật",
+        "note": "Tên thư mục là quy ước gợi ý; EF không bắt buộc entity ở Models. Ví dụ gọn có thể khai báo type trong Program.cs để dễ đọc. Secret dùng biến môi trường hoặc cơ chế secret phù hợp, không gửi xuống trình duyệt."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Log số lệnh SQL khi render một danh sách để phát hiện N+1. Kiểm tra foreign key thực trong DB và model builder khi quan hệ bị nhận sai. Nếu navigation rỗng, xác định dữ liệu chưa tải, không tồn tại, bị query filter hay bị serialization bỏ qua."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "relationships",
+          "url": "https://learn.microsoft.com/en-us/ef/core/modeling/relationships"
+        },
+        {
+          "title": "related data",
+          "url": "https://learn.microsoft.com/en-us/ef/core/querying/related-data/"
+        },
+        {
+          "title": "single split queries",
+          "url": "https://learn.microsoft.com/en-us/ef/core/querying/single-split-queries"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/entity-framework-core",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

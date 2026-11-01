@@ -1,0 +1,148 @@
+{
+  "id": "linq-basics",
+  "title": "LINQ: lọc, sắp xếp và chọn dữ liệu",
+  "description": "LINQ là Language Integrated Query: bộ khả năng truy vấn tích hợp trong C# với toán tử như Where, Select, OrderBy và GroupBy. Nó không phải database và không chỉ dành cho SQL. Cùng cú pháp có thể xử lý…",
+  "category": "foundation",
+  "kind": "Tính năng truy vấn dữ liệu",
+  "sourceParts": [
+    10
+  ],
+  "prerequisites": [
+    "Biết collection và lambda ở bài 8–9"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "LINQ là Language Integrated Query: bộ khả năng truy vấn tích hợp trong C# với toán tử như Where, Select, OrderBy và GroupBy. Nó không phải database và không chỉ dành cho SQL. Cùng cú pháp có thể xử lý object trong RAM hoặc mô tả truy vấn cho một provider bên ngoài."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Trước LINQ, lọc/sắp xếp/chiếu dữ liệu thường cần nhiều vòng lặp và biến tạm; truy vấn SQL lại dùng ngôn ngữ và cơ chế riêng. LINQ chuẩn hóa cách biểu đạt nhiều phép truy vấn, nhưng nơi thực thi vẫn phụ thuộc loại nguồn và provider."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Query diễn đạt cần dữ liệu gì rõ hơn việc tự quản lý index và danh sách tạm. Compiler kiểm tra thuộc tính và kiểu, giúp refactor an toàn hơn SQL nối chuỗi. Điều này không khiến SQL biến mất: vẫn cần hiểu SQL, index và kế hoạch thực thi khi LINQ đi tới database."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng LINQ cho đoạn rất nhạy hiệu năng nếu chưa đo allocation và số lần enumeration. Không kéo cả bảng bằng ToList rồi mới lọc chỉ vì cú pháp thuận tiện. Không đặt side effect như ghi file hoặc tăng biến ngoài trong phép Select rồi phụ thuộc số lần nó được duyệt.",
+        "Không phải mọi LINQ đều deferred hoặc streaming. OrderBy trì hoãn nhưng thường cần buffer để sắp; First trên nguồn rỗng ném lỗi, FirstOrDefault trả default(T), không luôn là null. Kiểm tra provider trước khi kết luận truy vấn chạy ở RAM hay database.",
+        "LINQ giúp ghép các thao tác rõ mục đích; vòng lặp có thể dễ theo dấu hơn khi cập nhật nhiều trạng thái. Materialize bằng ToList khi cần chốt kết quả, không nên làm trước bộ lọc ở database rồi mới lọc trong RAM."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Với IEnumerable, nhiều toán tử tạo iterator và chỉ xử lý khi enumeration diễn ra; Count/First/ToList tạo nhu cầu lấy kết quả, nhưng không phải mọi toán tử đều trễ hoặc streaming. OrderBy cần xem dữ liệu để sắp xếp. Với IQueryable, expression tree được provider phân tích và dịch, kết quả được materialize khi truy vấn được thực thi.",
+        "Where lọc, Select biến đổi, OrderBy sắp xếp; GroupBy gom nhóm theo khóa. Query syntax được hạ xuống các lời gọi toán tử tương ứng; không kết luận mọi cách viết đều sinh mã máy/SQL giống nhau.",
+        "First ném lỗi khi không có phần tử; FirstOrDefault trả default(T), ví dụ int là 0 và reference thường là null. Single yêu cầu đúng một phần tử; SingleOrDefault vẫn ném nếu có hơn một. IEnumerable chạy logic trong tiến trình; IQueryable đưa biểu thức cho provider, khả năng dịch phụ thuộc provider."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Where",
+          "meaning": "Giữ các phần tử mà predicate trả true; không biến đổi giá trị của phần tử.",
+          "example": "[8,3,6] sau điều kiện >= 6 còn 8 và 6."
+        },
+        {
+          "term": "OrderBy và Select",
+          "meaning": "OrderBy sắp thứ tự; Select chiếu mỗi phần tử thành một kết quả mới.",
+          "example": "Sắp 8,6 thành 6,8 rồi nhân 10 được 60,80."
+        },
+        {
+          "term": "Provider",
+          "meaning": "Cơ chế thực thi LINQ tùy nguồn: Enumerable trên object khác IQueryable dịch biểu thức qua provider.",
+          "example": "Ví dụ dùng mảng trong bộ nhớ; không có SQL nào được gửi đi."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "LINQ to Objects chạy delegate trong process; EF Core dịch phần truy vấn được hỗ trợ sang ngôn ngữ database. AsEnumerable chuyển phần xử lý tiếp theo sang cơ chế Enumerable; nó không tự tải ngay dữ liệu. Chỉ gọi ToList khi thực sự cần chụp kết quả và tái sử dụng."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "int[] scores = { 8, 3, 6 };\nvar result = scores.Where(x => x >= 6)\n                   .OrderBy(x => x)\n                   .Select(x => x * 10);\nConsole.WriteLine(string.Join(\", \", result));",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "60, 80",
+        "steps": [
+          "Where giữ 8 và 6, thứ tự ban đầu vẫn là 8,6.",
+          "OrderBy đọc nguồn để sắp thành 6,8.",
+          "Select tạo các giá trị 60,80 khi được duyệt.",
+          "string.Join yêu cầu kết quả; lúc này chuỗi truy vấn được duyệt."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Xem kiểu tĩnh của nguồn là IEnumerable hay IQueryable. Với dữ liệu RAM, theo dõi số lượt enumeration; với EF dùng ToQueryString và log Database.Command. Khi kết quả sai, kiểm tra thứ tự Where, Select, OrderBy, Skip/Take và hành vi tập rỗng."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "linq",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/linq/"
+        },
+        {
+          "title": "deferred execution lazy evaluation",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/linq/deferred-execution-lazy-evaluation"
+        },
+        {
+          "title": "querying",
+          "url": "https://learn.microsoft.com/en-us/ef/core/querying/"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

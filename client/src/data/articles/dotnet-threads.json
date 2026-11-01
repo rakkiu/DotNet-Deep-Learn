@@ -1,0 +1,143 @@
+{
+  "id": "dotnet-threads",
+  "title": "Thread và vòng đời luồng",
+  "description": "Thread đại diện một luồng thực thi trong process. Mỗi thread có call stack riêng; nhiều thread có thể truy cập cùng object trên heap. Thread khác với Task: Task là abstraction về công việc/kết quả và …",
+  "category": "concurrency",
+  "kind": "API luồng thực thi",
+  "sourceParts": [
+    30
+  ],
+  "prerequisites": [
+    "Đã phân biệt Task với thread ở bài 18"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Thread đại diện một luồng thực thi trong process. Mỗi thread có call stack riêng; nhiều thread có thể truy cập cùng object trên heap. Thread khác với Task: Task là abstraction về công việc/kết quả và không luôn gắn với một thread riêng."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Một luồng duy nhất phải làm tính toán dài có thể giữ UI hoặc việc khác đứng yên. Tạo thread riêng cho phép một đường thực thi độc lập, nhưng buộc lập trình viên quản lý khi bắt đầu, khi kết thúc, trao đổi dữ liệu và xử lý lỗi."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Thread thủ công hữu ích cho vòng lặp chuyên biệt cần kiểm soát luồng rõ ràng hoặc API blocking đặc thù. Với phần lớn công việc thông thường, ThreadPool/TPL quản lý tài nguyên dễ hơn. Không nên đánh giá Thread như bản cũ luôn phải bỏ, mà theo mức kiểm soát cần thiết."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không tạo một thread mới cho mỗi HTTP request hoặc mỗi phần tử danh sách. Không dùng Thread.Abort để dừng cưỡng bức trên .NET hiện đại. Không bỏ thread chạy vô hạn mà không có chính sách hủy/dọn tài nguyên.",
+        "Concurrency khác parallelism. Background thread bị dừng khi tiến trình kết thúc không phải quy trình shutdown an toàn. Với dừng hợp tác, ưu tiên CancellationToken và kiểm tra cancellation, không dùng bool không đồng bộ rồi giả định mọi thread thấy ngay.",
+        "Thread riêng hữu ích khi cần kiểm soát đặc biệt; Task và API async thường thích hợp hơn cho công việc thông thường. Join là blocking, không đặt nó tùy tiện trên UI hoặc đường xử lý request."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "new Thread tạo object mô tả; Start lên lịch đường thực thi và một Thread instance không được start lại sau khi hoàn tất. Join chặn caller tới khi luồng kết thúc. Foreground thread có thể giữ process sống; background thread không giữ process khi mọi foreground đã kết thúc, và không bảo đảm finally hoàn tất khi process bị đóng.",
+        "Thread.Start bắt đầu thread một lần; một Thread đã kết thúc không được Start lại. Nếu cần nhiều công việc ngắn, ThreadPool/Task thường tránh chi phí tạo thread thủ công liên tục.",
+        "Cancellation là hợp tác: caller yêu cầu, worker kiểm tra và thoát có dọn dẹp. Không dùng kết thúc cưỡng bức để thay cho thiết kế vòng đời và không giả định background thread sẽ chạy finally khi process đóng."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Thread",
+          "meaning": "Luồng thực thi có stack và trạng thái riêng, được hệ điều hành lập lịch.",
+          "example": "new Thread tạo object điều khiển; Start yêu cầu bắt đầu thực thi."
+        },
+        {
+          "term": "Join",
+          "meaning": "Chặn thread gọi cho tới khi worker kết thúc.",
+          "example": "Main chỉ đọc value sau khi worker.Join() trả về."
+        },
+        {
+          "term": "Foreground / background",
+          "meaning": "Foreground giữ tiến trình sống; background không ngăn tiến trình kết thúc khi không còn foreground thread.",
+          "example": "IsBackground không có nghĩa worker được dọn tài nguyên đúng lúc khi process thoát."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Thread truy cập UI control phải theo quy tắc dispatcher của framework UI. Shared object cần đồng bộ hoặc message passing. CancellationToken hỗ trợ thông báo hủy hợp tác; không tự ngắt mọi API blocking nếu API đó không quan sát token."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "int value = 0;\nvar worker = new Thread(() => value = 7);\nworker.Start();\nworker.Join();\nConsole.WriteLine(value);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "7",
+        "steps": [
+          "Main khởi tạo value bằng 0 và tạo worker chưa chạy.",
+          "Start bắt đầu worker; Join chờ worker kết thúc.",
+          "Worker đã ghi 7 trước khi Main in nên kết quả xác định."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Đặt tên thread, mở Threads/Parallel Stacks và Pause All để xem từng đường đang chờ gì. Với app không thoát, tìm foreground thread còn sống. Với state sai ngẫu nhiên, ghi thread ID và xem truy cập shared state có được bảo vệ nhất quán không."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "using threads and threading",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/using-threads-and-threading"
+        },
+        {
+          "title": "foreground and background threads",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/foreground-and-background-threads"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

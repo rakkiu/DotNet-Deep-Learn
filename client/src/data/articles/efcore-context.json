@@ -1,0 +1,152 @@
+{
+  "id": "efcore-context",
+  "title": "Entity Framework Core và DbContext",
+  "description": "EF Core là ORM ánh xạ giữa object .NET và dữ liệu trong database thông qua provider. Nó không phải database: SQL Server, SQLite hay PostgreSQL mới là hệ quản trị/lưu trữ phía dưới. DbContext quản lý m…",
+  "category": "data",
+  "kind": "Thư viện ORM",
+  "sourceParts": [
+    23
+  ],
+  "prerequisites": [
+    "Biết class, LINQ và cách cài package trong project Console"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "EF Core là ORM ánh xạ giữa object .NET và dữ liệu trong database thông qua provider. Nó không phải database: SQL Server, SQLite hay PostgreSQL mới là hệ quản trị/lưu trữ phía dưới. DbContext quản lý một đơn vị làm việc gồm model, truy vấn và theo dõi thay đổi."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Với ADO.NET trực tiếp, lập trình viên tự viết SQL, tạo command, gắn parameter, đọc từng cột và chuyển thành object. Cách này kiểm soát tốt nhưng nhiều mã ánh xạ lặp. EF Core tự động hóa phần lớn công việc đó và hỗ trợ quản lý mô hình quan hệ."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Truy vấn LINQ mạnh kiểu và change tracking giúp tập trung vào quy tắc dữ liệu; provider xử lý chi tiết kết nối. So với SQL thủ công, sửa tên property có thể được compiler hỗ trợ. EF không miễn phí về hiệu năng và không xóa nhu cầu hiểu SQL, transaction hay index."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không chọn EF mặc định cho truy vấn báo cáo rất đặc thù nếu SQL trực tiếp rõ và dễ tối ưu hơn. Không dùng một DbContext singleton cho mọi request. Không chia sẻ context đồng thời giữa nhiều task hoặc giữ nó quá lâu khiến tracked entities tích lũy.",
+        "DbContext không thread-safe; không chạy nhiều thao tác đồng thời trên một instance. DbSet là điểm truy vấn entity, không bảo đảm ánh xạ một-một với một bảng. Không nhúng connection string production vào source.",
+        "EnsureCreated phù hợp database thử nghiệm ở đây, không dùng xen với Migrations cho cùng database. Scaffold phù hợp schema có sẵn; model-first phù hợp khi dự án quản lý schema. ORM vẫn cần hiểu SQL, indexes và transaction."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Model định nghĩa entity, key và mapping. IQueryable tạo expression tree; provider dịch phần được hỗ trợ thành truy vấn database. Materialization tạo object từ dòng kết quả; tracking lưu trạng thái để SaveChanges xác định insert/update/delete. Thay property chưa tự ghi database; SaveChanges mới gửi các lệnh cần thiết.",
+        "DbContext quản lý change tracker và truy vấn qua provider. Connection có thể được mở/đóng theo thao tác; không định nghĩa context là một connection luôn mở. Đăng ký AddDbContext thường dùng scoped trong ứng dụng web.",
+        "Trong bài dùng SQLite in-memory để chạy độc lập; giữ connection mở cho tới hết ví dụ. Tính năng và SQL khác provider nên test SQLite không chứng minh mọi truy vấn chạy y hệt SQL Server."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Entity",
+          "meaning": "Kiểu mô tả đối tượng được ánh xạ; khóa giúp EF phân biệt từng bản ghi.",
+          "example": "Student.Id là khóa được nhận diện theo convention."
+        },
+        {
+          "term": "DbContext",
+          "meaning": "Unit of work quản lý truy vấn, tracking và lưu thay đổi.",
+          "example": "db.Students.Add chỉ đánh dấu Added; SaveChanges mới ghi INSERT."
+        },
+        {
+          "term": "Provider",
+          "meaning": "Thành phần dịch thao tác EF sang hệ quản trị cụ thể.",
+          "example": "UseSqlite dùng SQLite; không có nghĩa mọi SQL giống SQL Server."
+        },
+        {
+          "term": "Bảng, hàng và khóa chính",
+          "meaning": "Database quan hệ tổ chức dữ liệu thành bảng gồm các hàng và cột; khóa chính định danh từng hàng.",
+          "example": "Bảng Students có cột Id, Name, Score; một hàng có thể là Id=1, Name=An, Score=8. Student.Id là khóa chính trong ví dụ."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "AddDbContext thường đăng ký context theo scope request trong ASP.NET Core; UseSqlServer/UseSqlite chọn provider. Connection string là cấu hình server, secret không đưa vào frontend. Query thường được parameterize theo API hỗ trợ; raw SQL nối dữ liệu người dùng vẫn có thể gây injection."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\ndotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 10.0.0\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "using Microsoft.EntityFrameworkCore;\nusing Microsoft.Data.Sqlite;\nusing var connection = new SqliteConnection(\"Data Source=:memory:\");\nconnection.Open();\nvar options = new DbContextOptionsBuilder<School>().UseSqlite(connection).Options;\nusing var db = new School(options);\ndb.Database.EnsureCreated();\ndb.Students.Add(new Student { Name = \"An\", Score = 8 });\ndb.SaveChanges();\nConsole.WriteLine(db.Students.Count(s => s.Score >= 8));\nclass Student\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public int Score { get; set; }\n}\nclass School(DbContextOptions<School> options) : DbContext(options)\n{\n    public DbSet<Student> Students => Set<Student>();\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "1",
+        "steps": [
+          "Mở connection in-memory và tạo schema để ví dụ độc lập.",
+          "Add đánh dấu Student mới; SaveChanges ghi bản ghi.",
+          "Count dịch điều kiện sang database; điểm 8 thỏa >= 8 nên kết quả 1."
+        ],
+        "request": null,
+        "note": "Ví dụ sử dụng SQLite in-memory để không phụ thuộc SQL Server. EnsureCreated chỉ tạo schema cho ví dụ độc lập này; mục Migrations có luồng riêng cho database được quản lý bằng migration. Package 10.0.0 là mốc minh họa tương thích .NET 10, không phải khuyến nghị bỏ qua các bản vá."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "School/\n├── School.csproj         # provider và EF Design packages\n├── Program.cs            # đăng ký context / điểm chạy\n├── Models/Student.cs     # entity\n├── Data/SchoolContext.cs # DbContext và mapping\n├── Migrations/           # migration và model snapshot\n└── appsettings.json      # cấu hình; không chứa secret thật",
+        "note": "Tên thư mục là quy ước gợi ý; EF không bắt buộc entity ở Models. Ví dụ gọn có thể khai báo type trong Program.cs để dễ đọc. Secret dùng biến môi trường hoặc cơ chế secret phù hợp, không gửi xuống trình duyệt."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Bật log Database.Command, xem SQL bằng ToQueryString và theo dõi ChangeTracker khi SaveChanges không ghi như kỳ vọng. Không bật sensitive data logging ở production. Kiểm tra context đang trỏ database nào, entity có được track không và lỗi constraint từ database."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "core",
+          "url": "https://learn.microsoft.com/en-us/ef/core/"
+        },
+        {
+          "title": "dbcontext configuration",
+          "url": "https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/"
+        },
+        {
+          "title": "querying",
+          "url": "https://learn.microsoft.com/en-us/ef/core/querying/"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/entity-framework-core",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

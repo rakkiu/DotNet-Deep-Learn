@@ -1,0 +1,137 @@
+{
+  "id": "decorator-pattern",
+  "title": "Decorator — mở rộng bằng cách bọc",
+  "description": "Decorator giữ cùng contract với object gốc, nhận object đó bên trong và thêm hành vi quanh lời gọi. Nó khác kế thừa vì mở rộng bằng composition, và khác proxy ở mục đích thiết kế dù hình dạng code có …",
+  "category": "architecture",
+  "kind": "Mẫu thiết kế cấu trúc",
+  "sourceParts": [
+    15
+  ],
+  "prerequisites": [
+    "Biến, method và class cơ bản"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Decorator giữ cùng contract với object gốc, nhận object đó bên trong và thêm hành vi quanh lời gọi. Nó khác kế thừa vì mở rộng bằng composition, và khác proxy ở mục đích thiết kế dù hình dạng code có thể gần giống. Bài cache của thầy dùng lại pattern này."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu cần thêm lọc, log hay cache vào một service, sửa trực tiếp class gốc làm nó có nhiều trách nhiệm. Tạo subclass cho mọi tổ hợp tính năng gây bùng nổ số lớp. Bọc object cho phép ghép tính năng theo thứ tự khi lắp ráp."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Caller dùng cùng interface và không cần biết có lớp bọc. Mỗi decorator có trách nhiệm nhỏ, có thể ghép logging bên ngoài cache hoặc ngược lại để có hành vi mong muốn. So với subclass, lựa chọn composition linh hoạt theo instance."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không tạo nhiều decorator làm đường gọi quá khó theo nếu chỉ có một hành vi nhỏ. Không thay đổi hợp đồng trả về hay nuốt lỗi khiến caller hiểu sai. Không giả định các decorator đổi thứ tự vẫn tương đương, đặc biệt với transaction, cache và retry."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Decorator implement cùng interface, giữ inner và gọi inner trước/sau phần bổ sung hoặc có thể short-circuit khi contract cho phép như cache hit. Nhiều lớp tạo chuỗi. Mỗi lớp cần xác định quyền sở hữu tài nguyên và cách truyền cancellation/exception, không chỉ chuyển tiếp dữ liệu."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Component",
+          "meaning": "Contract chung của object gốc và decorator.",
+          "example": "IMessage cung cấp Read."
+        },
+        {
+          "term": "Inner component",
+          "meaning": "Object được lớp bọc chuyển tiếp tới.",
+          "example": "PrefixMessage giữ inner do caller truyền vào."
+        },
+        {
+          "term": "Composition order",
+          "meaning": "Thứ tự lớp bọc tạo hành vi quan sát được.",
+          "example": "Logging ngoài cache thấy cả hit; logging trong nguồn có thể chỉ thấy miss."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "DI/composition root có thể lắp decorator quanh service; cần tránh resolve chính interface của mình gây vòng lặp. Cache decorator có key/TTL/invalidation; logging decorator phải tránh secret. Retry decorator chỉ dùng với thao tác có chính sách idempotency phù hợp."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "IMessage message = new PrefixMessage(new PlainMessage());\nConsole.WriteLine(message.Read());\n\ninterface IMessage { string Read(); }\nclass PlainMessage : IMessage\n{\n    public string Read() => \"Xin chào\";\n}\nclass PrefixMessage(IMessage inner) : IMessage\n{\n    public string Read() => \"[Thông báo] \" + inner.Read();\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "[Thông báo] Xin chào",
+        "steps": [
+          "PrefixMessage giữ cùng contract IMessage và nhận inner qua constructor.",
+          "Read gọi inner.Read rồi bổ sung prefix; PlainMessage và caller không cần sửa nội dung."
+        ],
+        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Theo Call Stack để thấy thứ tự outer/inner. Log một correlation ID xuyên chuỗi thay vì lặp dữ liệu nhạy cảm. Khi kết quả từ cache khác nguồn, kiểm tra key và đường short-circuit trước khi nghi ngờ object gốc."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "learn.microsoft.com — architectural principles",
+          "url": "https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+        },
+        {
+          "title": "learn.microsoft.com — memory",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-10.0"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

@@ -1,0 +1,143 @@
+{
+  "id": "async-await",
+  "title": "async/await — cơ chế bất đồng bộ",
+  "description": "async/await là cú pháp viết luồng chờ tác vụ theo dạng tuần tự, thường với Task/Task<T>. Bất đồng bộ cho phép không block thread trong khi một API I/O phù hợp đang chờ. async không có nghĩa tự tạo thr…",
+  "category": "concurrency",
+  "kind": "Tính năng ngôn ngữ",
+  "sourceParts": [
+    34
+  ],
+  "prerequisites": [
+    "Biết Task và exception ở bài 6, 18"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "async/await là cú pháp viết luồng chờ tác vụ theo dạng tuần tự, thường với Task/Task<T>. Bất đồng bộ cho phép không block thread trong khi một API I/O phù hợp đang chờ. async không có nghĩa tự tạo thread, chạy song song hoặc tự làm phép tính nhanh hơn."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Code đồng bộ gọi mạng có thể giữ UI không phản hồi hoặc chiếm worker thread server chỉ để chờ. Callback lồng nhau làm xử lý lỗi và thứ tự công việc khó đọc. async/await giữ cấu trúc try/catch và luồng logic rõ trong khi runtime quản lý continuation."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Giao diện phản hồi và khả năng phục vụ nhiều tác vụ I/O có thể tốt hơn khi không block. So với callback thủ công, code gần với cách diễn đạt quy trình. Nếu công việc đã có kết quả sẵn hoặc rất nhỏ, async có overhead và không phải mọi method đều cần thêm async."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng async void ngoài ngữ cảnh event handler phù hợp. Không gọi .Result hoặc Wait để lấy kết quả ở giữa chuỗi async. Không dùng Task.Run cho phép gọi mạng vốn đã hỗ trợ async, và không bỏ task chạy mà không ai quan sát lỗi.",
+        "async không tự tạo thread. Method trả Task có thể không có async khi chỉ chuyển tiếp Task. async void khó quan sát lỗi và chỉ nên dùng trong các ngữ cảnh event handler phù hợp. ConfigureAwait(false) không bảo đảm ép đổi thread.",
+        "I/O-bound dùng API async tự nhiên; CPU-bound có thể cần Task.Run tùy host. Không bọc mọi truy vấn bằng Task.Run, không dùng .Result để biến async thành sync trên UI. Truyền cancellation xuyên qua chuỗi gọi và xử lý lỗi ở ranh giới rõ ràng."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Compiler biến async method thành state machine. Hàm bắt đầu đồng bộ; nếu awaitable chưa hoàn thành, lưu trạng thái, đăng ký continuation và trả quyền cho caller. Nếu nó đã hoàn thành, code có thể đi tiếp ngay mà không suspend. Sau await, context/awaiter quyết định cách tiếp tục; ConfigureAwait(false) không hứa tạo thread mới.",
+        "Caller nhận Task để theo dõi hoàn tất, kết quả và lỗi. await Task<T> cho T; await Task không có kết quả giá trị. Một thao tác đã hoàn tất không cần nhường quyền điều khiển chỉ vì có từ khóa await.",
+        "Ngữ cảnh continuation phụ thuộc SynchronizationContext/TaskScheduler và cách await. ConfigureAwait(false) không yêu cầu quay lại captured context phù hợp; nó không bảo đảm một thread cụ thể hoặc ép luôn đổi thread."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Async method",
+          "meaning": "Method có cơ chế state machine để tạm dừng tại await chưa hoàn tất.",
+          "example": "Phần đầu RunAsync chạy ngay trên đường gọi trước khi trả về caller."
+        },
+        {
+          "term": "Continuation",
+          "meaning": "Phần công việc cần tiếp tục sau khi awaitable hoàn tất.",
+          "example": "log.Add(\"end\") chạy sau khi ready có kết quả."
+        },
+        {
+          "term": "Completed awaitable",
+          "meaning": "Awaitable đã xong không buộc phương thức tạm dừng.",
+          "example": "await Task.CompletedTask có thể tiếp tục ngay trước khi caller thêm log."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "ASP.NET Core controller await service, service await EF/HttpClient. Truyền CancellationToken xuyên chuỗi, DisposeAsync khi tài nguyên cần dọn bất đồng bộ. UI có synchronization context để cập nhật control; code thư viện phải cân nhắc context thay vì sao chép ConfigureAwait một cách máy móc."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "var ready = new TaskCompletionSource();\nvar log = new List<string>();\nTask operation = RunAsync();\nlog.Add(\"caller\");\nready.SetResult();\nawait operation;\nConsole.WriteLine(string.Join(\",\", log));\nasync Task RunAsync()\n{\n    log.Add(\"start\");\n    await ready.Task;\n    log.Add(\"end\");\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "start,caller,end",
+        "steps": [
+          "RunAsync thêm start rồi dừng tại ready.Task chưa hoàn tất.",
+          "Caller thêm caller rồi SetResult.",
+          "Sau await, operation thêm end; Main chờ operation rồi mới đọc log."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Theo dõi Tasks và async call stack; xem task có completed/faulted/canceled hay không. Đặt breakpoint trước/sau await để biết đoạn nào chạy đồng bộ. Với treo, tìm blocking .Result/Wait và tài nguyên chưa hoàn tất, không giả định await nào cũng làm đổi thread."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "asynchronous programming",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/"
+        },
+        {
+          "title": "async scenarios",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-scenarios"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

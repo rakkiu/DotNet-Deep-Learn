@@ -1,0 +1,144 @@
+{
+  "id": "oop-classes",
+  "title": "Class, object và đóng gói một trạng thái hợp lệ",
+  "description": "OOP tổ chức chương trình quanh object kết hợp trạng thái và hành vi. Class là định nghĩa kiểu; object là instance cụ thể tạo ra khi chạy. Đóng gói, trừu tượng, kế thừa và đa hình là các ý tưởng thiết …",
+  "category": "architecture",
+  "kind": "Mô hình lập trình",
+  "sourceParts": [
+    11
+  ],
+  "prerequisites": [
+    "Biết value/reference type, method và kiểm tra điều kiện"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "OOP tổ chức chương trình quanh object kết hợp trạng thái và hành vi. Class là định nghĩa kiểu; object là instance cụ thể tạo ra khi chạy. Đóng gói, trừu tượng, kế thừa và đa hình là các ý tưởng thiết kế, không phải bốn câu thần chú phải đưa vào mọi class."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu dữ liệu mở công khai và nhiều hàm ở khắp nơi được sửa tùy ý, rất khó bảo đảm một tài khoản không âm tiền hoặc một đơn hàng không ở trạng thái vô lý. Object có ranh giới cho phép đưa quy tắc thay đổi trạng thái vào cùng nơi sở hữu dữ liệu."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Đóng gói giúp giữ invariant và giảm nơi phải sửa khi cách lưu dữ liệu thay đổi. Class có constructor và method mang ý nghĩa nghiệp vụ có thể rõ hơn một túi field công khai. C# hỗ trợ cả lập trình hướng đối tượng lẫn các phong cách khác; không cần biến mọi phép tính thành cây kế thừa."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng inheritance chỉ để tái sử dụng vài dòng code nếu quan hệ is-a không đúng. Không tạo class khổng lồ vừa truy cập database, render HTML và gửi email. Với dữ liệu bất biến nhỏ hoặc phép tính thuần, record/struct hoặc hàm đơn giản có thể phù hợp hơn.",
+        "Đóng gói không chỉ là thêm private: constructor trong ví dụ chưa kiểm tra số dư ban đầu, nên hợp đồng phải nói rõ hoặc bổ sung validation nếu cấm số dư âm. required yêu cầu khởi tạo member ở compile-time theo các quy tắc C#, không bảo đảm nội dung khác rỗng hoặc hợp lệ khi chạy. partial là khai báo từng phần, không phải local class.",
+        "Property với private set bảo vệ thao tác từ caller nhưng không làm object tự thread-safe. Abstract class chia sẻ hợp đồng và phần triển khai giữa các lớp; một class chỉ có một lớp cha trực tiếp, có thể implement nhiều interface. Constructor không được kế thừa như method thông thường."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "new cấp phát/khởi tạo instance và chạy constructor. Field lưu trạng thái; property có accessor để kiểm soát truy cập; method diễn đạt hành vi. private giới hạn truy cập từ ngoài type, internal trong assembly, protected hỗ trợ kế thừa. required yêu cầu caller cung cấp member lúc khởi tạo theo quy tắc compiler, không thay thế validation giá trị nghiệp vụ.",
+        "Constructor thiết lập trạng thái ban đầu và bất biến của object. Property có thể kiểm soát quyền đọc/ghi thay vì công khai field tùy ý. required yêu cầu cú pháp khởi tạo đáp ứng hợp đồng compiler nhưng không tự validate nội dung, không thay constructor kiểm tra nghiệp vụ.",
+        "partial chia khai báo một type qua nhiều file trong cùng compilation; không phải một class sống cục bộ. Kế thừa mô tả quan hệ “là một”; composition mô tả quan hệ “có một”. Đừng dùng kế thừa chỉ để tránh chép vài dòng code khi các đối tượng không thay thế được nhau."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Class và object",
+          "meaning": "Class định nghĩa kiểu; mỗi object là một instance có trạng thái riêng.",
+          "example": "Account là kiểu, account tham chiếu tới một tài khoản có số dư ban đầu 100."
+        },
+        {
+          "term": "Constructor",
+          "meaning": "Đoạn khởi tạo trạng thái của instance; không có kiểu trả về như method thông thường.",
+          "example": "new Account(100) gọi constructor và gán Balance."
+        },
+        {
+          "term": "Đóng gói",
+          "meaning": "Kiểm soát cách trạng thái được thay đổi để giữ invariant, tức quy tắc luôn phải đúng.",
+          "example": "private set ngăn caller gán Balance trực tiếp; Deposit chỉ chấp nhận số dương."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Entity biểu diễn dữ liệu được ORM ánh xạ; DTO biểu diễn hợp đồng API; ViewModel biểu diễn dữ liệu cho giao diện. Chúng có thể giống về hình dạng nhưng có trách nhiệm khác nhau. Không đưa mật khẩu hoặc navigation graph nội bộ ra JSON chỉ vì object có sẵn."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "var account = new Account(100);\nbool accepted = account.Deposit(50);\nConsole.WriteLine(accepted);\nConsole.WriteLine(account.Balance);\n\nclass Account\n{\n    public int Balance { get; private set; }\n    public Account(int balance) { Balance = balance; }\n    public bool Deposit(int amount)\n    {\n        if (amount <= 0) return false;\n        Balance += amount;\n        return true;\n    }\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "True\n150",
+        "steps": [
+          "Tạo Account, constructor gán Balance = 100.",
+          "Deposit nhận 50, điều kiện amount <= 0 sai.",
+          "Số dư tăng thành 150 và hàm trả true.",
+          "Caller in True rồi 150."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Xem object state trước và sau mỗi method thay đổi dữ liệu. Với constructor lỗi, xem thứ tự khởi tạo field và lời gọi base. Nếu khó tìm nơi sửa property, thu hẹp setter và dùng method nghiệp vụ; debugger có thể đặt breakpoint tại setter để bắt đường gọi."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "object oriented",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/"
+        },
+        {
+          "title": "classes",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/classes"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

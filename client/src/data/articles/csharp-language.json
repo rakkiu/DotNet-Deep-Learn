@@ -1,0 +1,137 @@
+{
+  "id": "csharp-language",
+  "title": "C# — ngôn ngữ và chương trình đầu tiên",
+  "description": "C# là ngôn ngữ lập trình kiểu tĩnh, đa mục đích, hỗ trợ hướng đối tượng, generic, pattern matching và async/await. C# diễn tả chương trình; compiler chuyển chương trình thành dạng thực thi trên nền tả…",
+  "category": "foundation",
+  "kind": "Ngôn ngữ lập trình",
+  "sourceParts": [
+    1
+  ],
+  "prerequisites": [
+    "Không cần biết C# trước"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "C# là ngôn ngữ lập trình kiểu tĩnh, đa mục đích, hỗ trợ hướng đối tượng, generic, pattern matching và async/await. C# diễn tả chương trình; compiler chuyển chương trình thành dạng thực thi trên nền tảng phù hợp, thường là .NET. Ngôn ngữ, runtime, framework web và IDE là bốn vai trò khác nhau."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Một chương trình cần cách mô tả dữ liệu, điều kiện, vòng lặp và ranh giới hàm mà con người có thể đọc/sửa. C# kết hợp cú pháp quen thuộc với hệ thống kiểu và thư viện của .NET để giảm nhiều thao tác quản lý bộ nhớ cấp thấp. Nó không loại bỏ lỗi nghiệp vụ hoặc nhu cầu hiểu tài nguyên."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Compiler phát hiện nhiều sai kiểu và IDE hỗ trợ refactor; generic và nullable làm hợp đồng dữ liệu rõ hơn. Có thể dùng cùng ngôn ngữ cho console, web và service. Lựa chọn còn tùy đội ngũ và hệ sinh thái, không nên khẳng định C# luôn nhanh hơn C++, Java hay Python ở mọi công việc."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không chọn C# chỉ vì muốn code chạy trực tiếp trong mọi trình duyệt như JavaScript; mô hình web client có yêu cầu riêng như WebAssembly. Với script ngắn xử lý dữ liệu trong hệ sinh thái đã dùng Python, chuyển ngôn ngữ có thể không mang lại lợi ích. Với hệ nhúng rất hạn chế tài nguyên, phải đánh giá toolchain/runtime."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Roslyn phân tích cú pháp, ràng buộc tên và kiểm tra kiểu trước khi sinh IL/metadata trong cách build phổ biến. Top-level statements là cú pháp rút gọn; compiler tạo điểm vào thay cho việc tự viết Program.Main. Namespace tổ chức tên, còn assembly là đơn vị triển khai, hai thứ không đồng nhất."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Compiler",
+          "meaning": "Công cụ kiểm tra và biên dịch source code.",
+          "example": "dotnet build dùng toolchain của SDK để biên dịch project."
+        },
+        {
+          "term": "Namespace",
+          "meaning": "Không gian đặt tên giúp phân biệt các type.",
+          "example": "Hai class Student trong hai namespace có thể là hai type khác nhau."
+        },
+        {
+          "term": "Entry point",
+          "meaning": "Điểm bắt đầu khi process chạy ứng dụng.",
+          "example": "Top-level statements được compiler chuyển thành điểm vào thích hợp."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "C# gọi thư viện .NET qua namespace và package reference trong .csproj. Một console app có thể dùng HttpClient gọi API và EF Core truy vấn DB; secret cấu hình không nên được hardcode trong file .cs. C# không tự biến mọi input thành dữ liệu an toàn, vẫn phải parse/validate."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "string name = \"Khôi\";\nint lessons = 41;\nConsole.WriteLine($\"Xin chào {name}, có {lessons} phần kiến thức.\");",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Xin chào Khôi, có 41 phần kiến thức.",
+        "steps": [
+          "string khai báo chuỗi; int khai báo số nguyên. Kiểu của hai biến được kiểm tra khi build.",
+          "Dấu $ cho phép chèn biểu thức vào chuỗi; WriteLine ghi chuỗi ra console và xuống dòng."
+        ],
+        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Chạy dotnet build để đọc lỗi compiler trước khi chạy. Đặt breakpoint ở Console.WriteLine, xem biến trong Locals và bước qua bằng F10. Phân biệt lỗi compile-time (sai kiểu) với runtime (chia nguyên cho 0) và lỗi logic (tổng tính sai nhưng app vẫn chạy)."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "learn.microsoft.com — tour of csharp",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/"
+        },
+        {
+          "title": "learn.microsoft.com — top level statements",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/program-structure/top-level-statements"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

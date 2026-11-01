@@ -1,0 +1,141 @@
+{
+  "id": "visual-studio",
+  "title": "Visual Studio, .NET CLI và NuGet",
+  "description": "Visual Studio là IDE: nơi soạn code, quản lý project, build, debug và dùng công cụ phân tích. .NET CLI là giao diện dòng lệnh của SDK; NuGet là hệ thống package của .NET. IDE không phải runtime và khô…",
+  "category": "foundation",
+  "kind": "IDE và công cụ phát triển",
+  "sourceParts": [
+    1
+  ],
+  "prerequisites": [
+    "Không cần biết C# trước"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Visual Studio là IDE: nơi soạn code, quản lý project, build, debug và dùng công cụ phân tích. .NET CLI là giao diện dòng lệnh của SDK; NuGet là hệ thống package của .NET. IDE không phải runtime và không phải ngôn ngữ; ứng dụng không cần mở Visual Studio để chạy sau khi được triển khai đúng."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu dùng một editor thuần, lập trình viên phải tự phối hợp lệnh build, tìm file lỗi, xem giá trị biến và quản lý package. IDE gom các thao tác vào cùng môi trường. CLI giữ cách build lặp lại trong terminal/CI mà không phụ thuộc thao tác chuột của từng người."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Solution Explorer, IntelliSense, breakpoint, Watch và Call Stack giúp học theo dấu chương trình. NuGet quản lý thư viện và dependency thay việc copy DLL thủ công. Visual Studio Community thuận tiện trên Windows; CLI và VS Code là lựa chọn hợp lệ cho nhiều nền tảng, không phải chỉ có một công cụ mới học được .NET."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không cài mọi workload nếu chỉ viết console; chọn thành phần cần thiết để giảm tải máy. Không gửi thư mục bin/obj hay thông tin đăng nhập NuGet vào Git. Không dựa vào thao tác IDE không được ghi lại nếu người khác/CI cần build cùng project."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Project .csproj mô tả SDK, TargetFramework, properties và PackageReference. Solution nhóm nhiều project cho việc quản lý, không bắt buộc với một project độc lập. dotnet restore giải dependency; build chạy MSBuild/compiler; debug gắn debugger vào process và dùng symbol để ánh xạ lệnh máy về dòng source."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Project / solution",
+          "meaning": "Project là đơn vị build; solution nhóm project.",
+          "example": "Có thể dotnet run trực tiếp một .csproj mà không có .sln/.slnx."
+        },
+        {
+          "term": "SDK / workload",
+          "meaning": "SDK cung cấp compiler/CLI; workload bổ sung khả năng phát triển theo nền tảng.",
+          "example": "Console không cần cài toàn bộ công cụ mobile."
+        },
+        {
+          "term": "NuGet package",
+          "meaning": "Gói thư viện cùng metadata/version/dependency.",
+          "example": "PackageReference được restore thay vì copy DLL tùy tiện."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Git theo dõi source và cấu hình cần chia sẻ; NuGet lấy package từ nguồn cấu hình trong NuGet.Config. Secret feed nằm trong cơ chế credential riêng, không commit. launchSettings.json cấu hình chạy local, không phải toàn bộ cấu hình production."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "dotnet --info\ndotnet new console -n HelloDotNet\ncd HelloDotNet\ndotnet build\ndotnet run",
+        "file": "Program.cs",
+        "language": "shell",
+        "files": {},
+        "output": "SDK in thông tin môi trường; template console mặc định in Hello, World!",
+        "steps": [
+          "Mỗi dòng trên là lệnh terminal, không dán vào Program.cs.",
+          "Mở HelloDotNet.csproj bằng Visual Studio hoặc mở thư mục với editor; Program.cs là nơi viết source."
+        ],
+        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "F9 bật breakpoint, F5 chạy debug, F10 bước qua, F11 bước vào. Dùng Locals/Watch xem giá trị và Call Stack xem đường gọi. Nếu breakpoint không được hit, kiểm tra đúng process/project khởi động, build Debug và symbol/source đang khớp."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "learn.microsoft.com — tutorial console",
+          "url": "https://learn.microsoft.com/en-us/visualstudio/get-started/csharp/tutorial-console?view=visualstudio"
+        },
+        {
+          "title": "learn.microsoft.com — tools",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/tools/"
+        },
+        {
+          "title": "learn.microsoft.com — what is nuget",
+          "url": "https://learn.microsoft.com/en-us/nuget/what-is-nuget"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

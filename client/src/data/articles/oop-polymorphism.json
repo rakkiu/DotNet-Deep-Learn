@@ -1,0 +1,147 @@
+{
+  "id": "oop-polymorphism",
+  "title": "Đa hình: override khác gì với new?",
+  "description": "Đa hình cho phép code gọi cùng một hợp đồng nhưng hành vi thực tế phụ thuộc đối tượng nhận lời gọi. Trong C#, virtual/override và interface dispatch là các cơ chế phổ biến. Overload chọn chữ ký phù hợ…",
+  "category": "architecture",
+  "kind": "Cơ chế của OOP",
+  "sourceParts": [
+    12
+  ],
+  "prerequisites": [
+    "Biết class và object ở bài 11; phần dưới giải thích thêm kế thừa"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Đa hình cho phép code gọi cùng một hợp đồng nhưng hành vi thực tế phụ thuộc đối tượng nhận lời gọi. Trong C#, virtual/override và interface dispatch là các cơ chế phổ biến. Overload chọn chữ ký phù hợp là chuyện khác với override chọn triển khai lúc chạy."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Một hàm gửi thông báo dùng switch theo Email, SMS, Zalo phải sửa mỗi khi thêm kênh mới. Đa hình đưa hành vi đặc thù về từng implementation, còn caller làm việc với hợp đồng chung. Mục tiêu là giảm nhánh phụ thuộc loại cụ thể tại những nơi cần mở rộng."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Thêm implementation mới có thể ít ảnh hưởng caller và dễ thay bằng fake khi test. So với switch dài, từng hành vi độc lập hơn. Tuy vậy nếu tập trường hợp rất nhỏ và ổn định, một switch rõ ràng đôi khi đơn giản hơn cả hệ thống class."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không tạo cây kế thừa sâu hoặc override làm thay đổi hợp đồng mà caller dựa vào. Không dùng new để mong có hành vi override. Không thêm virtual cho mọi method nếu không có điểm mở rộng cần bảo đảm lâu dài.",
+        "new trong khai báo thành viên là che giấu; new Dog() là tạo đối tượng. Bỏ từ khóa new khi che một thành viên phù hợp thường tạo cảnh báo biên dịch, không tự biến thành override. Overload là nhiều chữ ký khác nhau; override là chuyên biệt hóa cùng giao ước virtual.",
+        "Đa hình giúp mở rộng nhưng khiến hành vi phụ thuộc runtime, cần đọc cả giao ước và bản ghi đè. Interface cũng hỗ trợ đa hình nhưng cách triển khai interface không nên suy diễn chỉ từ ví dụ member hiding này. Ép kiểu downcast có thể thất bại nếu đối tượng thực tế không thuộc kiểu con."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Với lời gọi virtual qua biến lớp cha, runtime chọn implementation dựa trên type thực của instance. override tham gia chuỗi virtual; new chỉ che một member và việc chọn phụ thuộc kiểu biểu thức tại điểm gọi. sealed override chặn lớp con ghi đè thêm. JIT có thể tối ưu lời gọi nhưng phải giữ đúng ngữ nghĩa quan sát được.",
+        "Dùng override khi lớp con cần chuyên biệt hóa hành vi mà bên gọi qua kiểu cha vẫn phải nhận được. Dùng new khi chủ ý cung cấp một thành viên khác tên trùng với thành viên kế thừa, thường trong tình huống tương thích API. Tránh dùng new để “sửa” một phương thức không virtual rồi kỳ vọng đa hình."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Kế thừa",
+          "meaning": "Class con dùng hợp đồng và các thành viên được kế thừa từ class cha; đối tượng con có thể được tham chiếu qua kiểu cha.",
+          "example": "class Dog : Animal khai báo Dog kế thừa Animal. Animal pet = new Dog() sao chép tham chiếu tới object Dog, không cắt object thành Animal."
+        },
+        {
+          "term": "Kiểu tĩnh",
+          "meaning": "Kiểu compiler biết từ khai báo và ngữ cảnh biểu thức.",
+          "example": "Animal pet = new Dog(): pet có kiểu tĩnh Animal."
+        },
+        {
+          "term": "Kiểu runtime",
+          "meaning": "Type thực tế của object khi chương trình chạy.",
+          "example": "Object được new Dog() có kiểu runtime Dog."
+        },
+        {
+          "term": "Virtual dispatch",
+          "meaning": "Sau khi chọn member virtual, runtime chọn bản override theo object.",
+          "example": "Dog override Speak nên lời gọi qua Animal có thể chạy Dog.Speak."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "DI cung cấp implementation qua interface; controller không cần biết service là bản thật hay fake. EF proxy có thể dùng override cho một số tính năng được cấu hình. Khi serialize qua kiểu cơ sở, cần cấu hình đa hình phù hợp, không giả định serializer tự hiểu mọi subclass."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "Animal pet = new Dog();\npet.Speak();\n\nclass Animal\n{\n    public virtual void Speak() => Console.WriteLine(\"Animal\");\n}\nclass Dog : Animal\n{\n    public override void Speak() => Console.WriteLine(\"Dog\");\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Dog",
+        "steps": [
+          "Kiểu tĩnh Animal cho phép truy cập Speak.",
+          "Animal.Speak là virtual.",
+          "Đối tượng runtime là Dog; Dog override cùng thành viên nên in Dog."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Trong Watch, so sánh kiểu khai báo của biến với GetType của object. Đặt breakpoint trong cả method lớp cha và override. Nếu gọi nhầm, kiểm tra virtual/override/new, chữ ký và kiểu biến tại call site trước khi nghi ngờ runtime."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "polymorphism",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/polymorphism"
+        },
+        {
+          "title": "new modifier",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

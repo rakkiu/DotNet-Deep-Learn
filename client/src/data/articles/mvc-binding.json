@@ -1,0 +1,149 @@
+{
+  "id": "mvc-binding",
+  "title": "Model binding và validation: hai bước khác nhau",
+  "description": "Model binding chuyển dữ liệu request thành tham số/object C#. Validation kiểm tra dữ liệu đã nhận có thỏa quy tắc như Required, Range hay quy tắc nghiệp vụ hay không. Hai bước này khác nhau; bind thàn…",
+  "category": "web",
+  "kind": "Cơ chế nhận và kiểm tra dữ liệu",
+  "sourceParts": [
+    22
+  ],
+  "prerequisites": [
+    "Biết route và action ở bài 21; biết class/property"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Model binding chuyển dữ liệu request thành tham số/object C#. Validation kiểm tra dữ liệu đã nhận có thỏa quy tắc như Required, Range hay quy tắc nghiệp vụ hay không. Hai bước này khác nhau; bind thành công không có nghĩa dữ liệu hợp lệ hoặc người dùng có quyền sửa."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Tự đọc từng Request.Form, parse số và ghép thông báo lỗi gây lặp và dễ bỏ sót. Model binding dùng tên field và metadata để thực hiện các phép chuyển đổi nhất quán. Validation gom quy tắc và lỗi cho UI phản hồi rõ thay vì gặp lỗi database ở bước cuối."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Input model mạnh kiểu, DataAnnotations và ModelState giúp code controller tập trung vào use case. Tag Helpers giữ tên field và thông báo lỗi khớp model. So với nhận entity nguyên xi, DTO giới hạn field được phép nhận và giảm nguy cơ overposting."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không bind trực tiếp entity có IsAdmin, Price hay OwnerId do client tự gửi nếu các field đó phải do server quyết định. Không tin client-side validation. Không coi anti-forgery token là thay thế authentication, hoặc validation là thay thế kiểm tra quyền trên từng resource.",
+        "Ví dụ chủ ý không dùng [ApiController] để quan sát ModelState trực tiếp. Với [ApiController], lỗi model thường tạo response 400 tự động trước khi vào action. Model binding không tự xác thực danh tính hay ngăn overposting.",
+        "Form thông thường dùng name và [FromForm]; Razor Tag Helpers sinh tên field và thông báo lỗi. Form dùng cookie đăng nhập cần thiết kế chống CSRF. Validation phía client giúp trải nghiệm, server vẫn phải kiểm tra."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Binder lấy value theo nguồn được suy luận hoặc attribute như FromRoute/FromQuery/FromForm; JSON body thường được input formatter deserialize. Lỗi chuyển kiểu được thêm vào ModelState. MVC action thường kiểm tra ModelState.IsValid; với ApiController, invalid model có thể sinh 400 tự động theo cấu hình.",
+        "Form dùng method POST và các input có name, server nhận bằng [FromForm] hoặc binding phù hợp. JSON dùng Content-Type application/json và input formatter. Đừng trộn hai cách rồi mong mọi field tự nhận đúng.",
+        "Required, StringLength, EmailAddress và Range mô tả ràng buộc; không bảo đảm email tồn tại hoặc user sở hữu địa chỉ. Khi form có lỗi, trả view với model và validation messages; tránh đánh mất các giá trị hợp lệ người dùng đã nhập."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Binding / input formatting",
+          "meaning": "Lấy dữ liệu request vào tham số hoặc model với kiểu tương ứng.",
+          "example": "[FromBody] chọn body; JSON input formatter đọc {\"age\":17}."
+        },
+        {
+          "term": "Validation",
+          "meaning": "Kiểm tra ràng buộc sau khi có giá trị, ghi lỗi vào ModelState.",
+          "example": "17 là int hợp lệ nhưng không nằm trong Range(18,120)."
+        },
+        {
+          "term": "DTO",
+          "meaning": "Kiểu dữ liệu chỉ chứa các field mà endpoint cho phép nhập.",
+          "example": "SignupInput không có IsAdmin để client tùy ý gán quyền."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Form POST dùng anti-forgery khi xác thực bằng cookie theo mô hình phù hợp. Sau validation, service kiểm tra ràng buộc nghiệp vụ và quyền rồi ánh xạ field được phép sang entity. Database constraint vẫn cần để bảo vệ tính toàn vẹn khi có truy cập đồng thời."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new web -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs, tạo thêm các file được ghi bên dưới\ndotnet run --urls http://localhost:5090",
+        "code": "using Microsoft.AspNetCore.Mvc;\nusing System.ComponentModel.DataAnnotations;\nvar builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddControllers();\nvar app = builder.Build();\napp.MapControllers();\napp.Run();\npublic class SignupInput\n{\n    [Range(18, 120)]\n    public int Age { get; set; }\n}\n[Route(\"signup\")]\npublic class SignupController : ControllerBase\n{\n    [HttpPost]\n    public string Post([FromBody] SignupInput input)\n        => ModelState.IsValid ? \"Hợp lệ\" : \"Không hợp lệ\";\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Không hợp lệ",
+        "steps": [
+          "Client gửi POST /signup với Content-Type application/json.",
+          "JSON được đọc thành SignupInput có Age 17.",
+          "Range phát hiện 17 < 18; ModelState.IsValid là false."
+        ],
+        "request": {
+          "method": "POST",
+          "path": "/signup",
+          "body": {
+            "age": 17
+          }
+        },
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "WebApp/\n├── WebApp.csproj\n├── Program.cs            # host, services, pipeline, routes\n├── appsettings.json      # cấu hình theo môi trường\n├── Controllers/          # action nhận request\n├── Models/               # input model / view model\n├── Views/                # Razor .cshtml (nếu dùng MVC)\n│   └── Shared/_Layout.cshtml\n├── wwwroot/              # CSS, JS và tài nguyên công khai\n└── Properties/launchSettings.json # chạy local",
+        "note": "Đây là quy ước MVC. API thuần có thể không có Views; Minimal API có thể bắt đầu từ Program.cs. Khi chia class ra file, thêm namespace/using nhất quán. Không đặt cấu hình nhạy cảm dưới wwwroot."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Trong Network xem payload và Content-Type; đối chiếu name của input với property. Xem ModelState.Errors để phân biệt lỗi parse với lỗi validation. Nếu field không bind, kiểm tra nguồn dữ liệu, setter và attribute; không tắt validation toàn cục để cho request đi qua."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "model binding",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/model-binding?view=aspnetcore-10.0"
+        },
+        {
+          "title": "validation",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation?view=aspnetcore-10.0"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/asp.net-core",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

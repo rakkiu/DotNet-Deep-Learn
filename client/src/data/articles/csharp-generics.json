@@ -1,0 +1,143 @@
+{
+  "id": "csharp-generics",
+  "title": "Generic, ràng buộc kiểu và boxing",
+  "description": "Generic cho phép một type hoặc method nhận tham số kiểu, như List<T> hay Swap<T>. Khi dùng List<int>, int là một phần của hợp đồng được compiler kiểm tra. Generic không có nghĩa một collection trộn tù…",
+  "category": "architecture",
+  "kind": "Tính năng hệ thống kiểu",
+  "sourceParts": [
+    16
+  ],
+  "prerequisites": [
+    "Đã dùng List<T>; biết method và interface"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Generic cho phép một type hoặc method nhận tham số kiểu, như List<T> hay Swap<T>. Khi dùng List<int>, int là một phần của hợp đồng được compiler kiểm tra. Generic không có nghĩa một collection trộn tùy ý mọi loại dữ liệu."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Collection dựa trên object buộc ép kiểu khi lấy ra; value type có thể bị boxing khi đưa vào. Viết một class riêng cho từng kiểu lại lặp logic. Generic giữ một cấu trúc thuật toán chung trong khi vẫn biết kiểu dữ liệu cụ thể ở từng cách sử dụng."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Lỗi thêm string vào List<int> được phát hiện khi build. Code dùng lại mà ít cast hơn, thường tránh boxing ở thao tác lưu giá trị T. Lợi ích hiệu năng phụ thuộc cách dùng: cast T sang object hay gọi API object vẫn có thể boxing."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không tham số hóa mọi thứ bằng nhiều T nếu code chỉ làm việc với một kiểu ổn định. Không dùng constraint quá rộng rồi ép kiểu trong thân hàm; nếu thuật toán cần khả năng so sánh, biểu đạt bằng constraint/interface phù hợp. Không hứa generic luôn không allocation.",
+        "Không khẳng định mọi code generic đều không boxing: nếu implementation ép T sang object thì vẫn có thể boxing. where T : class không tự cấm null trong mọi tình huống runtime. new() là ràng buộc về constructor công khai không tham số, không bảo đảm nghiệp vụ hợp lệ.",
+        "Generic giúp tái sử dụng và kiểm tra kiểu tốt hơn collection object, nhưng một API với quá nhiều type parameter/constraint có thể khó đọc. Không thêm generic khi chỉ hỗ trợ một kiểu cụ thể có ý nghĩa nghiệp vụ rõ ràng."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Compiler giữ thông tin tham số kiểu và kiểm tra ràng buộc where. Runtime tạo/điều phối code cho các kiểu generic đóng theo chiến lược của nó, có thể chia sẻ mã giữa một số reference type và chuyên biệt cho value type. Constraint cho phép gọi member được bảo đảm, không cần thử ép kiểu tùy ý lúc chạy.",
+        "Constraint cho phép compiler biết các thao tác hợp lệ trên T: class, struct, interface, new() hoặc các ràng buộc phù hợp khác. struct yêu cầu non-nullable value type; không diễn đạt nó thành “mọi kiểu có dấu ? đều hợp lệ”.",
+        "Generic method có thể suy ra type argument từ đối số. List<object> và List<int> không có cùng hợp đồng kiểu; lấy object về cần kiểm tra/ép kiểu thích hợp. Lưu value type trong object có thể boxing, unboxing phải khớp kiểu value gốc."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Tham số kiểu T",
+          "meaning": "T cho phép cùng một định nghĩa dùng với nhiều kiểu nhưng giữ kiểm tra kiểu tại compile-time.",
+          "example": "Identity<int>(5) có parameter và kết quả int; ở đây compiler suy ra T."
+        },
+        {
+          "term": "Boxing",
+          "meaning": "Chuyển value type sang object hoặc một ngữ cảnh cần boxing tạo biểu diễn object tương ứng.",
+          "example": "object x = 5 boxing int; List<int> không phải boxing từng phần tử chỉ để lưu."
+        },
+        {
+          "term": "Constraint",
+          "meaning": "Ràng buộc nói những khả năng mà T phải có để implementation được phép sử dụng.",
+          "example": "where T : new() cho phép tạo new T() theo các quy tắc constructor được hỗ trợ."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "IEnumerable<T>, Task<T>, ILogger<T> và DbSet<TEntity> đều dùng generic để mang ý nghĩa kiểu qua nhiều tầng. Serializer và reflection có thể nhìn thấy generic arguments. Generic repository cần cân nhắc vì giao diện CRUD chung không luôn biểu đạt tốt query nghiệp vụ."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "var values = new List<int> { 2, 4 };\nvalues.Add(6);\nConsole.WriteLine(values.Sum());\nConsole.WriteLine(Identity(5));\n\nstatic T Identity<T>(T value) => value;",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "12\n5",
+        "steps": [
+          "List<int> nhận các số nguyên cùng kiểu.",
+          "Thêm 6 tạo dãy 2,4,6; Sum bằng 12.",
+          "Identity nhận 5 và trả đúng giá trị đó, kiểu T được suy ra là int."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Đọc lỗi constraint ngay tại kiểu truyền vào. Trong debugger xem type argument đóng và tránh lẫn T của class với T của method. Nếu nghi boxing, đo allocation bằng profiler thay vì kết luận từ việc code có dấu <T>."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "generics",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics"
+        },
+        {
+          "title": "constraints on type parameters",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/constraints-on-type-parameters"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}
