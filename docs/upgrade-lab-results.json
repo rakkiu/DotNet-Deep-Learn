@@ -1,0 +1,62 @@
+{
+  "reviewedAt": "2026-11-01",
+  "sdk": "10.0.403",
+  "runtime": "10.0.14",
+  "checks": [
+    {
+      "name": "WebLab HTTP contracts (xUnit)",
+      "status": "passed",
+      "observed": "WebLab -> $REPO\\examples\\WebLab\\bin\\Debug\\net10.0\\WebLab.dll\n  WebLab.Tests -> $REPO\\examples\\WebLab.Tests\\bin\\Debug\\net10.0\\WebLab.Tests.dll\nTest run for $REPO\\examples\\WebLab.Tests\\bin\\Debug\\net10.0\\WebLab.Tests.dll (.NETCoreApp,Version=v10.0)\nA total of 1 test files matched the specified pattern.\n\nPassed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 21 s - WebLab.Tests.dll (net10.0)"
+    },
+    {
+      "name": "Filtered auth and Razor tests independently",
+      "status": "passed",
+      "observed": "WebLab -> $REPO\\examples\\WebLab\\bin\\Debug\\net10.0\\WebLab.dll\n  WebLab.Tests -> $REPO\\examples\\WebLab.Tests\\bin\\Debug\\net10.0\\WebLab.Tests.dll\nTest run for $REPO\\examples\\WebLab.Tests\\bin\\Debug\\net10.0\\WebLab.Tests.dll (.NETCoreApp,Version=v10.0)\nA total of 1 test files matched the specified pattern.\n\nPassed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 3 s - WebLab.Tests.dll (net10.0)\nWebLab -> $REPO\\examples\\WebLab\\bin\\Debug\\net10.0\\WebLab.dll\n  WebLab.Tests -> $REPO\\examples\\WebLab.Tests\\bin\\Debug\\net10.0\\WebLab.Tests.dll\nTest run for $REPO\\examples\\WebLab.Tests\\bin\\Debug\\net10.0\\WebLab.Tests.dll (.NETCoreApp,Version=v10.0)\nA total of 1 test files matched the specified pattern.\n\nPassed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 3 s - WebLab.Tests.dll (net10.0)"
+    },
+    {
+      "name": "DataLab SQL, tracking, relationships, conflict and rollback",
+      "status": "passed",
+      "observed": "state:Added\nstate:Unchanged\nstate:Modified\nbefore-save:5\nafter-save:6\nidentity:True/False\nSQL:SELECT \"s\".\"Name\", \"d\".\"Name\" AS \"Department\"\nFROM \"Students\" AS \"s\"\nINNER JOIN \"Departments\" AS \"d\" ON \"s\".\"DepartmentId\" = \"d\".\"Id\"\nWHERE \"s\".\"Score\" >= 6\nORDER BY \"s\".\"Id\"\nprojection-read-commands:1\nprojection:An,Bình\nsplit-has-multiple-commands:True\njoin-payload:2026\nconcurrency:conflict\nrollback:True\nleft:CNTT:2\nleft:Empty:0\nparameterized:1\nrestrict:blocked\nbulk-stale:6\nbulk-reloaded:7\nstate:Deleted\nstate:Detached"
+    },
+    {
+      "name": "Two real EF migrations preserve An and add Email",
+      "status": "passed",
+      "observed": {
+        "before": "students:1\nname:An",
+        "after": "students:1\nname:An",
+        "columns": [
+          "Id",
+          "Name",
+          "Email"
+        ],
+        "rows": [
+          {
+            "Name": "An",
+            "Email": ""
+          }
+        ],
+        "logs": [
+          "Done. To undo this action, use 'ef migrations remove'",
+          "",
+          "Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.\nApplying migration '20261101095949_InitialCreate'.\nDone.",
+          "Done. To undo this action, use 'ef migrations remove'",
+          "",
+          "Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.\nApplying migration '20261101095959_AddEmail'.\nDone."
+        ]
+      }
+    },
+    {
+      "name": "Release publish starts from its output directory",
+      "status": "passed",
+      "observed": {
+        "rootStatus": 200,
+        "body": "Xin chào .NET 10",
+        "healthStatus": 200,
+        "data": {
+          "status": "ready",
+          "meaning": "local demo only"
+        }
+      }
+    }
+  ]
+}

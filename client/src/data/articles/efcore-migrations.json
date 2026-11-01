@@ -1,7 +1,7 @@
 {
   "id": "efcore-migrations",
-  "title": "EF Core Migrations và LINQ to Entities",
-  "description": "Migration là mô tả có phiên bản cho thay đổi schema database dựa trên model EF Core. LINQ to Entities là cách gọi thường dùng cho truy vấn LINQ được ORM dịch sang truy vấn database. Schema migration v…",
+  "title": "EF Core Migrations và tiến hóa schema",
+  "description": "Quản lý schema có phiên bản bằng migration, snapshot và script; giữ dữ liệu qua thay đổi an toàn và phân biệt development với rollout.",
   "category": "data",
   "kind": "Công cụ quản lý schema / truy vấn",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Migration là mô tả có phiên bản cho thay đổi schema database dựa trên model EF Core. LINQ to Entities là cách gọi thường dùng cho truy vấn LINQ được ORM dịch sang truy vấn database. Schema migration và truy vấn dữ liệu là hai nhiệm vụ khác nhau."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -38,11 +38,9 @@
     {
       "id": "limits",
       "paragraphs": [
-        "Không dùng EnsureCreated thay quy trình migrations cho database cần tiến hóa lâu dài. Không chạy database update tùy tiện trên production với quyền quá rộng. Không chấp nhận script drop cột/bảng khi chưa đánh giá dữ liệu và thời gian khóa.",
-        "Migration không bảo đảm giữ dữ liệu: DropColumn hoặc đổi kiểu có thể làm mất dữ liệu. migrations add so sánh model với snapshot, không tự dò mọi thay đổi thủ công trong database. Script SQL cần review và thử trên bản sao trước production.",
-        "Quy trình dự án thật: thêm Microsoft.EntityFrameworkCore.Design và dotnet-ef cùng major version; migrations add AddStudentEmail; migrations script để review; database update trên database dev. Ví dụ ở đây chỉ dùng EnsureCreated trên SQLite tạm, không giả vờ đã thực thi migration production."
+        "Ví dụ dùng SQLite lưu trong file school.db và quản lý schema bằng EF Core Migrations. Tạo migration, xem SQL rồi áp dụng vào database local mới trước khi chạy truy vấn. Không gọi EnsureCreated trong luồng này. Rollback schema không phục hồi nội dung đã xóa."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,32 +84,77 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Migration quản lý schema bằng Up/Down, model snapshot và bảng history của database. CLI so model hiện tại với snapshot trước, không tự diff schema đang chạy. IDesignTimeDbContextFactory tạo context cho tool khi cách khởi tạo app phức tạp; không yêu cầu mọi app thêm constructor rỗng.",
+        "Luồng bài này dùng SQLite file school.db và migrations: add, script, review rồi update local mới. Không gọi EnsureCreated trong luồng này. Sau InitialCreate, thêm Email vào Student, add AddEmail và update; hàng An đã lưu vẫn tồn tại với default/migration được review. Truy vấn chung và tracking xem bài EF Core."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Rename có thể bị scaffold thành drop/add, cần sửa migration và đọc SQL để giữ dữ liệu. Down không khôi phục giá trị đã bị xóa; rollback schema không là backup dữ liệu. Deployment nên dùng script/bundle đã review và schema rollout tương thích nhiều app version, không mọi instance tự chạy update khi khởi động."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\ndotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 10.0.0\ndotnet add package Microsoft.EntityFrameworkCore.Design --version 10.0.0\ndotnet new tool-manifest\ndotnet tool install dotnet-ef --version 10.0.0\n# Thay Program.cs bằng code bên dưới trước các lệnh tiếp theo\ndotnet ef migrations add InitialCreate\ndotnet ef migrations script\n# Xem SQL trước khi áp dụng vào database local mới\ndotnet ef database update\ndotnet run",
-        "code": "using Microsoft.EntityFrameworkCore;\n\nvar options = new DbContextOptionsBuilder<School>()\n    .UseSqlite(\"Data Source=school.db\").Options;\nusing var db = new School(options);\nConsole.WriteLine(await db.Students.CountAsync());\n\npublic class Student\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n}\npublic class School : DbContext\n{\n    public School() { } // constructor dùng cho CLI trong ví dụ nhỏ\n    public School(DbContextOptions<School> options) : base(options) { }\n    protected override void OnConfiguring(DbContextOptionsBuilder options)\n    {\n        if (!options.IsConfigured) options.UseSqlite(\"Data Source=school.db\");\n    }\n    public DbSet<Student> Students => Set<Student>();\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "0 khi school.db vừa được tạo và chưa có sinh viên.",
-        "steps": [
-          "CLI tạo migration từ model và snapshot; migrations script hiển thị SQL để xem trước.",
-          "database update áp dụng migration vào school.db local. Program truy vấn COUNT sau khi schema đã tồn tại."
-        ],
-        "request": null,
-        "note": "Chỉ chạy trong thư mục demo mới. Không dùng EnsureCreated trong luồng migrations này. Phiên bản 10.0.0 cố định để các thành phần cùng major; khi làm dự án thực tế chọn bản vá được hỗ trợ và cập nhật provider/Design/tool tương thích."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "migration-intro",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\ndotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 10.0.14\ndotnet add package Microsoft.EntityFrameworkCore.Design --version 10.0.14\ndotnet new tool-manifest\ndotnet tool install dotnet-ef --version 10.0.14\n# Thay Program.cs bằng code bên dưới trước các lệnh tiếp theo\ndotnet ef migrations add InitialCreate\ndotnet ef migrations script\n# Xem SQL trước khi áp dụng vào database local mới\ndotnet ef database update\ndotnet run",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.EntityFrameworkCore.Sqlite\" Version=\"10.0.14\" />\n    <PackageReference Include=\"Microsoft.EntityFrameworkCore.Design\" Version=\"10.0.14\" />\n  </ItemGroup>\n</Project>",
+            "Program.cs": "using Microsoft.EntityFrameworkCore;\n\nvar options = new DbContextOptionsBuilder<School>()\n    .UseSqlite(\"Data Source=school.db\").Options;\nusing var db = new School(options);\nConsole.WriteLine(await db.Students.CountAsync());\n\npublic class Student\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n}\npublic class School : DbContext\n{\n    public School() { } // constructor dùng cho CLI trong ví dụ nhỏ\n    public School(DbContextOptions<School> options) : base(options) { }\n    protected override void OnConfiguring(DbContextOptionsBuilder options)\n    {\n        if (!options.IsConfigured) options.UseSqlite(\"Data Source=school.db\");\n    }\n    public DbSet<Student> Students => Set<Student>();\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "0 khi school.db vừa được tạo và chưa có sinh viên.",
+          "explanation": "SQLite file và migrations; không gọi EnsureCreated. Xem ví dụ MigrationLab để kiểm chứng hai lần thay schema. CLI tạo migration từ model và snapshot; migrations script hiển thị SQL để xem trước. database update áp dụng migration vào school.db local. Program truy vấn COUNT sau khi schema đã tồn tại.",
+          "requests": [],
+          "verification": "compiled"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "migration-evolution",
+          "title": "Hai migration với dữ liệu giữ nguyên",
+          "kind": "migration",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "cd examples/MigrationLab\ndotnet new tool-manifest\ndotnet tool install dotnet-ef --version 10.0.14\ndotnet ef migrations add InitialCreate\ndotnet ef migrations script\ndotnet ef database update\ndotnet run\n# Thêm public string Email { get; set; } = \"\"; vào Student\ndotnet ef migrations add AddEmail\ndotnet ef migrations script InitialCreate AddEmail\ndotnet ef database update\ndotnet run",
+          "project": "examples/MigrationLab/MigrationLab.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "Sau InitialCreate: students:1, name:An. Sau thêm Email và AddEmail: vẫn students:1, name:An; query cột Email hoạt động.",
+          "explanation": "Project có design-time factory. Checker tạo một bản sao thư mục sạch, sinh migration, lưu An, sửa model thêm Email, sinh migration thứ hai, update rồi kiểm tra schema/dữ liệu.",
+          "verification": "lab-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "School/\n├── School.csproj         # provider và EF Design packages\n├── Program.cs            # đăng ký context / điểm chạy\n├── Models/Student.cs     # entity\n├── Data/SchoolContext.cs # DbContext và mapping\n├── Migrations/           # migration và model snapshot\n└── appsettings.json      # cấu hình; không chứa secret thật",
-        "note": "Tên thư mục là quy ước gợi ý; EF không bắt buộc entity ở Models. Ví dụ gọn có thể khai báo type trong Program.cs để dễ đọc. Secret dùng biến môi trường hoặc cơ chế secret phù hợp, không gửi xuống trình duyệt."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -122,19 +165,71 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "CLI add migration so model với đâu?",
+          "answer": "Model snapshot của lịch sử migration trước.",
+          "explanation": "Nó không mặc định diff toàn schema của database thực.",
+          "misconception": "Tool luôn mở DB để suy mọi khác biệt.",
+          "followUp": "History table giữ thông tin gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "EnsureCreated có nằm trong luồng bài này không?",
+          "answer": "Không, schema do migrations quản lý.",
+          "explanation": "Hai cơ chế tạo schema không nên trộn trong cùng lifecycle tiến hóa.",
+          "misconception": "Cứ EnsureCreated trước rồi migration sau cho chắc.",
+          "followUp": "Fixture DB in-memory khác bài này ở đâu?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Design-time factory giải quyết việc gì?",
+          "answer": "Cung cấp cách tạo context cho dotnet-ef tại design time.",
+          "explanation": "Không ép mọi app có constructor không tham số chỉ để tool chạy.",
+          "misconception": "Factory là script migration đã apply.",
+          "followUp": "Startup project ảnh hưởng tool thế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Down có khôi phục nội dung cột đã drop không?",
+          "answer": "Không, tạo lại schema không phục hồi dữ liệu đã mất.",
+          "explanation": "Cần backup/migration chuyển dữ liệu có chủ đích.",
+          "misconception": "Rollback migration tương đương backup restore.",
+          "followUp": "Review rename drop/add có thể tránh mất dữ liệu ra sao?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Vì sao không để mọi app instance tự migrate production?",
+          "answer": "Có rủi ro cạnh tranh, quyền cao, downtime và rollout không tương thích.",
+          "explanation": "Dùng bước triển khai kiểm soát script/bundle, backup và tương thích schema.",
+          "misconception": "Migration tự động luôn an toàn vì sinh từ class.",
+          "followUp": "Expand-contract rollout tách thành những bước nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "migrations",
+          "title": "Tổng quan migrations và snapshot",
           "url": "https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/"
         },
         {
-          "title": "applying",
+          "title": "Áp dụng migration bằng script hoặc bundle",
           "url": "https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying"
         },
         {
-          "title": "how query works",
-          "url": "https://learn.microsoft.com/en-us/ef/core/querying/how-query-works"
+          "title": "Khởi tạo DbContext ở design time",
+          "url": "https://learn.microsoft.com/en-us/ef/core/cli/dbcontext-creation"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/entity-framework-core",
@@ -142,5 +237,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A30",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Chạy hai migration từ thư mục sạch và giữ dữ liệu qua thêm cột.",
+    "Review SQL, design-time factory và rollout tương thích."
+  ],
+  "prerequisiteIds": [
+    "csharp-collections",
+    "linq-basics"
+  ],
+  "relatedIds": []
 }

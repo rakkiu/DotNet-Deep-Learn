@@ -1,7 +1,7 @@
 {
   "id": "http-request-line",
   "title": "HTTP request và kiến trúc Web Server",
-  "description": "HTTP định nghĩa cách client yêu cầu tài nguyên và server phản hồi. Bài của thầy xây server HTTP/1.1 tối giản trên TCP để nhìn thấy request line và luồng xử lý. Server học tập này khác Kestrel hoàn chỉ…",
+  "description": "HTTP định nghĩa cách client yêu cầu tài nguyên và server phản hồi. Bài của thầy xây server HTTP/1.1 tối giản trên TCP để nhìn thấy request line và luồng xử lý. Server học tập này khác Kestrel hoàn chỉnh và không đại diện parser HTTP/2 hay HTTP/3.",
   "category": "network",
   "kind": "Giao thức tầng ứng dụng",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "HTTP định nghĩa cách client yêu cầu tài nguyên và server phản hồi. Bài của thầy xây server HTTP/1.1 tối giản trên TCP để nhìn thấy request line và luồng xử lý. Server học tập này khác Kestrel hoàn chỉnh và không đại diện parser HTTP/2 hay HTTP/3."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Đây là parser tối giản của một request line đã có đủ dữ liệu, chưa phải HTTP server dùng production. HTTP thật có grammar, limits, escaping, headers, body framing và kết nối tái sử dụng. Response 405 thật còn cần header Allow phù hợp.",
         "Bài tổng hợp có thể đặt socket accept loop trong Worker Service, bind WebServerOptions từ configuration và truyền CancellationToken. Tách IRequestReader khỏi Worker để test parser bằng fixture mà không mở mạng."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Request line HTTP/1.1 có method, request target và version; target có thể chứa path/query theo dạng được chấp nhận. Safe nói không yêu cầu thay đổi state nghiệp vụ; idempotent nói tác động mong đợi khi lặp, không yêu cầu status/body/log giống hệt. DELETE có thể lần đầu 204, lần sau 404 mà vẫn idempotent về trạng thái.",
+        "400 cho input malformed; 404 resource vắng; 405 tài nguyên không cho method đã hiểu và có Allow phù hợp; method server không nhận biết/triển khai có thể 501. Fixture chỉ minh họa lựa chọn này trên chuỗi hoàn chỉnh, không là parser RFC hay server public."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Kiến trúc accept loop → reader → router → writer cần options validation, limits, timeout và shutdown có owner. Sơ đồ thư mục không chứng minh mọi thành phần đã có runtime. WebLab dùng Kestrel cho REST thật thay vì kéo dài Split thành parser production. HTTP/2 multiplexing và HTTP/3 có wire format khác, không dùng request-line parser này để đọc chúng."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "string requestLine = \"GET /docs HTTP/1.1\";\nstring[] parts = requestLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);\nif (parts.Length != 3 || parts[2] != \"HTTP/1.1\")\n    Console.WriteLine(\"400\");\nelse if (parts[0] != \"GET\")\n    Console.WriteLine(\"405\");\nelse\n    Console.WriteLine(parts[1] == \"/docs\" ? \"200\" : \"404\");",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "200",
-        "steps": [
-          "Split lấy GET, /docs và HTTP/1.1.",
-          "Cấu trúc fixture và method được chấp nhận.",
-          "/docs khớp tài nguyên nên in 200."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "string requestLine = \"GET /docs HTTP/1.1\";\nstring[] parts = requestLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);\nif (parts.Length != 3 || parts[2] != \"HTTP/1.1\")\n    Console.WriteLine(\"400\");\nelse if (parts[0] != \"GET\")\n    Console.WriteLine(\"405\");\nelse\n    Console.WriteLine(parts[1] == \"/docs\" ? \"200\" : \"404\");",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "200",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Split lấy GET, /docs và HTTP/1.1. Cấu trúc fixture và method được chấp nhận. /docs khớp tài nguyên nên in 200.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "http-route-status",
+          "title": "Ma trận request với Allow",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "foreach(string line in new[]{\"GET /docs HTTP/1.1\",\"bad\",\"GET /missing HTTP/1.1\",\"POST /docs HTTP/1.1\",\"BREW /docs HTTP/1.1\"})Console.WriteLine(Handle(line));\nstatic string Handle(string line){var p=line.Split(' ');if(p.Length!=3||p[2]!=\"HTTP/1.1\"||!p[1].StartsWith('/'))return \"400\";if(p[0]!=\"GET\"&&p[0]!=\"POST\")return \"501\";if(p[1]!=\"/docs\")return \"404\";return p[0]==\"GET\"?\"200\":\"405 Allow: GET\";}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "200\n400\n404\n405 Allow: GET\n501",
+          "explanation": "Policy tối giản chỉ biết GET/POST và resource /docs. Đây là fixture in-memory, chưa mở socket hoặc phân tích request body.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "LearningServer/\n├── Program.cs             # tạo host và đăng ký DI\n├── Worker.cs              # accept loop và shutdown\n├── WebServerOptions.cs    # địa chỉ, port, giới hạn\n├── appsettings.json       # cấu hình local\n├── Protocol/              # request/response model, reader, writer\n├── Middleware/            # handler trong pipeline\n└── wwwroot/               # chỉ tài nguyên được phép phục vụ",
-        "note": "Bố cục mô tả server tổng hợp trong bài giảng; đoạn Hello World bên dưới chỉ cô lập phần giao thức để đọc cơ chế, chưa triển khai toàn bộ server. Với sản phẩm thực tế dùng server framework phù hợp thay parser mẫu."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,19 +169,67 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Request line áp dụng nguyên dạng cho HTTP/2 không?",
+          "answer": "Không, đây là wire format HTTP/1.x.",
+          "explanation": "HTTP semantics chung và cách mã hóa trên dây khác nhau.",
+          "misconception": "Mọi version đều bắt đầu GET / HTTP/1.1.",
+          "followUp": "HTTP/3 khác transport gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "405 cần cho client thông tin gì?",
+          "answer": "Allow nêu method được tài nguyên hỗ trợ theo hợp đồng.",
+          "explanation": "Khác việc không nhận biết/triển khai method ở server.",
+          "misconception": "405 và 501 luôn thay nhau được.",
+          "followUp": "Resource vắng thì xét 404 thế nào trong fixture?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Idempotent có yêu cầu response lần lặp y hệt không?",
+          "answer": "Không, xét tác động mong đợi của yêu cầu lặp.",
+          "explanation": "DELETE 204 rồi 404 có thể vẫn giữ state đã xóa.",
+          "misconception": "Idempotent nghĩa không có log.",
+          "followUp": "Safe và idempotent khác nhau ở tiêu chí nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Vì sao không dùng Split fixture làm server public?",
+          "answer": "Nó thiếu grammar, limits, framing và kiểm soát nhiều failure mode.",
+          "explanation": "Cảnh báo giới hạn không biến demo thành implementation chuẩn.",
+          "misconception": "Có test vài request là đủ RFC.",
+          "followUp": "Kestrel xử lý phần nào để app tập trung nghiệp vụ?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Timeout khi đọc header cần thiết ở kiến trúc server vì sao?",
+          "answer": "Để client không giữ kết nối/tài nguyên vô hạn bằng input chậm.",
+          "explanation": "Limits còn phải áp dụng cho kích thước và số connection.",
+          "misconception": "TCP tự quyết mọi giới hạn ứng dụng.",
+          "followUp": "Ai sở hữu task accept và connection khi shutdown?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "IETF — rfc9110.html",
+          "title": "HTTP semantics, method và status",
           "url": "https://www.rfc-editor.org/rfc/rfc9110.html"
         },
         {
-          "title": "IETF — rfc9112.html",
+          "title": "HTTP/1.1 wire format và parsing",
           "url": "https://www.rfc-editor.org/rfc/rfc9112.html"
-        },
-        {
-          "title": "workers",
-          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/workers"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/http",
@@ -143,5 +237,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A43",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Phân biệt method semantics với wire format HTTP/1.1.",
+    "Đọc 400/404/405/501 trong phạm vi server fixture."
+  ],
+  "prerequisiteIds": [
+    "dotnet-streams",
+    "async-await"
+  ],
+  "relatedIds": []
 }

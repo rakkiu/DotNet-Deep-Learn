@@ -1,7 +1,7 @@
 {
   "id": "linq-basics",
   "title": "LINQ: lọc, sắp xếp và chọn dữ liệu",
-  "description": "LINQ là Language Integrated Query: bộ khả năng truy vấn tích hợp trong C# với toán tử như Where, Select, OrderBy và GroupBy. Nó không phải database và không chỉ dành cho SQL. Cùng cú pháp có thể xử lý…",
+  "description": "LINQ là Language Integrated Query: bộ khả năng truy vấn tích hợp trong C# với toán tử như Where, Select, OrderBy và GroupBy. Nó không phải database và không chỉ dành cho SQL. Cùng cú pháp có thể xử lý object trong RAM hoặc mô tả truy vấn cho một provider bên ngoài.",
   "category": "foundation",
   "kind": "Tính năng truy vấn dữ liệu",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "LINQ là Language Integrated Query: bộ khả năng truy vấn tích hợp trong C# với toán tử như Where, Select, OrderBy và GroupBy. Nó không phải database và không chỉ dành cho SQL. Cùng cú pháp có thể xử lý object trong RAM hoặc mô tả truy vấn cho một provider bên ngoài."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Khái niệm và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Không phải mọi LINQ đều deferred hoặc streaming. OrderBy trì hoãn nhưng thường cần buffer để sắp; First trên nguồn rỗng ném lỗi, FirstOrDefault trả default(T), không luôn là null. Kiểm tra provider trước khi kết luận truy vấn chạy ở RAM hay database.",
         "LINQ giúp ghép các thao tác rõ mục đích; vòng lặp có thể dễ theo dấu hơn khi cập nhật nhiều trạng thái. Materialize bằng ToList khi cần chốt kết quả, không nên làm trước bộ lọc ở database rồi mới lọc trong RAM."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,34 +86,116 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Where lọc; Select chiếu mỗi phần tử, SelectMany làm phẳng tập con; OrderBy thiết lập thứ tự chính, ThenBy bổ sung khóa phụ còn OrderBy tiếp theo thiết lập thứ tự chính mới. GroupBy gom nhóm; Join ghép khóa; Distinct/Union/Intersect/Except làm việc theo equality. Skip/Take phân trang cần thứ tự ổn định.",
+        "Any hỏi tồn tại; Count hỏi số lượng, chi phí phụ thuộc collection/provider. First yêu cầu ít nhất một; Single yêu cầu đúng một; FirstOrDefault/SingleOrDefault dùng giá trị mặc định khi rỗng nhưng SingleOrDefault vẫn lỗi nếu nhiều kết quả. Min/Max/Average và aggregate có hợp đồng tập rỗng theo kiểu/toán tử."
+      ],
+      "tables": [
+        {
+          "caption": "Semantics kết quả",
+          "headers": [
+            "Toán tử",
+            "Rỗng",
+            "Một",
+            "Nhiều"
+          ],
+          "rows": [
+            [
+              "First",
+              "Ném lỗi",
+              "Phần tử",
+              "Phần tử đầu"
+            ],
+            [
+              "Single",
+              "Ném lỗi",
+              "Phần tử",
+              "Ném lỗi"
+            ],
+            [
+              "FirstOrDefault",
+              "default(T)",
+              "Phần tử",
+              "Phần tử đầu"
+            ],
+            [
+              "SingleOrDefault",
+              "default(T)",
+              "Phần tử",
+              "Ném lỗi"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Multiple enumeration có thể lặp I/O hoặc side effect, và thấy dữ liệu nguồn đã đổi. ToList chụp cấu trúc danh sách tại lúc materialize nhưng không deep clone các element object. IQueryable mô tả biểu thức; provider có thể là EF hay nguồn khác, không bảo đảm mọi xử lý đều database. AsEnumerable đổi cách các toán tử tiếp theo được bind, không tự materialize; ToList có thể kéo dữ liệu trước khi filter nếu đặt sai vị trí."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "int[] scores = { 8, 3, 6 };\nvar result = scores.Where(x => x >= 6)\n                   .OrderBy(x => x)\n                   .Select(x => x * 10);\nConsole.WriteLine(string.Join(\", \", result));",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "60, 80",
-        "steps": [
-          "Where giữ 8 và 6, thứ tự ban đầu vẫn là 8,6.",
-          "OrderBy đọc nguồn để sắp thành 6,8.",
-          "Select tạo các giá trị 60,80 khi được duyệt.",
-          "string.Join yêu cầu kết quả; lúc này chuỗi truy vấn được duyệt."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int[] scores = { 8, 3, 6 };\nvar result = scores.Where(x => x >= 6)\n                   .OrderBy(x => x)\n                   .Select(x => x * 10);\nConsole.WriteLine(string.Join(\", \", result));",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "60, 80",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Where giữ 8 và 6, thứ tự ban đầu vẫn là 8,6. OrderBy đọc nguồn để sắp thành 6,8. Select tạo các giá trị 60,80 khi được duyệt. string.Join yêu cầu kết quả; lúc này chuỗi truy vấn được duyệt.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "deferred-groups",
+          "title": "Nguồn đổi, nhóm và SelectMany",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var source=new List<int>{1,2,3};var query=source.Where(x=>x>1);\nConsole.WriteLine(string.Join(\",\",query));source.Add(4);Console.WriteLine(string.Join(\",\",query));\nvar students=new[]{new Student(\"An\",\"A\"),new Student(\"Bình\",\"A\"),new Student(\"Chi\",\"B\")};\nforeach(var group in students.GroupBy(s=>s.Team).OrderBy(g=>g.Key))Console.WriteLine(group.Key+\":\"+group.Count());\nvar nested=new[]{new[]{1,2},new[]{3}};Console.WriteLine(string.Join(\",\",nested.SelectMany(x=>x)));\ntry{_ = new[]{1,2}.Single();}catch(InvalidOperationException){Console.WriteLine(\"Single: nhiều phần tử\");}\nrecord Student(string Name,string Team);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "2,3\n2,3,4\nA:2\nB:1\n1,2,3\nSingle: nhiều phần tử",
+          "explanation": "Where giữ query trễ; lần duyệt thứ hai thấy 4. GroupBy cần dữ liệu nhóm; không đồng nhất mọi deferred operator với streaming.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -124,18 +206,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Where xong có chắc đã đọc nguồn?",
+          "answer": "Không, với iterator thông thường nó chưa enumerate.",
+          "explanation": "Thao tác terminal/enumeration mới yêu cầu lấy kết quả.",
+          "misconception": "Khai báo query tự tạo bản sao nguồn.",
+          "followUp": "Nếu nguồn đổi trước lần duyệt thì sao?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "SelectMany khác Select thế nào?",
+          "answer": "SelectMany làm phẳng các tập con được chiếu.",
+          "explanation": "Select có thể trả một tập lồng cho mỗi phần tử.",
+          "misconception": "Hai tên chỉ là style viết khác.",
+          "followUp": "Một lớp có nhiều số điện thoại sẽ cho hình dạng nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "SingleOrDefault trên hai dòng trả gì?",
+          "answer": "Ném InvalidOperationException.",
+          "explanation": "Default chỉ giải quyết tập rỗng, không bỏ yêu cầu tối đa một.",
+          "misconception": "Nó luôn chọn dòng đầu hoặc null.",
+          "followUp": "Khi nào nên dùng Single thay First?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Any luôn nhanh hơn Count không?",
+          "answer": "Không thể kết luận tuyệt đối, phụ thuộc nguồn/provider và tối ưu.",
+          "explanation": "Chọn semantics hỏi tồn tại trước, rồi đo nếu cần.",
+          "misconception": "Any luôn O(1) với mọi nguồn.",
+          "followUp": "Database dịch hai biểu thức thành SQL gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "ToList có ngăn sửa object từ danh sách gốc không?",
+          "answer": "Không, object element có thể vẫn chung reference.",
+          "explanation": "Materialize chụp các ô danh sách chứ không deep clone graph.",
+          "misconception": "ToList là deep copy.",
+          "followUp": "Projection DTO trước ToList giúp giới hạn dữ liệu thế nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "linq",
+          "title": "Language Integrated Query (LINQ)",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/linq/"
         },
         {
-          "title": "deferred execution lazy evaluation",
+          "title": "Deferred execution and lazy evaluation (LINQ to XML)",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/linq/deferred-execution-lazy-evaluation"
         },
         {
-          "title": "querying",
+          "title": "Querying Data",
           "url": "https://learn.microsoft.com/en-us/ef/core/querying/"
         }
       ],
@@ -144,5 +278,30 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A12",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Xác định lúc query chạy, nơi xử lý và semantics tập rỗng/trùng.",
+    "Chọn projection/phân trang và kiểm soát nhiều lần enumeration."
+  ],
+  "prerequisiteIds": [
+    "csharp-language",
+    "csharp-types"
+  ],
+  "relatedIds": [
+    "efcore-query-performance"
+  ]
 }

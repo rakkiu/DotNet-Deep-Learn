@@ -1,7 +1,7 @@
 {
   "id": "thread-signals",
   "title": "AutoResetEvent và ManualResetEvent",
-  "description": "EventWaitHandle là tín hiệu đồng bộ để thread chờ một điều kiện được thông báo. AutoResetEvent cho phép một waiter vượt qua mỗi trạng thái signaled rồi tự reset; ManualResetEvent giữ trạng thái mở cho…",
+  "description": "EventWaitHandle là tín hiệu đồng bộ để thread chờ một điều kiện được thông báo. AutoResetEvent cho phép một waiter vượt qua mỗi trạng thái signaled rồi tự reset; ManualResetEvent giữ trạng thái mở cho các waiter cho tới Reset. Event ở đây khác event/delegate trong C#.",
   "category": "concurrency",
   "kind": "Primitive đồng bộ hóa",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "EventWaitHandle là tín hiệu đồng bộ để thread chờ một điều kiện được thông báo. AutoResetEvent cho phép một waiter vượt qua mỗi trạng thái signaled rồi tự reset; ManualResetEvent giữ trạng thái mở cho các waiter cho tới Reset. Event ở đây khác event/delegate trong C#."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Event không phải bộ đếm: gọi Set nhiều lần có thể gộp tín hiệu. Nếu mỗi phần tử công việc đều phải được xử lý, hãy cân nhắc Channel<T> hoặc hàng đợi và semaphore thay vì dùng event để đếm.",
         "WaitOne giữ thread khi cần chờ; CancellationToken/timeouts giúp tránh treo. Event thông thường trong C# là cơ chế delegate khác với EventWaitHandle dùng đồng bộ."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,89 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "AutoResetEvent ở trạng thái signaled giữ một quyền đi qua cho tới khi waiter tiêu thụ rồi reset; Set khi chưa có waiter không có nghĩa tín hiệu lập tức mất. ManualResetEvent giữ cổng mở cho mọi waiter tới Reset. Set không là bộ đếm các message, nhiều Set có thể gộp trạng thái."
+      ],
+      "diagrams": [
+        {
+          "caption": "Tín hiệu so với hàng đợi",
+          "steps": [
+            "Auto: Set → một lượt đi qua → reset",
+            "Manual: Set → mọi lượt đi qua → Reset mới chặn",
+            "Queue lưu item; signal chỉ báo có thể có việc",
+            "Consumer luôn kiểm tra queue/predicate thực"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Queue dữ liệu cần thread-safe và consumer phải đọc theo predicate/queue, không đếm item bằng số Set. ManualResetEventSlim là lựa chọn blocking nhẹ trong một process cho tình huống phù hợp; SemaphoreSlim có permit/count và WaitAsync, TCS biểu diễn một hoàn tất, Channel mang hàng đợi/backpressure. WaitOne không tự nhận CancellationToken; phải phối hợp wait handles, timeout hoặc dùng primitive async khác. Dispose sau waiter kết thúc; không giả định FIFO fairness."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "using EventWaitHandle gate = new AutoResetEvent(false);\ngate.Set();\nConsole.WriteLine(gate.WaitOne(0));\nConsole.WriteLine(gate.WaitOne(0));",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "True\nFalse",
-        "steps": [
-          "Event bắt đầu false rồi Set thành signaled.",
-          "WaitOne(0) thử ngay, không chờ; lần đầu true.",
-          "AutoReset tiêu thụ tín hiệu nên lần thứ hai false."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using EventWaitHandle gate = new AutoResetEvent(false);\ngate.Set();\nConsole.WriteLine(gate.WaitOne(0));\nConsole.WriteLine(gate.WaitOne(0));",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\nFalse",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Event bắt đầu false rồi Set thành signaled. WaitOne(0) thử ngay, không chờ; lần đầu true. AutoReset tiêu thụ tín hiệu nên lần thứ hai false.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "auto-manual",
+          "title": "Cùng chuỗi lệnh, hai cách reset",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using var auto=new AutoResetEvent(false);using var manual=new ManualResetEvent(false);\nauto.Set();Console.WriteLine(auto.WaitOne(0));Console.WriteLine(auto.WaitOne(0));\nmanual.Set();Console.WriteLine(manual.WaitOne(0));Console.WriteLine(manual.WaitOne(0));manual.Reset();Console.WriteLine(manual.WaitOne(0));\nvar queue=new System.Collections.Concurrent.ConcurrentQueue<int>();queue.Enqueue(1);queue.Enqueue(2);auto.Set();auto.Set();\nConsole.WriteLine(auto.WaitOne(0));while(queue.TryDequeue(out var item))Console.Write(item);Console.WriteLine();Console.WriteLine(auto.WaitOne(0));",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\nFalse\nTrue\nTrue\nFalse\nTrue\n12\nFalse",
+          "explanation": "Hai Set liên tiếp không tích lũy hai permit; consumer drain queue sau một tín hiệu. Bản dùng Channel với nhiều consumer và shutdown nằm trong bài worker.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,18 +179,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Auto Set trước khi có waiter có mất ngay không?",
+          "answer": "Không, nó giữ trạng thái signaled tới khi có lượt chờ tiêu thụ.",
+          "explanation": "Không nên mô tả Set chỉ đánh thức waiter đang sẵn có.",
+          "misconception": "Chưa có waiter thì Set luôn vô hiệu.",
+          "followUp": "Hai Set lúc đã signaled tích lũy thế nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Manual Set rồi WaitOne hai lần cho gì?",
+          "answer": "Cả hai true tới khi Reset.",
+          "explanation": "Cổng mở không tự đóng sau lượt đầu.",
+          "misconception": "Manual giống Auto nhưng tên dài hơn.",
+          "followUp": "Sau Reset WaitOne(0) trả gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Hai item queue cần đúng hai signal không?",
+          "answer": "Không trong policy drain queue; consumer dựa queue thực.",
+          "explanation": "Signal không là số lượng dữ liệu.",
+          "misconception": "Đếm Set là đủ thay queue counter.",
+          "followUp": "Nếu consumer chỉ lấy một item rồi chờ lại có nguy cơ gì?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "WaitOne tự hủy theo token truyền ở nơi khác không?",
+          "answer": "Không, cần cơ chế phối hợp hoặc timeout/API khác.",
+          "explanation": "Token không thể tự ngắt mọi blocking wait.",
+          "misconception": "Cancel ở CTS tự kết thúc mọi waiter.",
+          "followUp": "Khi dùng async nên cân nhắc primitive nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "TCS, Semaphore và Channel khác nhau ở thông tin lưu gì?",
+          "answer": "TCS một hoàn tất, semaphore permit, Channel các item và chính sách capacity.",
+          "explanation": "Chọn theo giao thức thay vì mọi cái đều gọi event.",
+          "misconception": "Mọi signal primitive đều là queue bền vững.",
+          "followUp": "Khi nào message cần sống qua process crash?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "overview of synchronization primitives",
+          "title": "Overview of synchronization primitives",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/overview-of-synchronization-primitives"
         },
         {
-          "title": "system.threading.autoresetevent",
+          "title": "AutoResetEvent Class",
           "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.autoresetevent"
         },
         {
-          "title": "system.threading.manualresetevent",
+          "title": "ManualResetEvent Class",
           "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.manualresetevent"
         }
       ],
@@ -143,5 +251,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A37",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Dự đoán hai cơ chế reset bằng phép chờ không blocking.",
+    "Phân biệt signal và bộ đếm dữ liệu của queue."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "csharp-exceptions"
+  ],
+  "relatedIds": []
 }

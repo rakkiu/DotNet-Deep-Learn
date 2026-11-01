@@ -1,7 +1,7 @@
 {
   "id": "oop-interfaces",
   "title": "Interface: gọi theo hợp đồng, thay được phần triển khai",
-  "description": "Interface định nghĩa các khả năng mà một type cam kết cung cấp. Caller dùng hợp đồng như IMessageSender thay vì gắn chặt với EmailSender. Interface không chứa trạng thái instance theo cách class làm; …",
+  "description": "Interface định nghĩa các khả năng mà một type cam kết cung cấp. Caller dùng hợp đồng như IMessageSender thay vì gắn chặt với EmailSender. Interface không chứa trạng thái instance theo cách class làm; C# hiện đại có thêm default implementation và static abstract member với quy tắc riêng.",
   "category": "architecture",
   "kind": "Hợp đồng kiểu / thiết kế API",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Interface định nghĩa các khả năng mà một type cam kết cung cấp. Caller dùng hợp đồng như IMessageSender thay vì gắn chặt với EmailSender. Interface không chứa trạng thái instance theo cách class làm; C# hiện đại có thêm default implementation và static abstract member với quy tắc riêng."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Interface không chỉ là tập method không thân trong C# hiện đại: có default interface implementation từ C# 8 và static abstract members từ C# 11. Không được new trực tiếp một interface. Quy tắc chữ I là convention, không phải yêu cầu cú pháp của compiler.",
         "Interface nhỏ theo nhu cầu caller giúp tránh buộc implement hành vi không liên quan. Abstract class phù hợp chia sẻ state/triển khai trong một họ đối tượng; interface mô tả khả năng và cho phép một type implement nhiều hợp đồng."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,123 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Interface mô tả khả năng; abstract class có thể mang instance state, constructor và code dùng chung. Class chỉ có một base class trực tiếp nhưng có thể implement nhiều interface. Explicit implementation chỉ gọi qua view interface tương ứng, không nhất thiết thành public member thấy trực tiếp trên class.",
+        "Contract gồm nullability, lỗi, side effects và điều kiện sử dụng chứ không chỉ tên method. Struct cũng implement interface được; conversion struct sang interface có thể boxing, còn generic constraint có thể tránh boxing ở một số đường gọi."
+      ],
+      "tables": [
+        {
+          "caption": "Chọn abstraction",
+          "headers": [
+            "Thuộc tính",
+            "Interface",
+            "Abstract class"
+          ],
+          "rows": [
+            [
+              "State instance/constructor",
+              "Không theo mô hình field/constructor class",
+              "Có"
+            ],
+            [
+              "Số contract class có thể nhận",
+              "Nhiều interface",
+              "Một base class trực tiếp"
+            ],
+            [
+              "Mục đích",
+              "Khả năng/hợp đồng",
+              "Khung và state chung có quan hệ is-a"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Default interface implementation từ C# 8 cung cấp hành vi mặc định, không cho interface tùy ý có field state như class. Static abstract members từ C# 11 đặt hợp đồng static dùng qua generic constraint, không được gọi qua mọi instance như method thường. Chỉ dùng nếu đúng bài toán; không kết luận interface luôn tốt hơn abstract class."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "INameSource source = new FixedNameSource();\nConsole.WriteLine(source.GetName());\n\ninterface INameSource { string GetName(); }\nclass FixedNameSource : INameSource\n{\n    public string GetName() => \"An\";\n}\nclass GuestNameSource : INameSource\n{\n    public string GetName() => \"Khách\";\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "An",
-        "steps": [
-          "Biến source có kiểu tĩnh INameSource.",
-          "Object thực tế là FixedNameSource.",
-          "Lời gọi GetName được chuyển tới triển khai tương ứng và trả An."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "INameSource source = new FixedNameSource();\nConsole.WriteLine(source.GetName());\n\ninterface INameSource { string GetName(); }\nclass FixedNameSource : INameSource\n{\n    public string GetName() => \"An\";\n}\nclass GuestNameSource : INameSource\n{\n    public string GetName() => \"Khách\";\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "An",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Biến source có kiểu tĩnh INameSource. Object thực tế là FixedNameSource. Lời gọi GetName được chuyển tới triển khai tương ứng và trả An.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "explicit-interface",
+          "title": "Hai implementation và explicit member",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "Show(new FileSource());Show(new MemorySource());\nvar both=new Both();((ILeft)both).Print();((IRight)both).Print();\nIDefault demo=new DefaultUser();Console.WriteLine(demo.Name());\nConsole.WriteLine(Create<Widget>() is Widget);\nstatic void Show(ISource source)=>Console.WriteLine(source.Read());\nstatic T Create<T>() where T:ICreate<T> => T.Create();\ninterface ISource{string Read();}\nclass FileSource:ISource{public string Read()=>\"file (fixture)\";}\nclass MemorySource:ISource{public string Read()=>\"memory\";}\ninterface ILeft{void Print();}interface IRight{void Print();}\nclass Both:ILeft,IRight{void ILeft.Print()=>Console.WriteLine(\"left\");void IRight.Print()=>Console.WriteLine(\"right\");}\ninterface IDefault{string Name()=>\"default\";}class DefaultUser:IDefault{}\ninterface ICreate<T>{static abstract T Create();}\nclass Widget:ICreate<Widget>{public static Widget Create()=>new();}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "file (fixture)\nmemory\nleft\nright\ndefault\nTrue",
+          "explanation": "FileSource được ghi nhãn fixture không đọc đĩa. Default member qua interface; static abstract gọi qua T với constraint. Both.Print trực tiếp không có public member.",
+          "verification": "ran"
+        },
+        {
+          "id": "explicit-error",
+          "title": "Gọi explicit member qua class",
+          "kind": "compile-error",
+          "label": "Cố ý lỗi biên dịch",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "new Both().Print();\ninterface ILeft{void Print();}\nclass Both:ILeft{void ILeft.Print(){}}"
+          },
+          "expected": "CS1061",
+          "explanation": "Sửa bằng ((ILeft)new Both()).Print().",
+          "verification": "expected-diagnostic",
+          "diagnostic": "CS1061"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,11 +213,67 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Caller nhận ISource có cần biết FileSource không?",
+          "answer": "Không khi contract Read đủ cho hành vi caller.",
+          "explanation": "Có thể truyền MemorySource mà không sửa caller.",
+          "misconception": "Phải cast về class trước mọi lời gọi.",
+          "followUp": "Contract còn phải nói gì ngoài signature?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Both.Print gọi trực tiếp được với explicit implementation không?",
+          "answer": "Không, cần view interface tương ứng.",
+          "explanation": "Member không hiện như public method trên class.",
+          "misconception": "Mọi member interface đều được gọi qua class trực tiếp.",
+          "followUp": "Hai interface trùng tên member được phân biệt ra sao?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Class có thể nhận hai interface không?",
+          "answer": "Có, nhưng chỉ một base class trực tiếp.",
+          "explanation": "Interface và class inheritance có giới hạn khác nhau.",
+          "misconception": "Có thể kế thừa hai class nếu đều abstract.",
+          "followUp": "Khi có state chung nên cân nhắc lựa chọn nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Default interface method làm interface có đầy đủ state như class?",
+          "answer": "Không, nó bổ sung implementation theo quy tắc riêng.",
+          "explanation": "Vẫn cần phân biệt cơ chế instance state/constructor.",
+          "misconception": "Interface hiện đại chính là abstract class đổi tên.",
+          "followUp": "Tại sao gọi default thường qua biến interface?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Struct chuyển sang interface có thể tốn gì?",
+          "answer": "Có thể boxing, tùy cách gọi/conversion.",
+          "explanation": "Generic constraint có thể mở đường gọi khác nhưng không hứa mọi generic không boxing.",
+          "misconception": "Interface chỉ chứa reference của class.",
+          "followUp": "Cần đo gì khi API nhạy allocation?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "interfaces",
+          "title": "Interfaces - define behavior for multiple types",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces"
+        },
+        {
+          "title": "Tài liệu API .NET theo phiên bản mục tiêu",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/c%23",
@@ -135,5 +281,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A16",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Thay implementation qua cùng caller và gọi explicit member đúng cách.",
+    "Chọn interface/abstract class theo state và contract."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": []
 }

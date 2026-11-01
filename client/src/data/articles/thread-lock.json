@@ -1,7 +1,7 @@
 {
   "id": "thread-lock",
   "title": "lock, Monitor và collection đồng thời",
-  "description": "Critical section là vùng thao tác lên trạng thái dùng chung cần loại trừ truy cập xung đột. lock bảo đảm từng thời điểm chỉ một thread giữ cùng đối tượng khóa trong phạm vi đó. Monitor là API nền cho …",
+  "description": "Critical section là vùng thao tác lên trạng thái dùng chung cần loại trừ truy cập xung đột. lock bảo đảm từng thời điểm chỉ một thread giữ cùng đối tượng khóa trong phạm vi đó. Monitor là API nền cho kiểu lock dùng object truyền thống; System.Threading.Lock có cơ chế riêng ở C# hiện đại.",
   "category": "concurrency",
   "kind": "Đồng bộ truy cập trạng thái",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Critical section là vùng thao tác lên trạng thái dùng chung cần loại trừ truy cập xung đột. lock bảo đảm từng thời điểm chỉ một thread giữ cùng đối tượng khóa trong phạm vi đó. Monitor là API nền cho kiểu lock dùng object truyền thống; System.Threading.Lock có cơ chế riêng ở C# hiện đại."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "lock trên object thường dùng Monitor với giải phóng trong finally; C# 13/.NET 9 còn hỗ trợ System.Threading.Lock chuyên biệt. Không await trong thân lock thông thường; dùng cơ chế async phù hợp. Không khóa this hoặc string intern dùng chung ngoài kiểm soát.",
         "Interlocked.Increment phù hợp bộ đếm đơn. ConcurrentDictionary bảo vệ các thao tác riêng lẻ nhưng một chuỗi ContainsKey rồi Add không tự thành atomic; dùng TryAdd/GetOrAdd với hiểu biết về callback có thể chạy nhiều lần."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,90 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "lock(object) dùng Monitor theo ngữ nghĩa khóa/reentrancy theo thread; với biểu thức đúng kiểu System.Threading.Lock từ C#13/.NET9 compiler có EnterScope chuyên biệt. Mọi reader/writer cần cùng giao thức khóa. Interlocked.Increment giải quyết increment nguyên tử, không tự gom nhiều field thành invariant.",
+        "ConcurrentDictionary.TryAdd thay check-then-act ContainsKey rồi Add. GetOrAdd/AddOrUpdate có thể chạy value factory nhiều lần nên side effect phải chịu lặp. volatile hỗ trợ một số visibility/order, không làm ++ hoặc chuỗi bước thành atomic."
+      ],
+      "diagrams": [
+        {
+          "caption": "Vòng chờ deadlock (sơ đồ, không chạy treo)",
+          "steps": [
+            "Thread A giữ L1, đợi L2",
+            "Thread B giữ L2, đợi L1",
+            "Không bên nào tiến triển nếu không đổi giao thức",
+            "Sửa: mọi đường lấy L1 rồi L2 hoặc bỏ giữ đồng thời"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Monitor.Wait nhả khóa rồi lấy lại trước khi tiếp tục; predicate phải kiểm tra trong while vì wake không chứng minh điều kiện vẫn đúng. Pulse không lưu một tín hiệu để dùng tùy lúc về sau. Deadlock do hai luồng giữ khóa theo thứ tự ngược: dùng thứ tự thống nhất, giảm vùng khóa và không I/O dài/await bên trong. Mẫu không bỏ lock rồi khẳng định luôn ra số nhỏ hơn: race có thể tình cờ không lộ trong một lần chạy."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "int total = 0;\nobject sync = new();\nint iterations = 100;\nTask Work() => Task.Run(() => {\n    for (int i = 0; i < iterations; i++)\n        lock (sync) { total++; }\n});\nawait Task.WhenAll(Work(), Work());\nConsole.WriteLine(total);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "200",
-        "steps": [
-          "Hai Task mỗi cái chạy 100 lượt.",
-          "Cùng sync bảo vệ từng total++ nên không mất lượt tăng.",
-          "WhenAll chờ cả hai kết thúc trước khi in 200."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int total = 0;\nobject sync = new();\nint iterations = 100;\nTask Work() => Task.Run(() => {\n    for (int i = 0; i < iterations; i++)\n        lock (sync) { total++; }\n});\nawait Task.WhenAll(Work(), Work());\nConsole.WriteLine(total);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "200",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Hai Task mỗi cái chạy 100 lượt. Cùng sync bảo vệ từng total++ nên không mất lượt tăng. WhenAll chờ cả hai kết thúc trước khi in 200.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "atomic-and-monitor",
+          "title": "Interlocked, TryAdd và Monitor predicate",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int total=0;Parallel.For(0,200,_=>Interlocked.Increment(ref total));Console.WriteLine(total);\nvar map=new System.Collections.Concurrent.ConcurrentDictionary<string,int>();Console.WriteLine(map.TryAdd(\"key\",1));Console.WriteLine(map.TryAdd(\"key\",2));\nvar sync=new object();bool ready=false;using var waiting=new ManualResetEventSlim();\nvar t=new Thread(()=>{lock(sync){waiting.Set();while(!ready)Monitor.Wait(sync);Console.WriteLine(\"predicate true\");}}){IsBackground=true};t.Start();if(!waiting.Wait(TimeSpan.FromSeconds(5)))throw new TimeoutException();lock(sync){ready=true;Monitor.Pulse(sync);}if(!t.Join(TimeSpan.FromSeconds(5)))throw new TimeoutException();\nvar modern=new System.Threading.Lock();lock(modern){Console.WriteLine(\"Lock scope\");}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "200\nTrue\nFalse\npredicate true\nLock scope",
+          "explanation": "Ready event xác nhận worker đã vào giao thức. Main cần cùng sync; Wait nhả khóa giúp main đổi predicate. Không dùng Sleep để đoán waiter đã sẵn sàng.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +180,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "volatile int count làm count++ atomic không?",
+          "answer": "Không, ++ là read-modify-write nhiều bước.",
+          "explanation": "Interlocked hoặc khóa mới cung cấp hợp đồng nguyên tử phù hợp.",
+          "misconception": "volatile thay mọi lock.",
+          "followUp": "Hai field cần cùng invariant dùng gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Monitor.Wait có giữ khóa suốt thời gian chờ không?",
+          "answer": "Nó nhả khóa và phải lấy lại trước khi tiếp tục.",
+          "explanation": "Nếu giữ mãi thì producer không thể thay predicate.",
+          "misconception": "Wait chỉ như Sleep trong lock.",
+          "followUp": "Vì sao predicate dùng while thay if?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "TryAdd khác ContainsKey rồi Add thế nào?",
+          "answer": "TryAdd là thao tác theo contract concurrent của collection.",
+          "explanation": "Giữa ContainsKey và Add có thể có bên khác ghi.",
+          "misconception": "Hai API liên tiếp tự là transaction.",
+          "followUp": "GetOrAdd factory có chắc chạy một lần không?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Khóa hai object theo thứ tự trái nhau rủi ro gì?",
+          "answer": "Tạo vòng chờ deadlock.",
+          "explanation": "Quy tắc thứ tự thống nhất giảm nguy cơ giữ L1 chờ L2 và ngược lại.",
+          "misconception": "Nhiều core sẽ tự giải deadlock.",
+          "followUp": "Timeout là cách phát hiện hay sửa nguyên nhân?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "lock object và System.Threading.Lock có codegen hoàn toàn giống nhau không?",
+          "answer": "Không ở compiler/runtime mục tiêu: Lock có đường EnterScope riêng.",
+          "explanation": "Phải nói đúng phiên bản và kiểu biểu thức.",
+          "misconception": "lock lúc nào cũng chỉ Monitor.Enter/Exit.",
+          "followUp": "Ép Lock thành object trước khóa ảnh hưởng gì?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "lock",
+          "title": "The lock statement - ensure exclusive access to a shared resource",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock"
         },
         {
-          "title": "thread safe",
+          "title": "Thread-safe collections",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/"
         }
       ],
@@ -139,5 +248,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A39",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Chọn lock/Lock/Interlocked theo phạm vi invariant.",
+    "Hiểu Wait/Pulse, deadlock và thao tác concurrent nguyên tử."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "csharp-exceptions"
+  ],
+  "relatedIds": []
 }

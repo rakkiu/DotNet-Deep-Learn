@@ -1,0 +1,176 @@
+{
+  "id": "efcore-transactions-concurrency",
+  "title": "Transaction, isolation và optimistic concurrency",
+  "description": "Xử lý mất cập nhật và xung đột theo nghiệp vụ; tách transaction database khỏi tác dụng phụ bên ngoài.",
+  "category": "data",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Transaction nhóm thao tác trong phạm vi engine với commit/rollback và isolation. ACID không tự bao phủ mọi API/email ngoài database. Optimistic concurrency kiểm tra token gốc khi update/delete để phát hiện dữ liệu đã đổi từ lúc đọc."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Một SaveChanges thường có transaction khi relational provider hỗ trợ và cấu hình phù hợp; nhiều SaveChanges cần explicit transaction nếu nghiệp vụ đòi gộp. Isolation quyết định hiện tượng đọc/khóa theo engine, không đồng nghĩa mọi xung đột đều biến mất. Unique constraint/duplicate insert thường là lỗi constraint/provider, không mặc định DbUpdateConcurrencyException.",
+        "DataLab dùng int Revision do app tăng, được IsConcurrencyToken trên SQLite. SQL Server rowversion là giá trị do DB tạo theo cơ chế riêng, không chép y nguyên sang SQLite rồi coi tương đương. Hai context đọc cùng revision, bên đầu lưu trước làm bên sau update 0 hàng và EF báo conflict."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Xung đột có thể reload, merge, tính lại rồi retry giới hạn hoặc báo 409 theo contract nghiệp vụ; không retry mù mọi lỗi với dữ liệu cũ. Deadlock/serialization/unique có nguyên nhân và policy khác token conflict. External HTTP/email không rollback cùng DB; outbox là hướng đọc thêm nếu cần atomic publish, không bắt biến bài thành microservice."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "optimistic-conflict",
+          "title": "Hai context và token app-managed",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/DataLab/DataLab.csproj",
+          "project": "examples/DataLab/DataLab.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "concurrency:conflict; bản ghi bên thắng giữ update và bên thua Reload giá trị hiện tại.",
+          "explanation": "Query và update dùng context độc lập; WHERE token kiểm tra original value. Không dùng rowversion giả trên SQLite.",
+          "verification": "lab-verified"
+        },
+        {
+          "id": "transaction-rollback",
+          "title": "Nhiều bước ghi và rollback",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/DataLab/DataLab.csproj",
+          "project": "examples/DataLab/DataLab.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "rollback:True; Temporary không tồn tại sau Rollback dù SaveChanges trong transaction đã chạy.",
+          "explanation": "Clear tracker sau rollback để không nhầm state in-memory với database; không dùng database thật của người dùng.",
+          "verification": "lab-verified"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Log SQL đã lược giá trị nhạy cảm và kiểm tra token OriginalValues/CurrentValues/DatabaseValues. Phân biệt DbUpdateConcurrencyException với unique/foreign-key provider exception. Kiểm tra transaction boundary và dữ liệu đọc lại trước retry."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "SaveChanges hai lần có tự chung một transaction không?",
+          "answer": "Không phải luôn; cần ranh giới explicit nếu nghiệp vụ yêu cầu.",
+          "explanation": "Mặc định mỗi lần có thể là transaction riêng theo provider.",
+          "misconception": "Mọi context lifetime là một transaction.",
+          "followUp": "Email có tự rollback cùng DB không?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Duplicate insert unique có phải token conflict không?",
+          "answer": "Không, thường là lỗi constraint/provider.",
+          "explanation": "Concurrency token update/delete là cơ chế khác.",
+          "misconception": "Mọi DbUpdateException đều là DbUpdateConcurrencyException.",
+          "followUp": "API nên map lỗi theo policy thế nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "SQLite dùng SQL Server rowversion giống hệt được không?",
+          "answer": "Không, demo dùng token app-managed riêng.",
+          "explanation": "Provider có cơ chế tạo/cập nhật token khác nhau.",
+          "misconception": "Tên thuộc tính Version là đủ mọi engine.",
+          "followUp": "Bên update phải gửi original token nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Conflict có nên SaveChanges lại ngay không đổi dữ liệu?",
+          "answer": "Không, cần đọc dữ liệu mới, tính lại điều kiện/merge hoặc báo lỗi.",
+          "explanation": "Retry mù giữ original token/state không giải quyết nguyên nhân.",
+          "misconception": "Retry vô hạn rồi luôn thành công.",
+          "followUp": "Tác dụng phụ ngoài DB cần idempotency thế nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Transaction có bao trùm HTTP gọi ngoài cùng lúc không?",
+          "answer": "Không theo DB transaction thông thường.",
+          "explanation": "Cần thiết kế consistency/outbox/compensation phù hợp nếu thực sự cần.",
+          "misconception": "Có using transaction thì mọi thế giới rollback.",
+          "followUp": "Isolation và deadlock đổi policy retry ra sao?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "Optimistic concurrency và token",
+          "url": "https://learn.microsoft.com/en-us/ef/core/saving/concurrency"
+        },
+        {
+          "title": "Transaction và savepoints EF Core",
+          "url": "https://learn.microsoft.com/en-us/ef/core/saving/transactions"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N07",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Theo dấu commit/rollback và hai context cùng cập nhật.",
+    "Chọn policy conflict/retry theo provider và điều kiện nghiệp vụ."
+  ],
+  "prerequisiteIds": [
+    "efcore-context",
+    "relational-databases",
+    "efcore-relationships"
+  ],
+  "relatedIds": [
+    "efcore-context",
+    "efcore-migrations"
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "id": "dotnet-delivery-basics",
+  "title": "Build, publish và triển khai .NET",
+  "description": "Dựng môi trường mới, publish ngoài IDE và vận hành có cấu hình/secret rõ; phân biệt build pass với deployment thật.",
+  "category": "foundation",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Build kiểm tra/biên dịch source; publish chuẩn bị output triển khai, chưa tự có một server production đang chạy. Debug/Release là cấu hình build; Development/Production là môi trường runtime. Docker là lựa chọn đóng gói, không điều kiện bắt buộc học hoặc triển khai mọi app .NET."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Framework-dependent cần runtime phù hợp; self-contained mang runtime theo RID và phải phát hành lại để có runtime đã vá. launchSettings.json chủ yếu phục vụ launch local, không đại diện mọi config production. Dùng environment/config provider và secret store phù hợp, không commit connection credential.",
+        "Smoke test thực sự phải khởi động output publish ngoài IDE, gửi request kiểm tra status/body/health. HTTPS có thể kết thúc tại Kestrel hoặc trusted reverse proxy theo kiến trúc, không mặc định tất cả phải IIS. Health live/ready chỉ có ý nghĩa theo policy đo."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "CI chạy SDK/dependency versions công bố, build/test và package có thể tái hiện. Schema migration nên là bước kiểm soát script/bundle, compatible rollout thay việc mọi instance tự update. Nhiều process có static/memory cache/locks riêng; Data Protection key/cookie cần cấu hình chia sẻ/lifetime đúng nếu có nhiều node. Timeout/cancel/graceful shutdown/logging cần được thiết kế, không đòi Kubernetes hoặc microservices để đạt mục tiêu này."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "publish-smoke",
+          "title": "Publish framework-dependent và chạy output",
+          "kind": "publish",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet restore examples/WebLab/WebLab.csproj\ndotnet build examples/WebLab/WebLab.csproj -c Release --no-restore\ndotnet test examples/WebLab.Tests/WebLab.Tests.csproj\ndotnet publish examples/WebLab/WebLab.csproj -c Release --self-contained false -o ./publish-demo\n# PowerShell: $env:ASPNETCORE_URLS=\"http://127.0.0.1:5090\"\n# Bash: export ASPNETCORE_URLS=http://127.0.0.1:5090\ncd publish-demo\ndotnet WebLab.dll",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "GET",
+              "path": "/",
+              "status": 200
+            },
+            {
+              "method": "GET",
+              "path": "/health/live",
+              "status": 200
+            }
+          ],
+          "expected": "/ trả Xin chào .NET 10; /health/live trả status alive khi process publish đang chạy.",
+          "explanation": "Bộ kiểm chứng publish vào thư mục riêng, chạy dotnet WebLab.dll trên loopback port riêng, smoke test rồi dừng process nó tạo. Không coi build pass là deployment Vercel.",
+          "verification": "lab-verified"
+        },
+        {
+          "id": "publish-models",
+          "title": "So cấu hình self-contained và framework-dependent",
+          "kind": "illustration",
+          "label": "Minh họa có giới hạn",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "PowerShell hoặc Bash; thay App.csproj bằng project thật.\ndotnet publish App.csproj -c Release --self-contained false\ndotnet publish App.csproj -c Release -r win-x64 --self-contained true",
+          "files": {},
+          "expected": "Hai output khác cách đóng gói runtime và phạm vi nền tảng; cần chạy trên môi trường đích để xác minh.",
+          "explanation": "Lệnh so sánh là minh họa tùy chọn, không tuyên bố đã publish/chạy self-contained mọi RID.",
+          "verification": "illustration"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Chạy output publish từ terminal ngoài IDE với environment/URL rõ. Kiểm tra runtime bằng --list-runtimes, status health và log startup; không dùng launchSettings làm bằng chứng cấu hình production. Smoke test phải trỏ đúng process vừa khởi động."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Build pass có chứng minh deployment hoạt động không?",
+          "answer": "Không, còn package/config/runtime/hosting và smoke test thực.",
+          "explanation": "Build chỉ xác minh một giai đoạn.",
+          "misconception": "Có dist hoặc DLL tức website đã live.",
+          "followUp": "Smoke test phải gửi request tới đâu?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Debug/Release có cùng nghĩa Development/Production không?",
+          "answer": "Không, một là build configuration, một là runtime environment.",
+          "explanation": "Có thể chạy Release với môi trường Development theo cấu hình.",
+          "misconception": "Release tự bảo vệ mọi secret/stack trace.",
+          "followUp": "launchSettings có theo toàn bộ deployment không?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Self-contained có cần phát hành lại khi runtime vá không?",
+          "answer": "Có để gói mang runtime mới theo policy.",
+          "explanation": "Nó không tự sử dụng mọi runtime system thay bản bundle.",
+          "misconception": "Không cần cập nhật vì đã tự chứa.",
+          "followUp": "RID ảnh hưởng nền tảng chạy thế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Nhiều app instance có cùng static cache/lock không?",
+          "answer": "Không, chúng thường riêng theo process.",
+          "explanation": "Consistency/key sharing cần cơ chế ngoài nếu nghiệp vụ yêu cầu.",
+          "misconception": "Deploy cùng repo tức state dùng chung.",
+          "followUp": "Cookie/Data Protection cần phối hợp gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Vì sao migration nên tách khỏi mỗi app startup?",
+          "answer": "Kiểm soát quyền, cạnh tranh schema và rollout nhiều version.",
+          "explanation": "Bước review script/bundle và kế hoạch dữ liệu giảm rủi ro.",
+          "misconception": "Cứ app tự update là không bao giờ lỗi.",
+          "followUp": "Expand-contract giúp app cũ/mới đồng thời ra sao?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "dotnet publish và output triển khai",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-publish"
+        },
+        {
+          "title": "Các mô hình deployment .NET",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/deploying/"
+        },
+        {
+          "title": "Cấu hình môi trường ASP.NET Core",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments?view=aspnetcore-10.0"
+        },
+        {
+          "title": "Áp dụng migration có kiểm soát",
+          "url": "https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N12",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Chạy restore/build/test/publish và smoke test ngoài IDE.",
+    "Nêu trách nhiệm cấu hình, migration, key và nhiều app instance."
+  ],
+  "prerequisiteIds": [
+    "visual-studio",
+    "aspnet-first-app",
+    "aspnet-configuration-observability"
+  ],
+  "relatedIds": [
+    "visual-studio",
+    "aspnet-configuration-observability",
+    "efcore-migrations"
+  ]
+}

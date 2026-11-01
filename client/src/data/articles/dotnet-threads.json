@@ -1,7 +1,7 @@
 {
   "id": "dotnet-threads",
   "title": "Thread và vòng đời luồng",
-  "description": "Thread đại diện một luồng thực thi trong process. Mỗi thread có call stack riêng; nhiều thread có thể truy cập cùng object trên heap. Thread khác với Task: Task là abstraction về công việc/kết quả và …",
+  "description": "Thread đại diện một luồng thực thi trong process. Mỗi thread có call stack riêng; nhiều thread có thể truy cập cùng object trên heap. Thread khác với Task: Task là abstraction về công việc/kết quả và không luôn gắn với một thread riêng.",
   "category": "concurrency",
   "kind": "API luồng thực thi",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Thread đại diện một luồng thực thi trong process. Mỗi thread có call stack riêng; nhiều thread có thể truy cập cùng object trên heap. Thread khác với Task: Task là abstraction về công việc/kết quả và không luôn gắn với một thread riêng."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Concurrency khác parallelism. Background thread bị dừng khi tiến trình kết thúc không phải quy trình shutdown an toàn. Với dừng hợp tác, ưu tiên CancellationToken và kiểm tra cancellation, không dùng bool không đồng bộ rồi giả định mọi thread thấy ngay.",
         "Thread riêng hữu ích khi cần kiểm soát đặc biệt; Task và API async thường thích hợp hơn cho công việc thông thường. Join là blocking, không đặt nó tùy tiện trên UI hoặc đường xử lý request."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Thread trước Start chưa chạy; Start chỉ một lần, Join chặn caller tới kết thúc hoặc timeout. Sleep chặn thread một khoảng; Task.Delay tạo tác vụ chờ có thể await, khác Join chờ thread. Đọc value sau Join thành công có quan hệ hoàn tất rõ; đọc ngay sau Start chưa có cùng bảo đảm kết quả.",
+        "Exception trên thread riêng không tự nhảy vào catch của thread tạo nó. Đặt try/catch ở entry point và kênh chuyển lỗi/kết quả, rồi join trước khi sử dụng. Không dùng bool thường làm cờ hủy chéo thread; CancellationToken cung cấp thông báo hợp tác và khả năng visibility theo API."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Foreground có thể giữ process sống, background không bảo đảm dọn khi process đóng; cả hai không thay chính sách shutdown. Token không tự cắt mọi blocking API; chọn API hỗ trợ token hoặc cơ chế đánh thức/timeout phù hợp. Dedicated thread hữu ích khi cần affinity/blocking đặc thù; ThreadPool cho nhiều tác vụ ngắn. UI control cần dispatcher theo framework."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "int value = 0;\nvar worker = new Thread(() => value = 7);\nworker.Start();\nworker.Join();\nConsole.WriteLine(value);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "7",
-        "steps": [
-          "Main khởi tạo value bằng 0 và tạo worker chưa chạy.",
-          "Start bắt đầu worker; Join chờ worker kết thúc.",
-          "Worker đã ghi 7 trước khi Main in nên kết quả xác định."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "int value = 0;\nvar worker = new Thread(() => value = 7);\nworker.Start();\nworker.Join();\nConsole.WriteLine(value);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "7",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Main khởi tạo value bằng 0 và tạo worker chưa chạy. Start bắt đầu worker; Join chờ worker kết thúc. Worker đã ghi 7 trước khi Main in nên kết quả xác định.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "thread-cooperation",
+          "title": "Báo ready, hủy và Join có timeout",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using var cts=new CancellationTokenSource();using var ready=new ManualResetEventSlim();string result=\"not-started\";Exception? error=null;\nvar worker=new Thread(()=>{try{ready.Set();cts.Token.WaitHandle.WaitOne();cts.Token.ThrowIfCancellationRequested();}catch(OperationCanceledException){result=\"canceled\";}catch(Exception ex){error=ex;}}){IsBackground=true};\nworker.Start();if(!ready.Wait(TimeSpan.FromSeconds(5)))throw new TimeoutException(\"not ready\");cts.Cancel();\nif(!worker.Join(TimeSpan.FromSeconds(5)))throw new TimeoutException(\"shutdown\");\nConsole.WriteLine(result);Console.WriteLine(error is null);\nException? reported=null;var failed=new Thread(()=>{try{throw new InvalidOperationException(\"work\");}catch(Exception ex){reported=ex;}}){IsBackground=true};failed.Start();if(!failed.Join(TimeSpan.FromSeconds(5)))throw new TimeoutException();Console.WriteLine(reported?.GetType().Name);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "canceled\nTrue\nInvalidOperationException",
+          "explanation": "Ready signal bảo đảm worker đã vào giao thức; token đánh thức WaitHandle, không dùng Sleep. Lỗi được bắt trong thread rồi đọc sau Join.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +169,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Start một Thread đã kết thúc lần nữa được không?",
+          "answer": "Không, cần Thread instance mới nếu thật sự cần luồng mới.",
+          "explanation": "Vòng đời Thread không tái khởi động như hàm.",
+          "misconception": "Join reset thread để Start lại.",
+          "followUp": "Task/ThreadPool có abstraction khác thế nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Join chờ mà có giữ thread caller không?",
+          "answer": "Có, Join là blocking.",
+          "explanation": "Task.Delay/await có cách chờ không block khác.",
+          "misconception": "Join là await viết kiểu cũ.",
+          "followUp": "Join timeout false cần xử lý gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Catch quanh worker.Start bắt lỗi bên trong worker được không?",
+          "answer": "Không theo cách tự động đó.",
+          "explanation": "Thread riêng cần exception boundary và kênh báo lỗi riêng.",
+          "misconception": "Exception luôn quay về caller đã tạo thread.",
+          "followUp": "Join xong mới đọc báo lỗi giúp gì?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Foreground có đủ làm shutdown đúng không?",
+          "answer": "Không, nó chỉ ảnh hưởng điều kiện process còn sống.",
+          "explanation": "Cần cancel, đánh thức và join/dọn đúng hợp đồng.",
+          "misconception": "Foreground tự drain mọi dữ liệu khi thoát.",
+          "followUp": "Background thread bị cắt có bảo đảm finally không?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Token có giết một blocking API bất kỳ ngay không?",
+          "answer": "Không, hủy là hợp tác.",
+          "explanation": "API phải quan sát token hoặc có cơ chế timeout/đánh thức.",
+          "misconception": "Cancel tương đương Thread.Abort.",
+          "followUp": "Dedicated thread hợp lý ở trường hợp affinity nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "using threads and threading",
+          "title": "Using threads and threading",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/using-threads-and-threading"
         },
         {
-          "title": "foreground and background threads",
+          "title": "Foreground and background threads",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/foreground-and-background-threads"
         }
       ],
@@ -139,5 +237,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A36",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Dừng thread hợp tác và quan sát lỗi tại entry point.",
+    "Phân biệt blocking, foreground/background và thread affinity."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "csharp-exceptions"
+  ],
+  "relatedIds": []
 }

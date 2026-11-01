@@ -1,7 +1,7 @@
 {
   "id": "oop-classes",
   "title": "Class, object và đóng gói một trạng thái hợp lệ",
-  "description": "OOP tổ chức chương trình quanh object kết hợp trạng thái và hành vi. Class là định nghĩa kiểu; object là instance cụ thể tạo ra khi chạy. Đóng gói, trừu tượng, kế thừa và đa hình là các ý tưởng thiết …",
+  "description": "OOP tổ chức chương trình quanh object kết hợp trạng thái và hành vi. Class là định nghĩa kiểu; object là instance cụ thể tạo ra khi chạy. Đóng gói, trừu tượng, kế thừa và đa hình là các ý tưởng thiết kế, không phải bốn câu thần chú phải đưa vào mọi class.",
   "category": "architecture",
   "kind": "Mô hình lập trình",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "OOP tổ chức chương trình quanh object kết hợp trạng thái và hành vi. Class là định nghĩa kiểu; object là instance cụ thể tạo ra khi chạy. Đóng gói, trừu tượng, kế thừa và đa hình là các ý tưởng thiết kế, không phải bốn câu thần chú phải đưa vào mọi class."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -39,10 +39,10 @@
       "id": "limits",
       "paragraphs": [
         "Không dùng inheritance chỉ để tái sử dụng vài dòng code nếu quan hệ is-a không đúng. Không tạo class khổng lồ vừa truy cập database, render HTML và gửi email. Với dữ liệu bất biến nhỏ hoặc phép tính thuần, record/struct hoặc hàm đơn giản có thể phù hợp hơn.",
-        "Đóng gói không chỉ là thêm private: constructor trong ví dụ chưa kiểm tra số dư ban đầu, nên hợp đồng phải nói rõ hoặc bổ sung validation nếu cấm số dư âm. required yêu cầu khởi tạo member ở compile-time theo các quy tắc C#, không bảo đảm nội dung khác rỗng hoặc hợp lệ khi chạy. partial là khai báo từng phần, không phải local class.",
+        "Đóng gói không chỉ là thêm private: constructor đã chặn số dư ban đầu âm, Deposit chặn số không dương và checked bảo vệ overflow. required yêu cầu khởi tạo member ở compile-time theo các quy tắc C#, không bảo đảm nội dung khác rỗng hoặc hợp lệ khi chạy. partial là khai báo từng phần, không phải local class.",
         "Property với private set bảo vệ thao tác từ caller nhưng không làm object tự thread-safe. Abstract class chia sẻ hợp đồng và phần triển khai giữa các lớp; một class chỉ có một lớp cha trực tiếp, có thể implement nhiều interface. Constructor không được kế thừa như method thông thường."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,34 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Field lưu state, property kiểm soát truy cập; private set chỉ giới hạn nơi gán, không tự tạo validation. Constructor không có kiểu trả về và không được kế thừa như method. init cho gán trong giai đoạn khởi tạo; required yêu cầu member được khởi tạo theo compiler nhưng không chứng minh chuỗi khác rỗng hoặc số hợp lệ. readonly field cấm gán lại ngoài các vị trí hợp lệ, không deep-freeze object graph.",
+        "Mô hình Account dùng int làm đơn vị điểm để học OOP, không tuyên bố đã mô hình hóa tiền tệ. Balance >= 0 là invariant; constructor chặn số âm; Deposit từ chối <=0 và checked ngăn overflow tạo số âm. Abstraction nêu hành vi gửi điểm, encapsulation giấu cách thay Balance."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Composition thường linh hoạt hơn inheritance nếu chỉ cần tái sử dụng code; kế thừa cần hợp đồng thay thế được. Deserialize hoặc ORM có thể tạo object qua đường khác nên invariant phải xét mọi đường khởi tạo trong thiết kế thật. DTO/ViewModel/entity có trách nhiệm khác nhau. Record/equality không tự giải quyết identity hay thread safety; private setter vẫn có thể race khi nhiều thread gọi Deposit."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "var account = new Account(100);\nbool accepted = account.Deposit(50);\nConsole.WriteLine(accepted);\nConsole.WriteLine(account.Balance);\n\nclass Account\n{\n    public int Balance { get; private set; }\n    public Account(int balance) { Balance = balance; }\n    public bool Deposit(int amount)\n    {\n        if (amount <= 0) return false;\n        Balance += amount;\n        return true;\n    }\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "True\n150",
-        "steps": [
-          "Tạo Account, constructor gán Balance = 100.",
-          "Deposit nhận 50, điều kiện amount <= 0 sai.",
-          "Số dư tăng thành 150 và hàm trả true.",
-          "Caller in True rồi 150."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var account = new Account(100);\nbool accepted = account.Deposit(50);\nConsole.WriteLine(accepted);\nConsole.WriteLine(account.Balance);\n\nclass Account\n{\n    public int Balance { get; private set; }\n    public Account(int balance) { if(balance<0)throw new ArgumentOutOfRangeException(nameof(balance)); Balance = balance; }\n    public bool Deposit(int amount)\n    {\n        if (amount <= 0) return false;\n        Balance = checked(Balance + amount);\n        return true;\n    }\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\n150",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Tạo Account, constructor gán Balance = 100. Deposit nhận 50, điều kiện amount <= 0 sai. Số dư tăng thành 150 và hàm trả true. Caller in True rồi 150.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "account-boundaries",
+          "title": "Constructor, số 0 và overflow",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "try{_ = new Account(-1);}catch(ArgumentOutOfRangeException){Console.WriteLine(\"âm: bị từ chối\");}\nvar a=new Account(0);Console.WriteLine(a.Deposit(0));Console.WriteLine(a.Deposit(5));Console.WriteLine(a.Balance);\ntry{new Account(int.MaxValue).Deposit(1);}catch(OverflowException){Console.WriteLine(\"overflow: bị từ chối\");}\npublic class Account\n{\n public int Balance {get;private set;}\n public Account(int balance)\n {if(balance<0)throw new ArgumentOutOfRangeException(nameof(balance));Balance=balance;}\n public bool Deposit(int amount)\n {if(amount<=0)return false;Balance=checked(Balance+amount);return true;}\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "âm: bị từ chối\nFalse\nTrue\n5\noverflow: bị từ chối",
+          "explanation": "Tất cả đường tạo trong demo hoặc giữ Balance hợp lệ hoặc ném lỗi rõ ràng. checked tính trước khi gán nên overflow không ghi số dư sai.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -124,14 +169,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Constructor có kiểu trả về void không?",
+          "answer": "Không, constructor không khai báo kiểu trả về.",
+          "explanation": "Nó thiết lập trạng thái ban đầu và không được kế thừa như method.",
+          "misconception": "Constructor là method void thông thường.",
+          "followUp": "Một constructor khác gọi this/base để làm gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Account(-1) nên làm gì theo hợp đồng?",
+          "answer": "Ném ArgumentOutOfRangeException trước khi nhận state.",
+          "explanation": "Invariant phải đúng ngay sau tạo object, không chỉ sau Deposit.",
+          "misconception": "Chỉ cần ghi chú số dư không nên âm.",
+          "followUp": "Deposit(0) theo mẫu có được chấp nhận không?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "required int Balance có tự chặn -1 không?",
+          "answer": "Không, required chỉ buộc cung cấp member theo quy tắc khởi tạo.",
+          "explanation": "Validation giá trị là trách nhiệm code nghiệp vụ.",
+          "misconception": "required đồng nghĩa giá trị hợp lệ.",
+          "followUp": "init có bảo đảm object graph immutable không?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "private set có làm Deposit thread-safe?",
+          "answer": "Không, nhiều lần đọc-cộng-ghi vẫn có thể race.",
+          "explanation": "Đóng gói và đồng bộ hóa là hai thuộc tính khác nhau.",
+          "misconception": "Không sửa từ ngoài thì không có race.",
+          "followUp": "Khi Account sống singleton cần bổ sung điều gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Vì sao checked cần thiết với int ở mẫu này?",
+          "answer": "Nó ngăn phép cộng quá giới hạn tạo state không hợp lệ.",
+          "explanation": "Miền biểu diễn int hữu hạn ngay cả khi số đầu vào đều dương.",
+          "misconception": "Hai số dương luôn cộng thành số dương.",
+          "followUp": "Mô hình tiền thật còn cần đơn vị và rounding gì?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "object oriented",
+          "title": "Overview of object oriented techniques in C#",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/"
         },
         {
-          "title": "classes",
+          "title": "Microsoft Learn · C# classes",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/classes"
         }
       ],
@@ -140,5 +237,30 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A13",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Giữ invariant Balance không âm ngay từ constructor.",
+    "Phân biệt encapsulation, validation và thread safety."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods"
+  ],
+  "relatedIds": [
+    "csharp-value-modeling",
+    "dotnet-dates-numbers-culture"
+  ]
 }

@@ -1,7 +1,7 @@
 {
   "id": "visual-studio",
   "title": "Visual Studio, .NET CLI và NuGet",
-  "description": "Visual Studio là IDE: nơi soạn code, quản lý project, build, debug và dùng công cụ phân tích. .NET CLI là giao diện dòng lệnh của SDK; NuGet là hệ thống package của .NET. IDE không phải runtime và khô…",
+  "description": "Visual Studio là IDE: nơi soạn code, quản lý project, build, debug và dùng công cụ phân tích. .NET CLI là giao diện dòng lệnh của SDK; NuGet là hệ thống package của .NET. IDE không phải runtime và không phải ngôn ngữ; ứng dụng không cần mở Visual Studio để chạy sau khi được triển khai đúng.",
   "category": "foundation",
   "kind": "IDE và công cụ phát triển",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Visual Studio là IDE: nơi soạn code, quản lý project, build, debug và dùng công cụ phân tích. .NET CLI là giao diện dòng lệnh của SDK; NuGet là hệ thống package của .NET. IDE không phải runtime và không phải ngôn ngữ; ứng dụng không cần mở Visual Studio để chạy sau khi được triển khai đúng."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Khái niệm và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -40,7 +40,7 @@
       "paragraphs": [
         "Không cài mọi workload nếu chỉ viết console; chọn thành phần cần thiết để giảm tải máy. Không gửi thư mục bin/obj hay thông tin đăng nhập NuGet vào Git. Không dựa vào thao tác IDE không được ghi lại nếu người khác/CI cần build cùng project."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -82,31 +82,72 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "restore giải dependency; build kiểm tra và biên dịch; run có thể build rồi chạy; test chạy test project với runner tương ứng; publish chuẩn bị output để triển khai. Debug/Release là cấu hình build, không phải tên môi trường Development/Production. Symbol PDB giúp ánh xạ lệnh đang chạy tới source.",
+        "NuGet có dependency trực tiếp trong PackageReference và dependency bắc cầu từ các gói đó. NuGet.Config khai báo nguồn; ProjectReference trỏ project. global.json chọn SDK và roll-forward theo chính sách của nó; không thay target framework. Không ghi credential feed vào source control."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Build tái lập cần khóa/version dependency phù hợp, SDK thống nhất, nguồn package sẵn có và cấu hình CI. Trong .NET 10 có lệnh dạng noun-first dotnet package list; dùng --include-transitive --vulnerable để xem thông tin rủi ro theo dữ liệu nguồn, không coi không có cảnh báo là chứng nhận an toàn. Breakpoint rỗng có thể do sai process, tối ưu Release hoặc symbol/source không khớp."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "dotnet --info\ndotnet new console -n HelloDotNet\ncd HelloDotNet\ndotnet build\ndotnet run",
-        "file": "Program.cs",
-        "language": "shell",
-        "files": {},
-        "output": "SDK in thông tin môi trường; template console mặc định in Hello, World!",
-        "steps": [
-          "Mỗi dòng trên là lệnh terminal, không dán vào Program.cs.",
-          "Mở HelloDotNet.csproj bằng Visual Studio hoặc mở thư mục với editor; Program.cs là nơi viết source."
-        ],
-        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Quy trình tạo đúng một project",
+          "kind": "cli",
+          "label": "Lệnh terminal",
+          "shell": "PowerShell hoặc Bash",
+          "input": "Tạo HelloDotNet trong thư mục cha mới.",
+          "setup": "dotnet --info\ndotnet new console -n HelloDotNet -f net10.0\ncd HelloDotNet\ndotnet restore\ndotnet build\ndotnet run",
+          "files": {
+            "Program.cs": "Console.WriteLine(\"Hello, World!\");"
+          },
+          "expected": "Hello, World!",
+          "explanation": "Các lệnh nằm trong terminal; Program.cs chỉ chứa câu lệnh C#. Không tạo thêm TheoryDemo lồng bên trong.",
+          "verification": "cli-verified"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "cli-clean",
+          "title": "Một đường chạy HelloDotNet",
+          "kind": "cli",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "PowerShell hoặc Bash, tại thư mục cha mới.\ndotnet --info\ndotnet new console -n HelloDotNet -f net10.0\ncd HelloDotNet\ndotnet add package Microsoft.Extensions.Logging.Abstractions --version 10.0.14\ndotnet restore\ndotnet build\ndotnet run\ndotnet package list --include-transitive --vulnerable\ndotnet publish -c Release --self-contained false",
+          "files": {},
+          "expected": "Template mặc định in Hello, World!; danh sách package/vulnerability tùy nguồn và thời điểm.",
+          "explanation": "Chỉ tạo HelloDotNet một lần. Toàn bộ khối này là terminal, không dán vào Program.cs. F9/F5/F10/F11 dùng trong IDE để kiểm tra cùng project.",
+          "verification": "cli-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -117,18 +158,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "restore khác build ở đâu?",
+          "answer": "restore giải các package, build biên dịch mã và có thể restore ngầm.",
+          "explanation": "Tách restore hỗ trợ chẩn đoán lỗi nguồn khác lỗi compiler.",
+          "misconception": "Restore tạo file thực thi hoàn chỉnh.",
+          "followUp": "--no-restore nên dùng sau bước nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Breakpoint rỗng cần xem gì?",
+          "answer": "Process đang debug, symbol PDB, source version và cấu hình build.",
+          "explanation": "Debugger phải ánh xạ binary đang chạy tới đúng source.",
+          "misconception": "Luôn là Visual Studio bị hỏng.",
+          "followUp": "Release tối ưu có thể ảnh hưởng bước qua code thế nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "ProjectReference khác PackageReference?",
+          "answer": "Một trỏ project nguồn; một trỏ package có version.",
+          "explanation": "Cả hai tham gia dependency graph nhưng được resolve khác nhau.",
+          "misconception": "using thay được hai reference này.",
+          "followUp": "Dependency bắc cầu tới từ đâu?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Build local pass nhưng CI fail thì kiểm tra gì?",
+          "answer": "SDK/global.json, nguồn NuGet, quyền feed, biến môi trường và lệnh thực tế.",
+          "explanation": "CI không tự thừa hưởng mọi cấu hình người dùng trên máy.",
+          "misconception": "Chép credential vào repo để CI giống local.",
+          "followUp": "Làm sao đưa secret cho CI mà không commit?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Vulnerable list không có cảnh báo có đủ kết luận an toàn?",
+          "answer": "Không, nó phụ thuộc nguồn advisories và phạm vi package đã kiểm tra.",
+          "explanation": "Cần cập nhật dữ liệu và xem cả transitive dependencies.",
+          "misconception": "Không báo tức là chứng nhận mọi code an toàn.",
+          "followUp": "Một package chưa có advisory vẫn cần đánh giá gì?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "learn.microsoft.com — tutorial console",
+          "title": "Tutorial: Create a simple C# console app in Visual Studio (part 1 of 2)",
           "url": "https://learn.microsoft.com/en-us/visualstudio/get-started/csharp/tutorial-console?view=visualstudio"
         },
         {
-          "title": "learn.microsoft.com — tools",
+          "title": ".NET CLI overview",
           "url": "https://learn.microsoft.com/en-us/dotnet/core/tools/"
         },
         {
-          "title": "learn.microsoft.com — what is nuget",
+          "title": "An introduction to NuGet",
           "url": "https://learn.microsoft.com/en-us/nuget/what-is-nuget"
         }
       ],
@@ -137,5 +230,25 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A03",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Tạo đúng một project từ terminal sạch; đọc dependency và build output.",
+    "Chẩn đoán breakpoint không khớp và quản lý cấu hình build."
+  ],
+  "prerequisiteIds": [],
+  "relatedIds": []
 }

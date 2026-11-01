@@ -1,3 +1,5 @@
+> B?n ghi c?a ??t tr??c (47 b?i g?c). Xem [ma tr?n n?ng c?p 59 b?i](upgrade-coverage.md) v? [ki?m ch?ng hi?n t?i](upgrade-validation.md).
+
 # Phạm vi thư viện lý thuyết
 
 Phạm vi được đối chiếu với 41 mục trong bản ghi bài giảng do người dùng cung cấp. Nội dung giải thích được biên soạn lại và mở rộng; không phải bản chép nguyên văn, không tuyên bố đã xem trực tiếp video. Ví dụ đặt trong bối cảnh .NET 10; bản ghi của thầy có bối cảnh .NET 8. Những khác biệt quan trọng được ghi trong bài.

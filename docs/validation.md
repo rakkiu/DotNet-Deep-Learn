@@ -1,3 +1,5 @@
+> B?n ghi c?a ??t tr??c (47 b?i g?c). Xem [ma tr?n n?ng c?p 59 b?i](upgrade-coverage.md) v? [ki?m ch?ng hi?n t?i](upgrade-validation.md).
+
 # Kiểm tra bản thư viện lý thuyết
 
 Ngày đối chiếu: 2026-11-01 (Asia/Saigon). Node 24.19.0, npm 11.17.0, .NET SDK 10.0.302, Chrome trên Windows.

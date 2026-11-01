@@ -1,7 +1,7 @@
 {
   "id": "dependency-injection",
   "title": "Dependency Injection và ba vòng đời service",
-  "description": "Dependency Injection đưa dependency từ bên ngoài vào một object thay vì object tự tạo tất cả. Constructor injection thể hiện điều class cần ngay trong constructor. IoC là ý tưởng rộng về đảo quyền điề…",
+  "description": "Dependency Injection đưa dependency từ bên ngoài vào một object thay vì object tự tạo tất cả. Constructor injection thể hiện điều class cần ngay trong constructor. IoC là ý tưởng rộng về đảo quyền điều khiển; Dependency Inversion là nguyên lý phụ thuộc, không phải tên khác hoàn toàn tương đương với DI.",
   "category": "architecture",
   "kind": "Kỹ thuật thiết kế / container dịch vụ",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Dependency Injection đưa dependency từ bên ngoài vào một object thay vì object tự tạo tất cả. Constructor injection thể hiện điều class cần ngay trong constructor. IoC là ý tưởng rộng về đảo quyền điều khiển; Dependency Inversion là nguyên lý phụ thuộc, không phải tên khác hoàn toàn tương đương với DI."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "DI là kỹ thuật, IoC là nguyên lý rộng hơn, DIP là nguyên lý về hướng phụ thuộc; ba khái niệm không đồng nghĩa. Singleton không nên giữ scoped dependency; bật scope validation để bắt cấu hình sai.",
         "Singleton có thể bị nhiều request gọi đồng thời nên implementation phải phù hợp. GetService có thể trả null; GetRequiredService ném lỗi khi thiếu đăng ký. Ưu tiên constructor injection thay vì giấu dependency trong service locator."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,109 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Constructor injection thủ công là new Handler(new Writer()); container chỉ tự động hóa lắp graph. ServiceCollection lưu đăng ký, ServiceProvider resolve dependency. GetService có thể null; GetRequiredService ném khi thiếu. Nhiều đăng ký có thể được lấy qua IEnumerable<T> theo contract container.",
+        "Transient tạo mới khi resolve, scoped dùng lại trong scope, singleton dùng lại trong provider. Scope web thường là request, không phải user/session. Singleton theo provider, không phải một object toàn vũ trụ; nhiều provider/process có instance riêng."
+      ],
+      "tables": [
+        {
+          "caption": "Lifetime trong hai scope",
+          "headers": [
+            "Lifetime",
+            "Hai lần trong scope A",
+            "A so với B"
+          ],
+          "rows": [
+            [
+              "Transient",
+              "Khác instance",
+              "Khác"
+            ],
+            [
+              "Scoped",
+              "Cùng",
+              "Khác"
+            ],
+            [
+              "Singleton",
+              "Cùng",
+              "Cùng trong một provider"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Singleton giữ scoped là captive dependency và ValidateScopes có thể bắt; transient bị singleton giữ cũng sống lâu dù đăng ký transient. Không BuildServiceProvider thêm trong lúc đăng ký app. Container dispose tài nguyên nó tạo theo lifetime; không tự Dispose service inject vào. ValidateOnBuild/ValidateScopes không chứng minh mọi logic runtime. BackgroundService tạo scope cho từng đơn vị; conventional middleware nhận scoped qua InvokeAsync hoặc dùng IMiddleware đúng lifetime."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thêm FrameworkReference vào .csproj theo hướng dẫn bên dưới\n# Thay Program.cs rồi chạy\ndotnet run",
-        "code": "using Microsoft.Extensions.DependencyInjection;\nvar services = new ServiceCollection();\nservices.AddScoped<Marker>();\nusing var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });\nusing var scope1 = provider.CreateScope();\nusing var scope2 = provider.CreateScope();\nvar first = scope1.ServiceProvider.GetRequiredService<Marker>();\nvar second = scope1.ServiceProvider.GetRequiredService<Marker>();\nvar other = scope2.ServiceProvider.GetRequiredService<Marker>();\nConsole.WriteLine(ReferenceEquals(first, second));\nConsole.WriteLine(ReferenceEquals(first, other));\nclass Marker { }",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "True\nFalse",
-        "steps": [
-          "Đăng ký Marker là Scoped rồi build provider.",
-          "Hai lần resolve trong scope1 nhận cùng instance.",
-          "scope2 nhận instance riêng nên ReferenceEquals lần hai là false."
-        ],
-        "request": null,
-        "note": "Thêm <ItemGroup><FrameworkReference Include=\"Microsoft.AspNetCore.App\" /></ItemGroup> bên trong <Project> của .csproj. Đây là console dùng các thư viện framework để cô lập cơ chế, chưa phải website đăng nhập hay server hoàn chỉnh."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n  <ItemGroup><FrameworkReference Include=\"Microsoft.AspNetCore.App\" /></ItemGroup>\n</Project>",
+            "Program.cs": "using Microsoft.Extensions.DependencyInjection;\nvar services = new ServiceCollection();\nservices.AddScoped<Marker>();\nusing var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });\nusing var scope1 = provider.CreateScope();\nusing var scope2 = provider.CreateScope();\nvar first = scope1.ServiceProvider.GetRequiredService<Marker>();\nvar second = scope1.ServiceProvider.GetRequiredService<Marker>();\nvar other = scope2.ServiceProvider.GetRequiredService<Marker>();\nConsole.WriteLine(ReferenceEquals(first, second));\nConsole.WriteLine(ReferenceEquals(first, other));\nclass Marker { }",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\nFalse",
+          "explanation": "Console fixture quan sát lifetime trong provider/scopes; project cung cấp framework reference đầy đủ. Đăng ký Marker là Scoped rồi build provider. Hai lần resolve trong scope1 nhận cùng instance. scope2 nhận instance riêng nên ReferenceEquals lần hai là false.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "lifetime-disposal",
+          "title": "Ba lifetime và scope validation",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.Extensions.DependencyInjection\" Version=\"10.0.14\" />\n  </ItemGroup>\n</Project>",
+            "Program.cs": "using Microsoft.Extensions.DependencyInjection;\nvar services=new ServiceCollection();services.AddTransient<Transient>();services.AddScoped<Scoped>();services.AddSingleton<Singleton>();\nusing(var provider=services.BuildServiceProvider(new ServiceProviderOptions{ValidateScopes=true,ValidateOnBuild=true}))\n{\n using var a=provider.CreateScope();using var b=provider.CreateScope();\n Console.WriteLine(ReferenceEquals(a.ServiceProvider.GetRequiredService<Transient>(),a.ServiceProvider.GetRequiredService<Transient>()));\n Console.WriteLine(ReferenceEquals(a.ServiceProvider.GetRequiredService<Scoped>(),a.ServiceProvider.GetRequiredService<Scoped>()));\n Console.WriteLine(ReferenceEquals(a.ServiceProvider.GetRequiredService<Scoped>(),b.ServiceProvider.GetRequiredService<Scoped>()));\n Console.WriteLine(ReferenceEquals(a.ServiceProvider.GetRequiredService<Singleton>(),b.ServiceProvider.GetRequiredService<Singleton>()));\n}\nvar invalid=new ServiceCollection();invalid.AddScoped<Scoped>();invalid.AddSingleton<Bad>();\ntry{using var _=invalid.BuildServiceProvider(new ServiceProviderOptions{ValidateScopes=true,ValidateOnBuild=true});}\ncatch(AggregateException){Console.WriteLine(\"captive dependency\");}\nclass Transient{}class Singleton{}class Scoped:IDisposable{public void Dispose()=>Console.WriteLine(\"Scoped disposed\");}\nclass Bad(Scoped value){public Scoped Value=value;}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "False\nTrue\nFalse\nTrue\nScoped disposed\nScoped disposed\ncaptive dependency",
+          "explanation": "Mỗi scope dispose instance scoped đã tạo; singleton không nhận scoped từ request. Sửa Bad thành scoped hoặc dùng scope factory ở boundary công việc.",
+          "verification": "ran",
+          "packages": {
+            "Microsoft.Extensions.DependencyInjection": "10.0.14"
+          }
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "ServicesDemo/\n├── ServicesDemo.csproj    # framework/package reference\n├── Program.cs            # composition root / đăng ký DI\n├── Contracts/            # interface theo nhu cầu\n├── Services/             # implementation\n└── Decorators/           # lớp bọc nếu thực sự cần",
-        "note": "Đăng ký lifetime tại Program.cs, không rải việc tạo container khắp service. Cấu hình TTL/endpoint có thể lấy từ options. Các thư mục này chỉ là gợi ý tổ chức, không phải yêu cầu của compiler."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,15 +199,67 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Scoped có nghĩa một instance mỗi user không?",
+          "answer": "Không, theo scope; request web thường tạo một scope.",
+          "explanation": "Một user có thể gửi nhiều request với scope khác nhau.",
+          "misconception": "Scoped theo phiên đăng nhập.",
+          "followUp": "Worker cần tạo scope ở đâu?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "GetService thiếu đăng ký khác GetRequiredService thế nào?",
+          "answer": "GetService có thể trả null, GetRequiredService ném lỗi.",
+          "explanation": "Chọn API diễn đạt dependency bắt buộc hoặc tùy chọn.",
+          "misconception": "Cả hai âm thầm tạo class bất kỳ.",
+          "followUp": "Resolve IEnumerable nhiều đăng ký cho tình huống nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Ai Dispose service do container tạo?",
+          "answer": "Container theo lifetime nó sở hữu.",
+          "explanation": "Caller không được tự đóng service vẫn được nơi khác dùng.",
+          "misconception": "Mọi method dùng xong đều Dispose injected service.",
+          "followUp": "Object truyền vào AddSingleton(instance) cần xem ownership nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Singleton giữ transient có phải transient luôn sống ngắn?",
+          "answer": "Không, reference được singleton giữ kéo lifetime thực tế dài.",
+          "explanation": "Tên đăng ký không thay GC reachability.",
+          "misconception": "Transient tự bị thu hồi sau mỗi method.",
+          "followUp": "Đây có thể gây shared-state bug gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "ValidateOnBuild có chứng minh app không có mọi lỗi DI không?",
+          "answer": "Không, nó hỗ trợ phát hiện graph/scope theo phạm vi resolve kiểm tra.",
+          "explanation": "Factory động và hành vi runtime vẫn cần test.",
+          "misconception": "Bật validation là không cần kiểm tra lifetime nữa.",
+          "followUp": "Vì sao tạo nhiều provider có thể nhân singleton?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "overview",
+          "title": "DI lifetime và dependency graph",
           "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview"
         },
         {
-          "title": "dependency injection guidelines",
-          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-guidelines"
+          "title": "Ownership và hướng dẫn dùng DI",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/c%23",
@@ -139,5 +267,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A33",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "So sánh ba lifetime qua hai scope và Dispose.",
+    "Phát hiện captive dependency và lắp graph đúng nơi."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": []
 }

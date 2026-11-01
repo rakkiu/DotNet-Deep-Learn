@@ -1,7 +1,7 @@
 {
   "id": "aspnet-middleware",
   "title": "Middleware, pipeline và static files",
-  "description": "Middleware là thành phần trong chuỗi xử lý request, có thể làm việc trước/sau bước kế tiếp hoặc kết thúc sớm. Chain of Responsibility mô tả ý tưởng mỗi handler xử lý hay chuyển tiếp. Bài 40 áp dụng ch…",
+  "description": "Middleware là thành phần trong chuỗi xử lý request, có thể làm việc trước/sau bước kế tiếp hoặc kết thúc sớm. Chain of Responsibility mô tả ý tưởng mỗi handler xử lý hay chuyển tiếp. Bài 40 áp dụng chuỗi cho server tự viết; ASP.NET Core có pipeline chuẩn để đối chiếu.",
   "category": "network",
   "kind": "Mô hình xử lý request",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Middleware là thành phần trong chuỗi xử lý request, có thể làm việc trước/sau bước kế tiếp hoặc kết thúc sớm. Chain of Responsibility mô tả ý tưởng mỗi handler xử lý hay chuyển tiếp. Bài 40 áp dụng chuỗi cho server tự viết; ASP.NET Core có pipeline chuẩn để đối chiếu."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Thứ tự middleware ảnh hưởng authentication, authorization, exception handling và static files. Không viết response sau khi nó đã bắt đầu rồi đổi headers/status tùy ý. Middleware tự viết phải có chính sách xử lý lỗi rõ ràng.",
         "Static content thật cần giới hạn đường dẫn trong web root, chống traversal và chọn content type phù hợp. Framework cung cấp static asset APIs; bài không tự nhận pipeline mẫu này là server file production hoàn chỉnh."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,36 +86,109 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Use bổ sung middleware có thể gọi next; Run ở pipeline middleware thường terminal. Map theo nhánh path khác MapGet ánh xạ endpoint GET; MapWhen phân nhánh theo predicate, UseWhen có thể trở lại pipeline nếu nhánh không terminal. Cần nhìn đúng overload, không gọi mọi Map là một cơ chế.",
+        "WebLab có A/B logger, /blocked short-circuit và /pipeline endpoint. Đường thường: A-in, B-in, endpoint, B-out, A-out. UseStaticFiles phục vụ wwwroot/site.css; Private nằm ngoài wwwroot không được map public. Cây project chỉ có các file thực của lab, không ép cấu trúc MVC cho mọi minimal example."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Thứ tự exception, HTTPS, routing, CORS, auth, authorization/endpoints tùy ứng dụng và dependencies, không một danh sách cố định luôn đúng. Conventional middleware có lifetime dài không giữ scoped ở constructor; inject qua InvokeAsync hoặc IMiddleware đăng ký phù hợp. UseStaticFiles và MapStaticAssets .NET10 khác khả năng build-time fingerprint/compression/endpoint; không tự công khai file cần quyền. OnStarting đặt header trước lúc gửi, không sửa sau khi body bắt đầu."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new web -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs, tạo thêm các file được ghi bên dưới\ndotnet run --urls http://localhost:5090",
-        "code": "var builder = WebApplication.CreateBuilder(args);\nvar app = builder.Build();\napp.Use(async (context, next) => {\n    context.Response.Headers[\"X-Lesson\"] = \"40\";\n    await next(context);\n});\napp.MapGet(\"/hello\", () => \"Xin chào\");\napp.MapFallback(async context => {\n    context.Response.StatusCode = 404;\n    await context.Response.WriteAsync(\"Không tìm thấy\");\n});\napp.Run();",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Xin chào",
-        "steps": [
-          "Request GET /hello đi qua middleware, nhận header X-Lesson.",
-          "next cho pipeline đi tiếp đến endpoint /hello.",
-          "Endpoint trả Xin chào; fallback không được chọn."
-        ],
-        "request": {
-          "method": "GET",
-          "path": "/hello"
-        },
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "web",
+          "label": "Ứng dụng ASP.NET Core local",
+          "input": "Gửi request đúng method/URL/body bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj -- --urls http://127.0.0.1:5090",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var builder = WebApplication.CreateBuilder(args);\nvar app = builder.Build();\napp.Use(async (context, next) => {\n    context.Response.Headers[\"X-Lesson\"] = \"40\";\n    await next(context);\n});\napp.MapGet(\"/hello\", () => \"Xin chào\");\napp.MapFallback(async context => {\n    context.Response.StatusCode = 404;\n    await context.Response.WriteAsync(\"Không tìm thấy\");\n});\napp.Run();"
+          },
+          "expected": "Xin chào",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Request GET /hello đi qua middleware, nhận header X-Lesson. next cho pipeline đi tiếp đến endpoint /hello. Endpoint trả Xin chào; fallback không được chọn.",
+          "requests": [
+            {
+              "method": "GET",
+              "path": "/hello",
+              "status": 200,
+              "headers": {}
+            }
+          ],
+          "verification": "http-verified"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "pipeline-static",
+          "title": "Log unwind, short-circuit, CSS và lỗi",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/WebLab/WebLab.csproj -- --urls http://127.0.0.1:5090",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "GET",
+              "path": "/pipeline",
+              "status": 200
+            },
+            {
+              "method": "GET",
+              "path": "/blocked",
+              "status": 403
+            },
+            {
+              "method": "GET",
+              "path": "/site.css",
+              "status": 200
+            },
+            {
+              "method": "GET",
+              "path": "/Private/internal.txt",
+              "status": 404
+            },
+            {
+              "method": "GET",
+              "path": "/boom",
+              "status": 500
+            }
+          ],
+          "expected": "Test logger ghi A-in → B-in → endpoint → B-out → A-out cho /pipeline. /blocked không tới endpoint; /site.css có Content-Type text/css; /boom được boundary thành ProblemDetails.",
+          "explanation": "HttpContractsTests kiểm tra thứ tự qua ILogger test provider, không gán header sau body để đoán log chiều ra.",
+          "verification": "lab-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "WebApp/\n├── WebApp.csproj\n├── Program.cs            # host, services, pipeline, routes\n├── appsettings.json      # cấu hình theo môi trường\n├── Controllers/          # action nhận request\n├── Models/               # input model / view model\n├── Views/                # Razor .cshtml (nếu dùng MVC)\n│   └── Shared/_Layout.cshtml\n├── wwwroot/              # CSS, JS và tài nguyên công khai\n└── Properties/launchSettings.json # chạy local",
-        "note": "Đây là quy ước MVC. API thuần có thể không có Views; Minimal API có thể bắt đầu từ Program.cs. Khi chia class ra file, thêm namespace/using nhất quán. Không đặt cấu hình nhạy cảm dưới wwwroot."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -126,14 +199,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "await next xong thì code sau đó chạy khi nào?",
+          "answer": "Sau phần pipeline phía trong hoàn tất theo call chain.",
+          "explanation": "Vì vậy chiều ra ngược chiều vào.",
+          "misconception": "Middleware chỉ chạy trước endpoint.",
+          "followUp": "A/B cho thứ tự log nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Không gọi next có nghĩa gì?",
+          "answer": "Short-circuit phần pipeline còn lại theo nhánh đó.",
+          "explanation": "Phải tự tạo response hợp đồng nếu kết thúc.",
+          "misconception": "Framework vẫn tự chạy endpoint sau đó.",
+          "followUp": "/blocked trong lab bỏ qua những bước nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "MapGet có giống middleware Map(path,branch) không?",
+          "answer": "Không, một cái ánh xạ endpoint theo HTTP GET, cái kia phân nhánh pipeline.",
+          "explanation": "Phải đọc overload và mô hình endpoint.",
+          "misconception": "Cứ có Map là luôn cùng cơ chế.",
+          "followUp": "UseWhen khác MapWhen về khả năng quay lại pipeline thế nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Scoped service ở constructor middleware sống dài có nguy cơ gì?",
+          "answer": "Captive dependency/lifetime mismatch.",
+          "explanation": "Dùng InvokeAsync injection hoặc IMiddleware phù hợp.",
+          "misconception": "DI luôn tự đổi lifetime cho đúng.",
+          "followUp": "OnStarting giải quyết thời điểm header nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "wwwroot có phù hợp file riêng của user không?",
+          "answer": "Không nếu được map static public không có policy quyền tương ứng.",
+          "explanation": "File riêng cần endpoint kiểm tra authorization và path policy.",
+          "misconception": "Tên thư mục private trong wwwroot tự bảo vệ file.",
+          "followUp": "MapStaticAssets khác UseStaticFiles ở khả năng nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "middleware",
+          "title": "ASP.NET Core middleware",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-10.0"
         },
         {
-          "title": "static files",
+          "title": "Serve static files in ASP.NET Core apps",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/static-files?view=aspnetcore-10.0"
         }
       ],
@@ -142,5 +267,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A46",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Theo dấu chiều vào/ra và short-circuit.",
+    "Phục vụ static file thật và đặt scoped service/header đúng lifetime."
+  ],
+  "prerequisiteIds": [
+    "dotnet-streams",
+    "async-await"
+  ],
+  "relatedIds": []
 }

@@ -1,0 +1,11 @@
+import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),dir=path.join(root,'client/src/data/articles');
+const files=fs.readdirSync(dir).filter(f=>f.endsWith('.json')),articles=files.map(file=>({file,article:JSON.parse(fs.readFileSync(path.join(dir,file),'utf8'))}));
+const urls=[...new Set(articles.flatMap(({article:l})=>l.sections.find(s=>s.id==='resources').links.map(l=>l.url)))];
+const reportPath=path.join(root,'docs/upgrade-sources.json');const prior=fs.existsSync(reportPath)?JSON.parse(fs.readFileSync(reportPath,'utf8')).results:[];
+const results=[];let cursor=0;
+function decode(s){return s.replace(/<[^>]*>/g,'').replaceAll('&amp;','&').replaceAll('&quot;','"').replaceAll('&#39;',"'").replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(Number(n))).trim();}
+await Promise.all(Array.from({length:1},async()=>{while(cursor<urls.length){const url=urls[cursor++];const cached=prior.find(r=>r.url===url&&r.status===200);if(cached){results.push(cached);continue;}await new Promise(r=>setTimeout(r,950));let result;try{const res=await fetch(url,{signal:AbortSignal.timeout(25000)}),html=await res.text();const heading=html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1]??html.match(/<title>(.*?)<\/title>/i)?.[1]??'';result={url,status:res.status,finalUrl:res.url,title:decode(heading).replace(/\s*\| Microsoft Learn$/,'')};}catch(e){result={url,status:0,error:String(e)};}results.push(result);if(result.status!==200)console.log(JSON.stringify(result));}}));
+results.sort((a,b)=>a.url.localeCompare(b.url));fs.writeFileSync(path.join(root,'docs/upgrade-sources.json'),JSON.stringify({checkedAt:new Date().toISOString(),results},null,2)+'\n');
+for(const{file,article:l}of articles){for(const link of l.sections.find(s=>s.id==='resources').links){const r=results.find(r=>r.url===link.url);if(r.status===200&&r.title&&!/[À-ỹĐđ]/u.test(link.title))link.title=r.title.length<12?`Microsoft Learn · ${r.title}`:r.title;}fs.writeFileSync(path.join(dir,file),JSON.stringify(l,null,2)+'\n');}
+console.log(JSON.stringify({checked:urls.length,ok:results.filter(r=>r.status===200).length}));if(results.some(r=>r.status!==200))process.exitCode=1;

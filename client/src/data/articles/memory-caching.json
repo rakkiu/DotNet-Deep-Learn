@@ -1,7 +1,7 @@
 {
   "id": "memory-caching",
   "title": "Cache: hit, miss, hết hạn và dữ liệu cũ",
-  "description": "Caching giữ bản sao kết quả để lần truy cập sau giảm tính toán hoặc I/O. IMemoryCache lưu trong process; IDistributedCache là abstraction cho bộ đệm chia sẻ qua hệ thống bên ngoài như Redis theo provi…",
+  "description": "Caching giữ bản sao kết quả để lần truy cập sau giảm tính toán hoặc I/O. IMemoryCache lưu trong process; IDistributedCache là abstraction cho bộ đệm chia sẻ qua hệ thống bên ngoài như Redis theo provider. Cache là dữ liệu phụ trợ, không mặc định là nguồn dữ liệu gốc.",
   "category": "data",
   "kind": "Kỹ thuật tối ưu / thư viện bộ đệm",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Caching giữ bản sao kết quả để lần truy cập sau giảm tính toán hoặc I/O. IMemoryCache lưu trong process; IDistributedCache là abstraction cho bộ đệm chia sẻ qua hệ thống bên ngoài như Redis theo provider. Cache là dữ liệu phụ trợ, không mặc định là nguồn dữ liệu gốc."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,13 +42,13 @@
         "GetOrCreate của IMemoryCache không bảo đảm chỉ một factory chạy khi nhiều caller cùng miss. TTL không bảo đảm freshness; cần invalidation hoặc chấp nhận độ trễ đã định nghĩa. Memory cache không chia sẻ tự động giữa server.",
         "Sliding expiration gia hạn khi truy cập; kết hợp absolute để có trần tuổi dữ liệu. Decorator có thể bọc service cùng interface để thêm cache nhưng vẫn phải giải quyết invalidation, lỗi nguồn và chống nhiều request cùng tải lại."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
       "id": "mechanism",
       "paragraphs": [
-        "Cache-aside: tìm key, nếu hit trả bản sao; nếu miss tải từ nguồn, lưu với TTL rồi trả. Absolute expiration giới hạn theo mốc; sliding kéo dài theo truy cập và nên phối hợp giới hạn tối đa khi cần. Nhiều request cùng miss có thể cùng tải dữ liệu (stampede); GetOrCreate không mặc định bảo đảm chỉ một factory chạy cho mọi tình huống.",
+        "Cache-aside: tìm key, nếu hit trả giá trị đã lưu, reference type có thể là cùng object; nếu miss tải từ nguồn, lưu với TTL rồi trả. Absolute expiration giới hạn theo mốc; sliding kéo dài theo truy cập và nên phối hợp giới hạn tối đa khi cần. Nhiều request cùng miss có thể cùng tải dữ liệu (stampede); GetOrCreate không mặc định bảo đảm chỉ một factory chạy cho mọi tình huống.",
         "Cache-aside đọc cache trước, miss mới đọc nguồn và ghi cache. Distributed cache cho phép nhiều instance chia sẻ dữ liệu, nhưng cần serialization, key strategy, expiration và cách xử lý khi cache không khả dụng.",
         "Bọc service bằng decorator có thể thêm caching mà giữ contract. Tuy nhiên, kết quả không được lẫn user/tenant, dữ liệu nhạy cảm phải có ranh giới phù hợp, và giá trị mutable có thể bị caller sửa nếu trả cùng reference."
       ],
@@ -86,33 +86,93 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Cache-aside tìm key: hit trả giá trị đã lưu, miss tải rồi lưu theo expiration. IMemoryCache có thể trả cùng reference object, không clone theo mỗi caller. Muốn caller không phá dữ liệu chung thì dùng dữ liệu bất biến, copy có chủ đích hoặc ownership contract.",
+        "Absolute giới hạn theo mốc; sliding gia hạn theo truy cập và nên có absolute cap khi cần. Remove sau update làm lần đọc sau tải lại. Key phải gồm tenant/user/locale khi chúng đổi kết quả. Negative caching lưu kết quả vắng theo TTL phù hợp, không giữ vĩnh viễn trạng thái chưa có."
+      ],
+      "diagrams": [
+        {
+          "caption": "Cache-aside và đường ghi",
+          "steps": [
+            "Read(key) → hit: giá trị đã lưu",
+            "Miss → nguồn thật → cache theo TTL → caller",
+            "Update nguồn → invalidate/update theo policy",
+            "Nhiều instance: memory cache/lock mỗi process riêng"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "IMemoryCache không cam kết tự giới hạn theo memory pressure; nếu dùng SizeLimit thì quy định đơn vị Size nhất quán, thường cache riêng cho phần kiểm soát được entry. Concurrent miss của GetOrCreate có thể chạy nhiều factory; khóa theo key trong process hoặc HybridCache có stampede protection giúp một phạm vi nhưng không thay consistency nghiệp vụ hay mọi server. Distributed cache thường serialize/deserialize theo API, không là deep clone contract chung."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thêm FrameworkReference vào .csproj theo hướng dẫn bên dưới\n# Thay Program.cs rồi chạy\ndotnet run",
-        "code": "using Microsoft.Extensions.Caching.Memory;\nusing var cache = new MemoryCache(new MemoryCacheOptions());\nint calls = 0;\nint Read(string key) => cache.GetOrCreate(key, entry => {\n    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);\n    return ++calls;\n});\nConsole.WriteLine(Read(\"student:1\"));\nConsole.WriteLine(Read(\"student:\" + 1));\nConsole.WriteLine(calls);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "1\n1\n1",
-        "steps": [
-          "Read đầu miss, factory tăng calls lên 1 và lưu số 1.",
-          "Read lần hai cùng key hit, trả lại 1.",
-          "calls vẫn 1 vì factory không được gọi lại trong chuỗi tuần tự này."
-        ],
-        "request": null,
-        "note": "Thêm <ItemGroup><FrameworkReference Include=\"Microsoft.AspNetCore.App\" /></ItemGroup> bên trong <Project> của .csproj. Đây là console dùng các thư viện framework để cô lập cơ chế, chưa phải website đăng nhập hay server hoàn chỉnh."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n  <ItemGroup><FrameworkReference Include=\"Microsoft.AspNetCore.App\" /></ItemGroup>\n</Project>",
+            "Program.cs": "using Microsoft.Extensions.Caching.Memory;\nusing var cache = new MemoryCache(new MemoryCacheOptions());\nint calls = 0;\nint Read(string key) => cache.GetOrCreate(key, entry => {\n    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);\n    return ++calls;\n});\nConsole.WriteLine(Read(\"student:1\"));\nConsole.WriteLine(Read(\"student:\" + 1));\nConsole.WriteLine(calls);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "1\n1\n1",
+          "explanation": "Console fixture cache int theo chuỗi gọi tuần tự, chưa chứng minh concurrent factory hay reference isolation. Read đầu miss, factory tăng calls lên 1 và lưu số 1. Read lần hai cùng key hit, trả lại 1. calls vẫn 1 vì factory không được gọi lại trong chuỗi tuần tự này.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "mutable-cache-stampede",
+          "title": "Reference chung, invalidation và concurrent miss",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.Extensions.Caching.Memory\" Version=\"10.0.14\" />\n  </ItemGroup>\n</Project>",
+            "Program.cs": "using Microsoft.Extensions.Caching.Memory;\nusing var cache=new MemoryCache(new MemoryCacheOptions());\ncache.Set(\"list\",new List<int>{1});var a=cache.Get<List<int>>(\"list\")!;a.Add(2);Console.WriteLine(cache.Get<List<int>>(\"list\")!.Count);\ncache.Remove(\"list\");Console.WriteLine(cache.TryGetValue(\"list\",out _));\nvar entered=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);var release=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);int calls=0;\nasync Task<int> Read()=>await cache.GetOrCreateAsync(\"key\",async entry=>{entry.AbsoluteExpirationRelativeToNow=TimeSpan.FromMinutes(1);if(Interlocked.Increment(ref calls)==2)entered.SetResult();await release.Task;return 42;});\nvar first=Read();var second=Read();await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));release.SetResult();await Task.WhenAll(first,second);Console.WriteLine(\"factory:\"+calls);\nusing var gate=new SemaphoreSlim(1,1);int safeCalls=0;\nasync Task<int> SafeRead(){await gate.WaitAsync();try{return cache.GetOrCreate(\"safe\",e=>{e.AbsoluteExpirationRelativeToNow=TimeSpan.FromMinutes(1);return ++safeCalls;});}finally{gate.Release();}}\nawait Task.WhenAll(SafeRead(),SafeRead());Console.WriteLine(\"safe-factory:\"+safeCalls);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "2\nFalse\nfactory:2\nsafe-factory:1",
+          "explanation": "TCS giữ cả factory mở tới khi hai bên đã vào, không Sleep đoán lịch. Gate minh họa scope process và key cố định, chưa là giải pháp khóa phân tán.",
+          "verification": "ran",
+          "packages": {
+            "Microsoft.Extensions.Caching.Memory": "10.0.14"
+          }
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "ServicesDemo/\n├── ServicesDemo.csproj    # framework/package reference\n├── Program.cs            # composition root / đăng ký DI\n├── Contracts/            # interface theo nhu cầu\n├── Services/             # implementation\n└── Decorators/           # lớp bọc nếu thực sự cần",
-        "note": "Đăng ký lifetime tại Program.cs, không rải việc tạo container khắp service. Cấu hình TTL/endpoint có thể lấy từ options. Các thư mục này chỉ là gợi ý tổ chức, không phải yêu cầu của compiler."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +183,70 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Cache hit List có được object clone mới không?",
+          "answer": "Không theo IMemoryCache mặc định; có thể cùng List.",
+          "explanation": "Mutation qua một caller có thể được caller khác thấy.",
+          "misconception": "Mọi cache tự deep clone.",
+          "followUp": "Dữ liệu immutable có lợi gì cho ownership?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Sau update nguồn cần nghĩ gì về cache?",
+          "answer": "Invalidate hoặc update theo policy nhất quán với hợp đồng đọc.",
+          "explanation": "Cache không biết mọi thay đổi nguồn tự động.",
+          "misconception": "TTL dài là đủ mọi consistency.",
+          "followUp": "Nếu update DB thành công nhưng invalidate thất bại thì sao?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Sliding expiration có giữ entry mãi khi bị đọc liên tục không?",
+          "answer": "Có thể nếu không có absolute cap theo policy.",
+          "explanation": "Đọc gia hạn sliding, khác absolute deadline.",
+          "misconception": "Sliding tự có thời gian tối đa cố định.",
+          "followUp": "Khi nào negative cache có hại?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "GetOrCreate concurrent có bảo đảm một factory không?",
+          "answer": "Không, demo điều khiển được hai factory cùng miss.",
+          "explanation": "Cần cơ chế single-flight phù hợp nếu tải nguồn cần hạn chế.",
+          "misconception": "Tên GetOrCreate chứng minh atomic factory toàn hệ thống.",
+          "followUp": "Gate riêng mỗi request có giới hạn toàn app không?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "HybridCache stampede protection thay mọi consistency nghiệp vụ?",
+          "answer": "Không, nó không biến cache thành nguồn transaction chính.",
+          "explanation": "Phạm vi key, node, backend và invalidation vẫn phải thiết kế.",
+          "misconception": "Có HybridCache là không thể stale.",
+          "followUp": "SizeLimit cần quy ước đơn vị như thế nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "memory",
+          "title": "IMemoryCache, expiration và size limit",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-10.0"
         },
         {
-          "title": "distributed",
+          "title": "HybridCache và stampede protection",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/hybrid?view=aspnetcore-10.0"
+        },
+        {
+          "title": "Distributed cache và provider",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/distributed?view=aspnetcore-10.0"
         }
       ],
@@ -139,5 +255,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A34",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Quan sát reference dùng chung, hit/miss và invalidation.",
+    "Đánh giá key, kích thước, stampede và phạm vi nhiều instance."
+  ],
+  "prerequisiteIds": [
+    "csharp-collections",
+    "linq-basics"
+  ],
+  "relatedIds": []
 }

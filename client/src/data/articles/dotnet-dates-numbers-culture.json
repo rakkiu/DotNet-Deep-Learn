@@ -1,0 +1,184 @@
+{
+  "id": "dotnet-dates-numbers-culture",
+  "title": "Ngày giờ, số tiền và hợp đồng dữ liệu",
+  "description": "Chọn kiểu dữ liệu cho ngày, thời điểm, khoảng thời gian và số thập phân; làm rõ timezone, DST và rounding.",
+  "category": "foundation",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Ngày sinh là ngày lịch, không cần tự biến thành UTC instant. Thời điểm giao dịch cần một instant/offset hoặc UTC rõ; lịch hẹn theo giờ địa phương có thể cần zone ID và quy tắc DST. Offset hiện tại không chứa toàn bộ lịch sử/quy tắc của một timezone."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "DateTime có Kind (Utc/Local/Unspecified); DateTimeOffset mang offset cho một thời điểm; DateOnly là ngày, TimeOnly giờ trong ngày, TimeSpan khoảng thời gian. TimeZoneInfo chuyển đổi theo zone và cần xử lý thời gian ambiguous/invalid ở vùng DST. Serialization cần format round-trip và contract, không chỉ ToString theo máy.",
+        "decimal phù hợp nhiều hợp đồng thập phân nhưng vẫn cần đơn vị tiền tệ, precision/scale database và MidpointRounding. Không áp decimal cho mọi khoa học số thực. TimeProvider giúp inject clock cho test, không dùng DateTime.Now/Sleep để giả đồng hồ kiểm soát được."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Lưu UTC/offset cho instant không thay việc giữ zone khi lịch hẹn phải sống theo local rules trong tương lai. DST có thể tạo local time không tồn tại hoặc xuất hiện hai lần; phải có policy lựa chọn/đòi xác nhận. Quy tắc làm tròn cần ở ranh giới nghiệp vụ, không tùy từng UI; schema numeric precision/scale khác kiểu .NET."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "dates-rounding",
+          "title": "Ngày sinh, instant, timezone và làm tròn",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Globalization;\nvar birth=new DateOnly(2004,10,2);Console.WriteLine(birth.ToString(\"yyyy-MM-dd\",CultureInfo.InvariantCulture));\nvar instant=new DateTimeOffset(2026,11,1,0,0,0,TimeSpan.Zero);var zone=TimeZoneInfo.FindSystemTimeZoneById(\"Asia/Ho_Chi_Minh\");Console.WriteLine(TimeZoneInfo.ConvertTime(instant,zone).ToString(\"HH:mm zzz\",CultureInfo.InvariantCulture));\nConsole.WriteLine(decimal.Round(2.345m,2,MidpointRounding.ToEven).ToString(CultureInfo.InvariantCulture));Console.WriteLine(decimal.Round(2.345m,2,MidpointRounding.AwayFromZero).ToString(CultureInfo.InvariantCulture));",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "2004-10-02\n07:00 +07:00\n2.34\n2.35",
+          "explanation": "Dùng IANA timezone trên .NET10 với dữ liệu timezone/ICU phù hợp; checker ghi nền tảng chạy. Hai rounding policy khác nhau đều có thể đúng theo contract.",
+          "verification": "ran"
+        },
+        {
+          "id": "dst-clock",
+          "title": "Ambiguous/invalid và clock được inject",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var zone=TimeZoneInfo.FindSystemTimeZoneById(\"America/New_York\");\nConsole.WriteLine(zone.IsAmbiguousTime(new DateTime(2026,11,1,1,30,0,DateTimeKind.Unspecified)));\nConsole.WriteLine(zone.IsInvalidTime(new DateTime(2026,3,8,2,30,0,DateTimeKind.Unspecified)));\nTimeProvider clock=new FixedClock();Console.WriteLine(clock.GetUtcNow().Year);\nclass FixedClock:TimeProvider{public override DateTimeOffset GetUtcNow()=>new(2026,1,1,0,0,0,TimeSpan.Zero);}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\nTrue\n2026",
+          "explanation": "Không phụ thuộc giờ hiện tại máy; dữ liệu timezone là điều kiện công bố của ví dụ.",
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Trong debugger xem DateTime.Kind, offset, zone ID và format round-trip, không chỉ chuỗi hiển thị ngắn. Cố định CultureInfo/TimeProvider trong test. Với rounding, kiểm tra MidpointRounding và schema precision/scale cùng quy tắc nghiệp vụ."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Ngày sinh nên mặc định DateTime.UtcNow không?",
+          "answer": "Không, DateOnly thường diễn đạt đúng ý nghĩa ngày lịch.",
+          "explanation": "Ngày sinh không là instant phát sinh tại lúc chạy.",
+          "misconception": "Mọi dữ liệu ngày đều nên UTC.",
+          "followUp": "TimeOnly và TimeSpan khác ý nghĩa nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Offset +07:00 có phải timezone ID đầy đủ không?",
+          "answer": "Không, nó không chứa mọi quy tắc lịch sử/DST.",
+          "explanation": "Zone ID và instant/offset phục vụ các hợp đồng khác nhau.",
+          "misconception": "Offset là toàn bộ timezone cho mọi thời điểm.",
+          "followUp": "Lịch hẹn tương lai cần giữ thêm gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "2.345m làm tròn hai số lẻ có duy nhất một đáp án không?",
+          "answer": "Không, ToEven cho 2.34 và AwayFromZero cho 2.35 theo mẫu.",
+          "explanation": "Policy nghiệp vụ phải được công bố.",
+          "misconception": "decimal tự quyết rounding phù hợp mọi tiền tệ.",
+          "followUp": "Precision/scale ở DB khác kiểu .NET ra sao?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Local time DST ambiguous cần xử lý gì?",
+          "answer": "Chọn policy rõ hoặc yêu cầu người dùng xác nhận offset/lần xuất hiện.",
+          "explanation": "Một local clock reading có thể ứng với hai instant.",
+          "misconception": "Chuyển timezone luôn có đúng một kết quả tự nhiên.",
+          "followUp": "Invalid local time cần xử lý khác thế nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "TimeProvider giúp test ổn định ở đâu?",
+          "answer": "Cho clock giả/truyền vào để kết quả không tùy giờ máy.",
+          "explanation": "Không cần Sleep để đợi thời điểm trong unit test.",
+          "misconception": "Inject clock thay mọi test timezone.",
+          "followUp": "Format máy cần culture nào theo contract?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "Chọn kiểu ngày giờ trong .NET",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/datetime/choosing-between-datetime"
+        },
+        {
+          "title": "TimeProvider và test thời gian",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/datetime/timeprovider-overview"
+        },
+        {
+          "title": "System.Text.Json hỗ trợ ngày giờ",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/datetime/system-text-json-support"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N04",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Chọn DateOnly/TimeOnly/DateTimeOffset/TimeSpan theo ý nghĩa.",
+    "Tạo test ổn định với culture, clock và rounding công khai."
+  ],
+  "prerequisiteIds": [
+    "csharp-types",
+    "csharp-strings-unicode"
+  ],
+  "relatedIds": [
+    "csharp-types",
+    "mvc-binding",
+    "httpclient-json"
+  ]
+}

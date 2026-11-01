@@ -1,7 +1,7 @@
 {
   "id": "http-headers",
   "title": "HTTP headers và ranh giới thông điệp",
-  "description": "Header là metadata có tên/giá trị đi kèm request hoặc response. Host, Content-Type, Authorization và Content-Length có semantics riêng. Tên header không phân biệt hoa thường; điều đó không có nghĩa mọ…",
+  "description": "Header là metadata có tên/giá trị đi kèm request hoặc response. Host, Content-Type, Authorization và Content-Length có semantics riêng. Tên header không phân biệt hoa thường; điều đó không có nghĩa mọi giá trị header hay đường dẫn URL cũng so sánh như vậy.",
   "category": "network",
   "kind": "Thành phần giao thức HTTP",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Header là metadata có tên/giá trị đi kèm request hoặc response. Host, Content-Type, Authorization và Content-Length có semantics riêng. Tên header không phân biệt hoa thường; điều đó không có nghĩa mọi giá trị header hay đường dẫn URL cũng so sánh như vậy."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "HTTP/1.1 cần Host hợp lệ; fixture chỉ báo có khóa, chưa validate authority, duplicate, kích thước, Content-Length hay Transfer-Encoding. Dictionary.Add ở đây từ chối duplicate thô; parser thật phải theo quy tắc của từng header, không gộp tùy tiện.",
         "Mạng cung cấp từng mảnh byte, còn fixture ở đây đã có toàn bộ text. Reader thật cần giới hạn độ dài/số header và timeout; tách parse khỏi I/O để tránh lẫn lỗi giao thức với lỗi socket."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Header name case-insensitive, field value giữ semantics riêng; dùng dấu hai chấm đầu để tách name/value nên giá trị a:b không mất phần sau. Dòng trống CRLF kết thúc section, EOF trước delimiter là thiếu input, không phải kết thúc hợp lệ. Body sau delimiter không được đọc thành header.",
+        "Content-Type nói kiểu body gửi đi, Accept nói response client muốn nhận. Content-Length đếm byte; Transfer-Encoding có quy tắc framing HTTP/1.1. Host/authority cần được kiểm tra theo chuẩn/phạm vi app, forwarded headers chỉ tin từ proxy được cấu hình. Set-Cookie có quy tắc riêng, không tùy tiện gộp duplicate mọi field."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Framing mơ hồ giữa proxy/server có thể tạo request smuggling; không tự chọn CL hay TE theo cảm giác. Fixture từ chối input có cả hai theo policy an toàn của nó và vẫn chưa là parser RFC đầy đủ. Giới hạn line/header count/total, timeout và grammar tên/OWS cần nhất quán. CORS/preflight là cơ chế browser theo policy origin, không xác thực user hay chặn mọi client ngoài browser."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "string raw = \"GET / HTTP/1.1\\r\\nHost: example.test\\r\\nConnection: close\\r\\n\\r\\n\";\nusing var reader = new StringReader(raw);\n_ = reader.ReadLine();\nvar values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);\nstring? line;\nwhile (!string.IsNullOrEmpty(line = reader.ReadLine()))\n{\n    int colon = line.IndexOf(':');\n    if (colon <= 0) throw new FormatException(\"Header sai\");\n    values.Add(line[..colon], line[(colon + 1)..].Trim());\n}\nConsole.WriteLine(values.ContainsKey(\"host\"));\nConsole.WriteLine(values[\"Connection\"]);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "True\nclose",
-        "steps": [
-          "Bỏ qua request line để tập trung vào headers đã có đủ trong chuỗi.",
-          "Tách mỗi dòng tại dấu hai chấm đầu tiên; lưu vào dictionary không phân biệt hoa thường.",
-          "Dừng ở dòng trống, tra host thấy true và Connection có giá trị close."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "string raw = \"GET / HTTP/1.1\\r\\nHost: example.test\\r\\nConnection: close\\r\\n\\r\\n\";\nusing var reader = new StringReader(raw);\n_ = reader.ReadLine();\nvar values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);\nstring? line;\nwhile (true)\n{\n    line = reader.ReadLine();\n    if(line is null)throw new EndOfStreamException(\"Header chưa kết thúc\");\n    if(line.Length==0)break;\n    int colon = line.IndexOf(':');\n    if (colon <= 0) throw new FormatException(\"Header sai\");\n    values.Add(line[..colon], line[(colon + 1)..].Trim());\n}\nConsole.WriteLine(values.ContainsKey(\"host\"));\nConsole.WriteLine(values[\"Connection\"]);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\nclose",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Bỏ qua request line để tập trung vào headers đã có đủ trong chuỗi. Tách mỗi dòng tại dấu hai chấm đầu tiên; lưu vào dictionary không phân biệt hoa thường. Dừng ở dòng trống, tra host thấy true và Connection có giá trị close.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "header-boundaries",
+          "title": "EOF, colon value, case và input mơ hồ",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "string valid=\"GET / HTTP/1.1\\r\\nhOsT: example.test\\r\\nX-Time: a:b\\r\\n\\r\\nbody:not-header\";\nvar h=Parse(valid);Console.WriteLine(h[\"host\"]);Console.WriteLine(h[\"x-time\"]);Console.WriteLine(h.Count);\nforeach(var raw in new[]{\"GET / HTTP/1.1\\r\\nHost: x\", \"GET / HTTP/1.1\\r\\nX: a\\r\\n\\r\\n\", \"GET / HTTP/1.1\\r\\nHost: x\\r\\nContent-Length: 1\\r\\nTransfer-Encoding: chunked\\r\\n\\r\\n\", \"GET / HTTP/1.1\\r\\nHost: x\\r\\nX: \"+new string('a',1100)+\"\\r\\n\\r\\n\"})\n{try{Parse(raw);}catch(Exception ex)when(ex is FormatException or EndOfStreamException){Console.WriteLine(ex.GetType().Name);}}\nstatic Dictionary<string,string> Parse(string raw){int end=raw.IndexOf(\"\\r\\n\\r\\n\",StringComparison.Ordinal);if(end<0)throw new EndOfStreamException();if(end>1024)throw new FormatException(\"headers too long\");var lines=raw[..end].Split(\"\\r\\n\");var h=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);foreach(string line in lines.Skip(1)){int at=line.IndexOf(':');if(at<=0)throw new FormatException();string name=line[..at];if(name.Any(c=>!(char.IsAsciiLetterOrDigit(c)||c=='-')))throw new FormatException();if(!h.TryAdd(name,line[(at+1)..].Trim(' ','\\t')))throw new FormatException(\"duplicate policy\");}if(!h.ContainsKey(\"Host\")||h.ContainsKey(\"Content-Length\")&&h.ContainsKey(\"Transfer-Encoding\"))throw new FormatException();return h;}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "example.test\na:b\n2\nEndOfStreamException\nFormatException\nFormatException\nFormatException",
+          "explanation": "Fixture chỉ nhận tập name hẹp, từ chối duplicate theo policy cho request demo; không tự nhận xử lý mọi field, đặc biệt response Set-Cookie.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "LearningServer/\n├── Program.cs             # tạo host và đăng ký DI\n├── Worker.cs              # accept loop và shutdown\n├── WebServerOptions.cs    # địa chỉ, port, giới hạn\n├── appsettings.json       # cấu hình local\n├── Protocol/              # request/response model, reader, writer\n├── Middleware/            # handler trong pipeline\n└── wwwroot/               # chỉ tài nguyên được phép phục vụ",
-        "note": "Bố cục mô tả server tổng hợp trong bài giảng; đoạn Hello World bên dưới chỉ cô lập phần giao thức để đọc cơ chế, chưa triển khai toàn bộ server. Với sản phẩm thực tế dùng server framework phù hợp thay parser mẫu."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,19 +169,67 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "EOF trước dòng trống có phải kết thúc header hợp lệ?",
+          "answer": "Không, input bị cắt cụt.",
+          "explanation": "Cần phân biệt hết dữ liệu với delimiter hoàn chỉnh.",
+          "misconception": "ReadLine null và chuỗi rỗng luôn cùng nghĩa giao thức.",
+          "followUp": "Body bắt đầu ở đâu?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "X-Time: a:b có value gì?",
+          "answer": "a:b, tách tại colon đầu.",
+          "explanation": "Colon trong value không mặc định là separator field mới.",
+          "misconception": "Split mọi dấu colon rồi lấy phần thứ hai đủ dùng.",
+          "followUp": "Tên header so case thế nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Accept và Content-Type có giống nhau không?",
+          "answer": "Không, Accept nói loại response mong muốn, Content-Type mô tả representation gửi.",
+          "explanation": "Chúng tác động negotiation/parser ở các chiều khác nhau.",
+          "misconception": "Accept quyết định parser của JSON request.",
+          "followUp": "415 có thể liên quan header nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Có cả Content-Length và Transfer-Encoding thì tự chọn cái nào?",
+          "answer": "Không tự đặt precedence tùy ý; cần parser chuẩn/policy từ chối mơ hồ đúng phạm vi.",
+          "explanation": "Hai hop hiểu khác framing có thể tạo lỗi nghiêm trọng.",
+          "misconception": "Cứ ưu tiên header viết trước.",
+          "followUp": "Fixture này công bố giới hạn gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "CORS có ngăn curl gọi API nếu origin không cho phép không?",
+          "answer": "Không như cơ chế access control server cho mọi client.",
+          "explanation": "Nó là policy browser, không thay authentication/authorization.",
+          "misconception": "CORS là firewall và login.",
+          "followUp": "Forwarded header nào cần proxy trust riêng?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "IETF — rfc9112.html",
-          "url": "https://www.rfc-editor.org/rfc/rfc9112.html#name-message-parsing"
-        },
-        {
-          "title": "IETF — rfc9110.html",
+          "title": "Field semantics và duplicate headers",
           "url": "https://www.rfc-editor.org/rfc/rfc9110.html#name-fields"
         },
         {
-          "title": "logging",
-          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-10.0"
+          "title": "HTTP/1.1 message parsing và framing",
+          "url": "https://www.rfc-editor.org/rfc/rfc9112.html#name-message-parsing"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/http",
@@ -143,5 +237,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A44",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Phân biệt EOF sớm và delimiter header/body.",
+    "Nêu policy duplicate, framing và độ tin cậy của header."
+  ],
+  "prerequisiteIds": [
+    "dotnet-streams",
+    "async-await"
+  ],
+  "relatedIds": []
 }

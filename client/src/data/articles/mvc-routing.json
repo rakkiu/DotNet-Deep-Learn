@@ -1,7 +1,7 @@
 {
   "id": "mvc-routing",
   "title": "Routing: URL, HTTP method và tham số",
-  "description": "Routing ánh xạ request tới endpoint dựa trên đường dẫn, HTTP method và các ràng buộc liên quan. Trong MVC, endpoint thường là action của controller. Route parameter là một phần URL; nó khác query stri…",
+  "description": "Routing ánh xạ request tới endpoint dựa trên đường dẫn, HTTP method và các ràng buộc liên quan. Trong MVC, endpoint thường là action của controller. Route parameter là một phần URL; nó khác query string và khác dữ liệu form gửi trong body.",
   "category": "web",
   "kind": "Cơ chế định tuyến HTTP",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Routing ánh xạ request tới endpoint dựa trên đường dẫn, HTTP method và các ràng buộc liên quan. Trong MVC, endpoint thường là action của controller. Route parameter là một phần URL; nó khác query string và khác dữ liệu form gửi trong body."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Constraint :int phân biệt route; validation nghiệp vụ nên đưa ra lỗi có ý nghĩa thay vì lạm dụng route constraint. 404 không khớp URL khác với 405 method không được hỗ trợ ở tài nguyên khớp.",
         "Conventional route tiện cho website MVC; attribute route thường rõ hơn cho API. Tránh URL phụ thuộc tên method nội bộ nếu muốn đổi implementation mà giữ API ổn định."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,36 +86,154 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Conventional routing dùng mẫu như {controller=Home}/{action=Index}/{id?}; attribute routing gắn đường dẫn/method cạnh action. Defaults điền thiếu, optional cho phép vắng, constraint giúp chọn endpoint. Query string không là segment route. API nên đặt URL theo resource thay tên nội bộ của action.",
+        "Literal/parameter/constraint và endpoint policies cùng ảnh hưởng chọn route; thứ tự khai báo không phải quy tắc duy nhất. Url.Action, LinkGenerator hoặc Tag Helpers giúp tạo link từ metadata. CreatedAtAction trong WebLab tạo Location tới action đọc resource."
+      ],
+      "tables": [
+        {
+          "caption": "Route WebLab api/students/{id:int}",
+          "headers": [
+            "Request",
+            "Route/action",
+            "Kết quả"
+          ],
+          "rows": [
+            [
+              "GET /api/students/5",
+              "Match; action chạy",
+              "200 nếu đã tạo, nếu không 404"
+            ],
+            [
+              "GET /api/students/abc",
+              "Constraint không match",
+              "404"
+            ],
+            [
+              "GET /api/students/-1",
+              "Match int; action chạy",
+              "404 resource trong lab"
+            ],
+            [
+              "POST /api/students/5",
+              "Không có POST cho path này",
+              "405, Allow phù hợp"
+            ],
+            [
+              "GET /api/students?after=0&take=2",
+              "Action List, query binding",
+              "200; sort Id ổn định"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Route {id:int} chấp nhận -1 về kiểu nhưng nghiệp vụ có thể từ chối hoặc không có resource. Constraint không thay validation; route không match khác record không tồn tại sau khi action chạy. GET có semantics safe, không dùng làm endpoint xóa. PathBase và proxy có thể thay đường dẫn công khai; phải cấu hình trusted forwarded headers, không ghép host từ input chưa tin."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new web -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs, tạo thêm các file được ghi bên dưới\ndotnet run --urls http://localhost:5090",
-        "code": "using Microsoft.AspNetCore.Mvc;\nvar builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddControllers();\nvar app = builder.Build();\napp.MapControllers();\napp.Run();\n[Route(\"products\")]\npublic class ProductsController : ControllerBase\n{\n    [HttpGet(\"{id:int}\")]\n    public string Get(int id) => id >= 5 ? \"Đạt ngưỡng\" : \"Dưới ngưỡng\";\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Đạt ngưỡng",
-        "steps": [
-          "GET /products/5 khớp mẫu và id được bind thành 5.",
-          "Action kiểm tra 5 >= 5, được true.",
-          "Response chứa Đạt ngưỡng; đây là logic bên trong action, sau routing."
-        ],
-        "request": {
-          "method": "GET",
-          "path": "/products/5"
-        },
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "web",
+          "label": "Ứng dụng ASP.NET Core local",
+          "input": "Gửi request đúng method/URL/body bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj -- --urls http://127.0.0.1:5090",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using Microsoft.AspNetCore.Mvc;\nvar builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddControllers();\nvar app = builder.Build();\napp.MapControllers();\napp.Run();\n[Route(\"products\")]\npublic class ProductsController : ControllerBase\n{\n    [HttpGet(\"{id:int}\")]\n    public string Get(int id) => id >= 5 ? \"Đạt ngưỡng\" : \"Dưới ngưỡng\";\n}"
+          },
+          "expected": "Đạt ngưỡng",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. GET /products/5 khớp mẫu và id được bind thành 5. Action kiểm tra 5 >= 5, được true. Response chứa Đạt ngưỡng; đây là logic bên trong action, sau routing.",
+          "requests": [
+            {
+              "method": "GET",
+              "path": "/products/5",
+              "status": 200,
+              "headers": {}
+            }
+          ],
+          "verification": "http-verified"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "routing-matrix",
+          "title": "Match, method và link generation",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/WebLab/WebLab.csproj -- --urls http://127.0.0.1:5090",
+          "project": "examples/WebLab/WebLab.csproj",
+          "files": {},
+          "requests": [
+            {
+              "method": "GET",
+              "path": "/api/students/abc",
+              "status": 404,
+              "headers": {}
+            },
+            {
+              "method": "GET",
+              "path": "/api/students/-1",
+              "status": 404,
+              "headers": {}
+            },
+            {
+              "method": "POST",
+              "path": "/api/students/5",
+              "status": 405,
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {}
+            },
+            {
+              "method": "POST",
+              "path": "/api/students",
+              "status": 201,
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "name": "Route demo",
+                "age": 20
+              }
+            }
+          ],
+          "expected": "POST create trả Location /api/students/{id}. GET Location trả cùng object. POST tại URL chỉ có GET/PUT/DELETE nhận 405 và Allow.",
+          "explanation": "So sánh riêng 404 do constraint với 404 do record vắng; không đoán action chạy chỉ từ status.",
+          "verification": "lab-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "WebApp/\n├── WebApp.csproj\n├── Program.cs            # host, services, pipeline, routes\n├── appsettings.json      # cấu hình theo môi trường\n├── Controllers/          # action nhận request\n├── Models/               # input model / view model\n├── Views/                # Razor .cshtml (nếu dùng MVC)\n│   └── Shared/_Layout.cshtml\n├── wwwroot/              # CSS, JS và tài nguyên công khai\n└── Properties/launchSettings.json # chạy local",
-        "note": "Đây là quy ước MVC. API thuần có thể không có Views; Minimal API có thể bắt đầu từ Program.cs. Khi chia class ra file, thêm namespace/using nhất quán. Không đặt cấu hình nhạy cảm dưới wwwroot."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -126,11 +244,67 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "{id:int} có tự kiểm tra id tồn tại không?",
+          "answer": "Không, chỉ là constraint chọn route theo kiểu được chấp nhận.",
+          "explanation": "Action/repository mới xác định resource.",
+          "misconception": "Route int bảo đảm có record.",
+          "followUp": "-1 có thể match int không?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "POST vào path chỉ có GET nên hiểu thế nào?",
+          "answer": "Nếu path ứng viên có method khác, có thể 405 và Allow.",
+          "explanation": "Cần xem endpoint cấu hình thực tế.",
+          "misconception": "Mọi sai method đều 404.",
+          "followUp": "Allow cho biết điều gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Query after=0 có phải route segment?",
+          "answer": "Không, query string là nguồn binding khác.",
+          "explanation": "Path và query có vai trò riêng.",
+          "misconception": "Mọi input URL là một loại route value.",
+          "followUp": "Tạo link bằng Tag Helper có lợi gì?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Khai báo route trước có luôn thắng không?",
+          "answer": "Không, specificity, constraint và policy còn ảnh hưởng.",
+          "explanation": "Hai endpoint mơ hồ có thể gây lỗi thay vì chọn đại.",
+          "misconception": "Framework chỉ duyệt danh sách từ trên xuống.",
+          "followUp": "Literal products/new so với products/{id} khác thế nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Hardcode host khi tạo Location sau proxy rủi ro gì?",
+          "answer": "Có thể sai URL công khai hoặc tin header không đáng tin.",
+          "explanation": "Cần PathBase/trusted proxy và link generation đúng cấu hình.",
+          "misconception": "Header Host luôn là nguồn đáng tin.",
+          "followUp": "GET xóa record vi phạm semantics nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "routing",
+          "title": "Routing to controller actions in ASP.NET Core",
           "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/routing?view=aspnetcore-10.0"
+        },
+        {
+          "title": "Tài liệu API .NET theo phiên bản mục tiêu",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/?view=aspnetcore-10.0"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/asp.net-core",
@@ -138,5 +312,29 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A26",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Phân biệt route match, input hợp lệ và resource tồn tại.",
+    "Tạo link từ hợp đồng endpoint và hiểu ambiguity/PathBase."
+  ],
+  "prerequisiteIds": [
+    "http-request-line",
+    "dependency-injection",
+    "async-await"
+  ],
+  "relatedIds": []
 }

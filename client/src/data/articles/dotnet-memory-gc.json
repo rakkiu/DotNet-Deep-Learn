@@ -1,0 +1,196 @@
+{
+  "id": "dotnet-memory-gc",
+  "title": "CLR, GC và quyền sở hữu tài nguyên",
+  "description": "Hiểu allocation, reachability và retention; tách vòng đời bộ nhớ managed khỏi việc đóng tài nguyên.",
+  "category": "foundation",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "GC là tracing collector của runtime: tìm object reachable từ roots, thu vùng không còn được graph sống truy cập. Managed heap giữ object được GC quản lý; stack là frame thực thi theo thread và không dùng làm định nghĩa value/reference type."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Các generation 0/1/2 phục vụ chiến lược thu gom theo tuổi; LOH dành một số allocation lớn theo quy tắc runtime, không phải mọi array đều ở LOH. Allocation pressure là tốc độ cấp phát; retention là dữ liệu còn bị giữ sống. Cycle không reachable vẫn có thể thu; static/event/cache giữ reference có thể làm graph tiếp tục reachable.",
+        "Dispose/using kết thúc sử dụng tài nguyên theo contract, không thu object khỏi heap ngay. Finalizer có chi phí và thời điểm không xác định, không bảo đảm chạy khi process bị giết. SafeHandle là abstraction thích hợp để gói ownership native handle thay vì tự viết finalizer phức tạp nếu có lựa chọn."
+      ],
+      "diagrams": [
+        {
+          "caption": "Reachability và ownership",
+          "steps": [
+            "GC roots → publisher sống lâu",
+            "Publisher → delegate → subscriber/closure",
+            "Unsubscribe loại một đường giữ reference",
+            "Dispose native resource độc lập với lúc GC thu object"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Tăng RAM không tự chứng minh leak; phân biệt allocation rate và retained heap bằng counters/profiler/dump như dotnet-counters, dotnet-gcdump trong môi trường được phép. Không gọi GC.Collect như cách chữa chung. Span<T> là view ref struct có lifetime hạn chế; Memory<T> có thể dùng qua ranh giới async phù hợp. stackalloc chỉ cho dữ liệu unmanaged có giới hạn; ArrayPool mượn buffer cần Return trong finally và không dùng lại sau trả."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "subscription-retention",
+          "title": "Đường giữ subscriber và cách gỡ",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var publisher=new Publisher();var subscriber=new Subscriber();EventHandler handler=subscriber.On;publisher.Changed+=handler;Console.WriteLine(publisher.Count);publisher.Changed-=handler;Console.WriteLine(publisher.Count);using(var resource=new Resource()){Console.WriteLine(\"using\");}Console.WriteLine(\"scope ended\");\nclass Publisher{public event EventHandler? Changed;public int Count=>Changed?.GetInvocationList().Length??0;}\nclass Subscriber{public void On(object? sender,EventArgs e){}}\nclass Resource:IDisposable{public void Dispose()=>Console.WriteLine(\"Dispose\");}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "1\n0\nusing\nDispose\nscope ended",
+          "explanation": "Chứng minh invocation list không còn đường giữ handler đó, không giả vờ đã chứng minh thời điểm GC thu object bằng một lần chạy.",
+          "verification": "ran"
+        },
+        {
+          "id": "pooled-data",
+          "title": "Span và buffer mượn có ownership",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Buffers;\nSpan<int> local=stackalloc int[]{1,2,3};int sum=0;foreach(int n in local)sum+=n;Console.WriteLine(sum);\nbyte[] rented=ArrayPool<byte>.Shared.Rent(16);try{Memory<byte> slice=rented.AsMemory(0,16);slice.Span.Fill(7);Console.WriteLine(slice.Length);Console.WriteLine(slice.Span[0]);}finally{ArrayPool<byte>.Shared.Return(rented,clearArray:true);}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "6\n16\n7",
+          "explanation": "Không assert capacity thực của array rented; chỉ dùng phần yêu cầu và trả pool trong finally. Không sử dụng slice sau Return.",
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Xem allocation rate và retained heap bằng dotnet-counters hoặc memory profiler khi môi trường cho phép. Với retention, theo đường GC roots tới static/event/cache. Với handle leak, tìm Dispose ownership và scope; không gọi GC.Collect để che việc giữ reference còn sống."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Object cycle luôn gây leak không?",
+          "answer": "Không nếu cả graph không reachable từ roots.",
+          "explanation": "Tracing GC không dựa reference counting.",
+          "misconception": "Hai object trỏ nhau thì vĩnh viễn sống.",
+          "followUp": "Static giữ một node đổi kết luận thế nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "using có thu object khỏi heap ngay không?",
+          "answer": "Không, nó gọi Dispose theo scope.",
+          "explanation": "Managed lifetime và tài nguyên hệ điều hành có cơ chế khác nhau.",
+          "misconception": "Dispose là GC.Collect cho object.",
+          "followUp": "SafeHandle giúp ownership nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Allocation và retention khác gì?",
+          "answer": "Allocation là tạo dữ liệu, retention là dữ liệu còn được giữ sống.",
+          "explanation": "RAM tăng cần phân tích cả hai, không đoán leak từ một số.",
+          "misconception": "Cấp phát nhiều chắc chắn là leak.",
+          "followUp": "Counter/profiler nào giúp phân biệt?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Vì sao không dựa finalizer để ghi dữ liệu chắc chắn lúc tắt app?",
+          "answer": "Thời điểm và khả năng chạy finalizer không được bảo đảm mọi shutdown.",
+          "explanation": "Cần explicit lifecycle và cơ chế bền vững phù hợp.",
+          "misconception": "Finalizer luôn chạy trước khi process kết thúc.",
+          "followUp": "Graceful shutdown có giới hạn gì?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Memory slice có còn hợp lệ sau Return pooled array không?",
+          "answer": "Không được tiếp tục dùng theo ownership contract.",
+          "explanation": "Pool có thể đưa vùng đó cho caller khác.",
+          "misconception": "Còn reference tức tiếp tục sử dụng hợp lệ.",
+          "followUp": "Span/Memory thay đổi quy tắc GC hay chỉ là view dữ liệu?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "GC fundamentals và generations",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals"
+        },
+        {
+          "title": "Dispose và unmanaged resources",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/unmanaged"
+        },
+        {
+          "title": "Memory và Span guidelines",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/memory-t-usage-guidelines"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N02",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Giải thích GC roots/generations và vì sao chu kỳ không tự leak.",
+    "Quản lý subscription, IDisposable và vùng dữ liệu mượn."
+  ],
+  "prerequisiteIds": [
+    "dotnet-first-program",
+    "csharp-exceptions"
+  ],
+  "relatedIds": [
+    "csharp-exceptions",
+    "dotnet-streams",
+    "csharp-events",
+    "memory-caching"
+  ]
+}

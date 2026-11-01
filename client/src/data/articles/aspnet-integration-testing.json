@@ -1,0 +1,181 @@
+{
+  "id": "aspnet-integration-testing",
+  "title": "Kiểm thử tích hợp ASP.NET Core và EF Core",
+  "description": "Kiểm tra pipeline HTTP thật trong TestServer và database cô lập; biết khi nào fake hoặc SQLite chưa đủ.",
+  "category": "architecture",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Unit test cô lập logic, integration test kiểm tra ranh giới ghép như HTTP pipeline/DI/formatter/database, E2E đi qua browser/user flow. WebApplicationFactory tạo host TestServer và HttpClient test không gọi Internet. Test controller trực tiếp không xác nhận middleware/routing/formatters."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "WebLab.Tests tham chiếu WebLab, dùng Microsoft.AspNetCore.Mvc.Testing cùng .NET10.0.14, xUnit v2 2.9.3 và runner công bố. Mỗi factory tạo DB file temp riêng và xóa sau Dispose; DataLab SQLite in-memory/connection lifetime được phân biệt. EF InMemory không thay relational constraints/SQL translation; cần SQL Server thật cô lập khi xác minh semantics SQL Server.",
+        "Test thay auth handler trong ConfigureTestServices để tạo principal cho role/owner; app source không trust X-Test headers. Form test lấy antiforgery cookie/token trước khi POST, không vô hiệu bảo vệ chỉ để test pass. Seed và reset phải có owner, không phụ thuộc dữ liệu cá nhân hoặc thứ tự test."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Unit mock repository không xác nhận query provider; integration không thay browser test accessibility/keyboard. Chọn ranh giới fake đúng nhu cầu, không thay mọi dependency khiến test chỉ kiểm tra giả. Test auth bypass phải ở test assembly/config; Identity thực được test riêng. Transaction/conflict dùng hai context token trong DataLab; cancellation deterministic dùng TCS/controlled I/O chứ không Sleep."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "web-factory-tests",
+          "title": "Chạy cả HTTP contract suite",
+          "kind": "test-project",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet test examples/WebLab.Tests/WebLab.Tests.csproj",
+          "project": "examples/WebLab.Tests/WebLab.Tests.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "Các ca 201/400/401/403/404/409/415/405, Razor encode/form/PRG, pipeline/static/500/ETag và Identity được assertion trong suite.",
+          "explanation": "Project test chứa WebApplicationFactory, handler test-only, provider logger ghi thứ tự và DB temp có cleanup.",
+          "verification": "lab-verified"
+        },
+        {
+          "id": "test-boundary-filter",
+          "title": "Chạy riêng ranh giới auth hoặc form",
+          "kind": "test-project",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet test examples/WebLab.Tests/WebLab.Tests.csproj --filter FullyQualifiedName~Roles_Ownership\ndotnet test examples/WebLab.Tests/WebLab.Tests.csproj --filter FullyQualifiedName~Razor_Encoding",
+          "project": "examples/WebLab.Tests/WebLab.Tests.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "Các test được filter phải pass độc lập; không cần browser hoặc API Internet.",
+          "explanation": "--filter chọn test thực, không đổi app production thành chế độ bỏ xác thực.",
+          "verification": "lab-verified"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Chạy riêng test bằng --filter và đọc expected/actual status/body. Kiểm tra content root, environment Testing, connection lifetime và DB file cô lập. Nếu test pass nhờ fake, ghi rõ ranh giới chưa đi qua và thêm engine/pipeline test phù hợp."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Unit test controller có kiểm tra routing/auth middleware thật không?",
+          "answer": "Không, lời gọi method trực tiếp bỏ pipeline đó.",
+          "explanation": "WebApplicationFactory gửi HTTP qua host để kiểm tra ghép.",
+          "misconception": "Controller test tương đương mọi integration test.",
+          "followUp": "Formatter và ApiController auto 400 được test ở mức nào?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "SQLite in-memory cần giữ gì để DB tồn tại?",
+          "answer": "Connection thích hợp phải còn mở trong lifetime cần dùng.",
+          "explanation": "Mỗi connection đóng/mở có thể làm mất database in-memory theo cấu hình.",
+          "misconception": "Tên in-memory khiến dữ liệu sống toàn test process chắc chắn.",
+          "followUp": "EF InMemory khác relational provider ở đâu?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Test auth handler được đặt ở đâu?",
+          "answer": "Chỉ test assembly/ConfigureTestServices trong suite.",
+          "explanation": "Không để app production trust header tự chọn user/role.",
+          "misconception": "Thêm handler test vào Program rồi tắt bằng comment là đủ.",
+          "followUp": "Test token Identity thật kiểm tra khác điều gì?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Vì sao không tắt antiforgery trong form integration test?",
+          "answer": "Vì cần kiểm tra contract bảo vệ thật, lấy token/cookie như client.",
+          "explanation": "Bỏ cơ chế làm pass không chứng minh flow hoạt động.",
+          "misconception": "Test luôn nên bypass mọi middleware.",
+          "followUp": "Làm sao kiểm tra thiếu token và input invalid riêng?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "SQLite suite pass có đủ xác nhận production SQL Server isolation không?",
+          "answer": "Không, cần engine đích cho semantics đặc thù.",
+          "explanation": "Test strategy chọn boundary theo rủi ro, không lấy fake làm bằng chứng mọi tầng.",
+          "misconception": "SQL cùng tên nên cùng hành vi.",
+          "followUp": "Browser E2E còn kiểm tra được vấn đề nào khác?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "WebApplicationFactory và integration tests",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0"
+        },
+        {
+          "title": "Chọn chiến lược test EF Core",
+          "url": "https://learn.microsoft.com/en-us/ef/core/testing/choosing-a-testing-strategy"
+        },
+        {
+          "title": "xUnit v2 project và runner",
+          "url": "https://xunit.net/docs/getting-started/v2/getting-started"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N10",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Chạy WebApplicationFactory và assert status/headers/body/auth.",
+    "Giữ seed/reset/lifetime DB rõ và tránh test bypass vào production."
+  ],
+  "prerequisiteIds": [
+    "unit-testing",
+    "aspnet-web-api-design",
+    "efcore-context"
+  ],
+  "relatedIds": [
+    "unit-testing",
+    "aspnet-web-api-design",
+    "efcore-transactions-concurrency"
+  ]
+}

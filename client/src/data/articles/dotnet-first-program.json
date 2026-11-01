@@ -1,7 +1,7 @@
 {
   "id": "dotnet-first-program",
   "title": ".NET — nền tảng, SDK và runtime",
-  "description": ".NET là một nền tảng phát triển phần mềm gồm runtime, thư viện nền, trình biên dịch và bộ công cụ SDK. C# là ngôn ngữ dùng để diễn đạt chương trình; .NET là hệ sinh thái giúp xây dựng và thực thi chươ…",
+  "description": ".NET là một nền tảng phát triển phần mềm gồm runtime, thư viện nền, trình biên dịch và bộ công cụ SDK. C# là ngôn ngữ dùng để diễn đạt chương trình; .NET là hệ sinh thái giúp xây dựng và thực thi chương trình đó. ASP.NET Core là framework web xây trên .NET, còn Visual Studio là công cụ làm việc với mã nguồn.",
   "category": "foundation",
   "kind": "Nền tảng phát triển",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         ".NET là một nền tảng phát triển phần mềm gồm runtime, thư viện nền, trình biên dịch và bộ công cụ SDK. C# là ngôn ngữ dùng để diễn đạt chương trình; .NET là hệ sinh thái giúp xây dựng và thực thi chương trình đó. ASP.NET Core là framework web xây trên .NET, còn Visual Studio là công cụ làm việc với mã nguồn."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Khái niệm và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,13 +42,13 @@
         "Solution là nhóm project để quản lý, không bắt buộc để chạy một project. C# hiện đại cho phép top-level statements và local function; không buộc người mới phải tự viết class cho mọi dòng lệnh. VS Code + SDK cũng là lựa chọn hợp lệ, Visual Studio for Mac đã ngừng hỗ trợ.",
         "Visual Studio Community thuận tiện trên Windows; .NET SDK + VS Code phù hợp nhiều hệ điều hành. Thông thường compiler tạo IL và runtime dùng JIT; Native AOT là một lựa chọn khác, nên không đồng nhất mọi cách triển khai .NET với JIT."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
       "id": "mechanism",
       "paragraphs": [
-        "Thông thường, Roslyn biên dịch file .cs thành IL kèm metadata trong assembly. Khi chạy, runtime nạp assembly, giải quyết kiểu và JIT biên dịch các phương thức cần dùng thành mã máy. Garbage Collector theo dõi object còn được tham chiếu và thu hồi bộ nhớ không còn cần; tài nguyên như file/socket vẫn cần Dispose. Native AOT là lối triển khai khác, biên dịch trước ra mã máy và có các giới hạn riêng về reflection/code động.",
+        "Thông thường, Roslyn biên dịch file .cs thành IL kèm metadata trong assembly. Khi chạy, runtime nạp assembly, giải quyết kiểu và JIT biên dịch các phương thức cần dùng thành mã máy. Garbage Collector đi từ GC roots để xác định object còn reachable và thu vùng không còn reachable; tài nguyên như file/socket vẫn cần Dispose. Native AOT là lối triển khai khác, biên dịch trước ra mã máy và có các giới hạn riêng về reflection/code động.",
         "Cài .NET SDK bản được hỗ trợ, mở terminal và chạy dotnet --info để kiểm tra. Tạo thư mục riêng cho bài thử, chạy dotnet new console, thay Program.cs rồi dotnet run. File .csproj mô tả project và target framework; Solution chỉ giúp quản lý nhiều project.",
         ".NET Framework 4.8.1 thuộc dòng Windows, vẫn có chính sách hỗ trợ gắn với Windows tương ứng. .NET Core là dòng đa nền tảng trước .NET 5; .NET Standard là bộ đặc tả API dùng chung, không phải runtime. Ví dụ bài học dùng .NET 10 thay vì yêu cầu cài phiên bản trong video."
       ],
@@ -86,33 +86,90 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Managed code là mã chạy dưới các dịch vụ runtime. CLR quản lý thực thi; BCL là thư viện nền như Console, collections, I/O. Assembly chứa IL và metadata; process là tiến trình hệ điều hành nạp chương trình, không phải tên khác của assembly. Một project có thể chạy không cần solution.",
+        "dotnet build tạo output thường ở bin/Debug/net10.0; run build khi cần rồi chạy. publish gom output triển khai, thường trong bin/Release/net10.0/publish. TargetFramework net10.0 chọn API/runtime mục tiêu; Nullable enable bật phân tích null. global.json chọn SDK phát triển, không cài runtime cho máy nhận."
+      ],
+      "diagrams": [
+        {
+          "caption": "Từ source tới process",
+          "steps": [
+            "Source .cs → Roslyn kiểm tra kiểu",
+            "Assembly: IL + metadata",
+            "CLR nạp assembly → JIT hoặc đường Native AOT",
+            "Process gọi BCL, OS; GC quản lý reachability"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "GC xác định object reachable (còn truy cập được) từ GC roots như tham chiếu trong stack đang hoạt động, static và handle thích hợp. GC không đếm số reference; một chu kỳ object không còn reachable vẫn thu hồi được. Dispose kết thúc quyền sử dụng tài nguyên, không ra lệnh GC thu object ngay.",
+        "Framework-dependent cần runtime thích hợp trên máy nhận; self-contained mang runtime theo RID và cần được publish lại khi runtime có bản vá. JIT cho phép tối ưu lúc chạy nhưng có chi phí khởi động; Native AOT có thể giảm startup và yêu cầu phân tích trimming/code động, không phải cứ AOT là nhỏ hoặc nhanh hơn mọi workload. Nền tảng thực tế còn tùy workload và thư viện."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "Console.WriteLine(\"Xin chào, An!\");\nConsole.Write(\"Tổng: \");\nConsole.WriteLine(2 + 3);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Xin chào, An!\nTổng: 5",
-        "steps": [
-          "Dòng 1 in lời chào và xuống dòng. Dấu ngoặc kép tạo chuỗi, không phải tên biến.",
-          "Write ở dòng 2 in nhãn nhưng không xuống dòng.",
-          "Dòng 3 tính 2 + 3 thành 5 rồi in trên cùng dòng nhãn."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "Console.WriteLine(\"Xin chào, An!\");\nConsole.Write(\"Tổng: \");\nConsole.WriteLine(2 + 3);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Xin chào, An!\nTổng: 5",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Dòng 1 in lời chào và xuống dòng. Dấu ngoặc kép tạo chuỗi, không phải tên biến. Write ở dòng 2 in nhãn nhưng không xuống dòng. Dòng 3 tính 2 + 3 thành 5 rồi in trên cùng dòng nhãn.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "sdk-diagnostics",
+          "title": "Đọc cấu hình và chẩn đoán máy nhận",
+          "kind": "cli",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "Đặt hai file trong một thư mục mới rồi chạy các lệnh PowerShell/Bash bên dưới.\ndotnet --info\ndotnet --list-sdks\ndotnet --list-runtimes\ndotnet build Demo.csproj\ndotnet publish Demo.csproj -c Release --self-contained false",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup></Project>",
+            "Program.cs": "Console.WriteLine(\"Hello .NET 10\");"
+          },
+          "expected": "Danh sách thực tế tùy máy; build/publish phải thành công với SDK 10.0.403 và runtime 10.0.14 đã công bố.",
+          "explanation": "Máy chỉ có runtime chạy được app tương thích nhưng không có compiler/SDK để build. Không lấy số dòng hay đường dẫn cài đặt làm output cố định.",
+          "verification": "cli-verified"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,15 +180,71 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Máy có runtime 10 nhưng dotnet build không chạy, cần kiểm tra gì?",
+          "answer": "Kiểm tra --list-sdks, không chỉ --list-runtimes.",
+          "explanation": "SDK chứa compiler và build tools; runtime phục vụ thực thi.",
+          "misconception": "Có dotnet.exe là luôn đủ SDK.",
+          "followUp": "Self-contained có giúp máy lập trình thiếu SDK build được không?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Nullable trong csproj làm gì?",
+          "answer": "Bật phân tích và annotation nullable cho mã C#.",
+          "explanation": "Nó không thêm runtime wrapper cho mọi string.",
+          "misconception": "Nullable enable chặn mọi null runtime.",
+          "followUp": "Một thư viện cũ có thể vẫn trả null không?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Hai object giữ tham chiếu vòng tròn có chắc leak?",
+          "answer": "Không nếu cả graph không còn reachable từ roots.",
+          "explanation": "Tracing GC đi từ roots, không dựa vào reference count.",
+          "misconception": "Mọi object cycle đều không thu hồi được.",
+          "followUp": "Static giữ một node trong graph thì sao?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Chọn self-contained khi nào và cần cập nhật gì?",
+          "answer": "Khi muốn mang runtime theo gói triển khai và chấp nhận kích thước/phạm vi RID.",
+          "explanation": "Cần publish lại để đưa runtime đã vá vào gói.",
+          "misconception": "Tự chứa nghĩa là không bao giờ cần vá runtime.",
+          "followUp": "Có phụ thuộc native ngoài runtime không?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "AOT có thay thế JIT cho mọi app?",
+          "answer": "Không, phải kiểm tra startup, kích thước và tính năng động của dependency.",
+          "explanation": "Reflection/trimming cần dữ liệu metadata đúng; đo trên workload thật.",
+          "misconception": "AOT luôn nhanh và cấm tuyệt đối reflection.",
+          "followUp": "App plugin động cần xác minh gì trước?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "introduction",
+          "title": "Tổng quan thành phần .NET",
           "url": "https://learn.microsoft.com/en-us/dotnet/core/introduction"
         },
         {
-          "title": "native aot",
-          "url": "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/"
+          "title": "Phiên bản và chính sách hỗ trợ",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/releases-and-support"
+        },
+        {
+          "title": "Các mô hình triển khai .NET",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/deploying/"
         }
       ],
       "community": "https://stackoverflow.com/questions/tagged/c%23",
@@ -139,5 +252,25 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A01",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đọc được TargetFramework, Nullable và phân biệt SDK với runtime.",
+    "Chẩn đoán thiếu công cụ; chọn cách publish theo môi trường nhận."
+  ],
+  "prerequisiteIds": [],
+  "relatedIds": []
 }

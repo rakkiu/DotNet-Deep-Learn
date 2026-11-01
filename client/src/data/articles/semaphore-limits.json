@@ -1,7 +1,7 @@
 {
   "id": "semaphore-limits",
   "title": "Semaphore và SemaphoreSlim",
-  "description": "Semaphore giới hạn số bên được vào vùng tài nguyên cùng lúc bằng bộ đếm permit. SemaphoreSlim là biến thể nhẹ trong một process, có WaitAsync cho async code. Semaphore với một permit không hoàn toàn g…",
+  "description": "Semaphore giới hạn số bên được vào vùng tài nguyên cùng lúc bằng bộ đếm permit. SemaphoreSlim là biến thể nhẹ trong một process, có WaitAsync cho async code. Semaphore với một permit không hoàn toàn giống Mutex: ownership và tính reentrant có quy tắc khác.",
   "category": "concurrency",
   "kind": "Primitive giới hạn đồng thời",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Semaphore giới hạn số bên được vào vùng tài nguyên cùng lúc bằng bộ đếm permit. SemaphoreSlim là biến thể nhẹ trong một process, có WaitAsync cho async code. Semaphore với một permit không hoàn toàn giống Mutex: ownership và tính reentrant có quy tắc khác."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Mutex có ownership theo thread; semaphore không phải mutex đổi tên. Release sai có thể vượt max và ném SemaphoreFullException hoặc phá giới hạn. Chỉ Release khi đã acquire thành công.",
         "Trong nghiệp vụ thật: await WaitAsync(token); try { await WorkAsync(token); } finally { Release(); }. Ví dụ chỉ thử permit rồi dispose để nhìn count; không phải mẫu thay thế finally trong service sống lâu."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,78 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "await WaitAsync(token) phải thành công trước khi vào try/finally cần Release. Nếu chờ bị hủy chưa lấy permit thì không Release. Với overload timeout trả bool, chỉ vào vùng/Release khi true. finally trả permit kể cả WorkAsync ném lỗi hay token bị hủy trong vùng."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Gate phải cùng instance/lifetime cho mọi caller cùng tài nguyên, không new mỗi request. SemaphoreSlim chỉ trong process; named OS semaphore có phạm vi theo nền tảng, không là khóa phân tán mọi máy. Count=1 vẫn khác lock/Monitor về thread ownership, reentrancy và await. Giới hạn concurrency không phải rate limit hay giới hạn backlog. Dispose chỉ khi mọi task/waiter đã kết thúc."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "using var gate = new SemaphoreSlim(2, 2);\nConsole.WriteLine(gate.Wait(0));\nConsole.WriteLine(gate.Wait(0));\nConsole.WriteLine(gate.CurrentCount);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "True\nTrue\n0",
-        "steps": [
-          "Count ban đầu 2.",
-          "Hai lần Wait(0) lần lượt lấy permit, đều true.",
-          "Count cuối là 0; không có lần chờ blocking trong fixture này."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using var gate = new SemaphoreSlim(2, 2);\nConsole.WriteLine(gate.Wait(0));\nConsole.WriteLine(gate.Wait(0));\nConsole.WriteLine(gate.CurrentCount);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\nTrue\n0",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Count ban đầu 2. Hai lần Wait(0) lần lượt lấy permit, đều true. Count cuối là 0; không có lần chờ blocking trong fixture này.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "bounded-errors",
+          "title": "Giới hạn 2, task lỗi và canceled wait",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using var gate=new SemaphoreSlim(2,2);var twoInside=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);var release=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);int active=0,peak=0;var statsLock=new object();\nasync Task Work(int id){await gate.WaitAsync();try{int n=Interlocked.Increment(ref active);lock(statsLock){peak=Math.Max(peak,n);}if(n==2)twoInside.TrySetResult();await release.Task;if(id==0)throw new InvalidOperationException(\"demo\");}finally{Interlocked.Decrement(ref active);gate.Release();}}\nvar all=Task.WhenAll(Enumerable.Range(0,4).Select(Work));await twoInside.Task.WaitAsync(TimeSpan.FromSeconds(5));release.SetResult();try{await all;}catch(InvalidOperationException){}\nConsole.WriteLine($\"peak:{peak};active:{active};permits:{gate.CurrentCount}\");\nawait gate.WaitAsync();await gate.WaitAsync();using var canceled=new CancellationTokenSource();canceled.Cancel();try{await gate.WaitAsync(canceled.Token);}catch(OperationCanceledException){Console.WriteLine(\"canceled wait, không Release\");}\nConsole.WriteLine(await gate.WaitAsync(TimeSpan.Zero));gate.Release(2);Console.WriteLine(gate.CurrentCount);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "peak:2;active:0;permits:2\ncanceled wait, không Release\nFalse\n2",
+          "explanation": "TCS giữ hai bên trong vùng để quan sát giới hạn có điều khiển. Peak trong fixture được cập nhật dưới gate phụ/atomic ở bản kiểm chứng, không dựa thread sleep; tất cả task được await trước Dispose.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +168,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Canceled wait trước acquire có Release trong finally không?",
+          "answer": "Không, chưa có permit để trả.",
+          "explanation": "Đặt acquire ngoài khối try/finally của vùng đã chiếm.",
+          "misconception": "Release luôn dù acquire thất bại.",
+          "followUp": "Release dư có thể gây exception gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "WaitAsync(timeout) trả false thì vào vùng không?",
+          "answer": "Không, đó là không lấy được permit.",
+          "explanation": "Cần kiểm tra bool trước phần công việc và release.",
+          "misconception": "Timeout false vẫn đã lấy slot.",
+          "followUp": "Timeout khác token cancel thế nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "New SemaphoreSlim trong mỗi request có giới hạn toàn app không?",
+          "answer": "Không, mỗi request có gate riêng.",
+          "explanation": "Mọi caller cùng tài nguyên phải dùng đúng gate chung.",
+          "misconception": "Count=2 tự có hiệu lực toàn process.",
+          "followUp": "Scoped và singleton gate khác phạm vi ra sao?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Count=1 có giống hoàn toàn lock không?",
+          "answer": "Không, ownership/reentrancy/await khác nhau.",
+          "explanation": "Semaphore không ràng buộc thread nhả giống Monitor.",
+          "misconception": "Một permit luôn là mutex reentrant.",
+          "followUp": "Vì sao await trong lock không được dùng như WaitAsync?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Một triệu task cùng chờ gate có kiểm soát bộ nhớ tốt chưa?",
+          "answer": "Chưa, backlog và các task vẫn chiếm tài nguyên.",
+          "explanation": "Cần producer/consumer bounded nếu đầu vào lớn.",
+          "misconception": "Gate giới hạn mọi thứ từ network đến heap.",
+          "followUp": "Rate limit 100/phút khác concurrency=4 thế nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "semaphore and semaphoreslim",
+          "title": "Semaphore and SemaphoreSlim",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/semaphore-and-semaphoreslim"
         },
         {
-          "title": "system.threading.semaphoreslim.waitasync",
+          "title": "SemaphoreSlim.WaitAsync Method",
           "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.semaphoreslim.waitasync"
         }
       ],
@@ -139,5 +236,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A38",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đặt acquire/release đúng cả lỗi, hủy và timeout.",
+    "Kiểm chứng giới hạn N với caller dùng chung gate."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "csharp-exceptions"
+  ],
+  "relatedIds": []
 }

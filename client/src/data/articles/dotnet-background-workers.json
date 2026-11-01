@@ -1,0 +1,191 @@
+{
+  "id": "dotnet-background-workers",
+  "title": "BackgroundService, Channel và shutdown",
+  "description": "Tạo công việc nền có owner, DI scope và giới hạn hàng chờ; nêu rõ đường lỗi, drain và khác biệt .NET 10.",
+  "category": "concurrency",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Hosted service là công việc do host sở hữu vòng đời. BackgroundService dùng ExecuteAsync(stoppingToken); Channel in-memory chuyển item giữa producer/consumer và bounded channel áp backpressure. Channel không bền vững qua crash và không tự là message broker phân tán."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Không Task.Run fire-and-forget từ controller rồi dùng request DbContext đã Dispose. Chuyển dữ liệu cần thiết vào queue, worker tạo scope theo từng job và quan sát lỗi. Bounded capacity giới hạn backlog; nhiều consumer giới hạn số job đang chạy theo cấu hình. Mọi task cần owner chờ/quan sát kết quả.",
+        "Trong .NET10, toàn bộ ExecuteAsync chạy nền; khác .NET8 nơi phần đồng bộ trước await đầu có thể block startup. Nếu cần công việc startup theo thứ tự dùng StartAsync/lifecycle đúng thay giả định behavior cũ. Ví dụ công bố net10.0/C#14."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Shutdown phải chọn drain hay cancel, giới hạn thời gian và chính sách retry/idempotency. Complete writer cho phép consumer drain rồi kết thúc; stoppingToken hủy có thể bỏ phần còn lại tùy policy, không hứa mọi item được xử lý chắc chắn. Lỗi job riêng có thể ghi nhận để tiếp tục theo policy, lỗi worker/host có exception behavior theo cấu hình. Scope/DbContext riêng mỗi unit; không share context giữa consumer."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "worker-drain",
+          "title": "Hai consumer, scope mỗi job và lỗi có owner",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Threading.Channels;using Microsoft.Extensions.Hosting;using Microsoft.Extensions.DependencyInjection;using Microsoft.Extensions.Logging;\nvar builder=Host.CreateApplicationBuilder();builder.Logging.ClearProviders();builder.Services.AddSingleton<QueueState>();builder.Services.AddScoped<Job>();builder.Services.AddHostedService<Worker>();using var host=builder.Build();await host.StartAsync();var state=host.Services.GetRequiredService<QueueState>();\nforeach(int id in new[]{1,2,3})await state.Queue.Writer.WriteAsync(id);state.Queue.Writer.Complete();await state.Done.Task.WaitAsync(TimeSpan.FromSeconds(5));await host.StopAsync();Console.WriteLine($\"processed:{state.Processed};failed:{state.Failed};disposed:{state.Disposed}\");\nclass QueueState{public Channel<int> Queue=Channel.CreateBounded<int>(2);public TaskCompletionSource Done=new(TaskCreationOptions.RunContinuationsAsynchronously);public int Processed,Failed,Disposed;}\nclass Job(QueueState state):IDisposable{public async Task Run(int id,CancellationToken t){t.ThrowIfCancellationRequested();await Task.Yield();if(id==2)throw new InvalidOperationException(\"job\");}public void Dispose()=>Interlocked.Increment(ref state.Disposed);}\nclass Worker(QueueState state,IServiceScopeFactory scopes):BackgroundService\n{protected override async Task ExecuteAsync(CancellationToken t){try{await Task.WhenAll(Enumerable.Range(0,2).Select(_=>Consume(t)));state.Done.TrySetResult();}catch(Exception ex){state.Done.TrySetException(ex);throw;}}\nprivate async Task Consume(CancellationToken t){await foreach(int id in state.Queue.Reader.ReadAllAsync(t)){using var scope=scopes.CreateScope();try{await scope.ServiceProvider.GetRequiredService<Job>().Run(id,t);}catch(InvalidOperationException){Interlocked.Increment(ref state.Failed);}finally{Interlocked.Increment(ref state.Processed);}}}}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "processed:3;failed:1;disposed:3",
+          "explanation": "Writer được Complete rồi chờ drain trước StopAsync. Job lỗi được ghi nhận theo policy mẫu, scope vẫn dọn. Không assert thứ tự các job hoặc thread ID.",
+          "verification": "ran"
+        },
+        {
+          "id": "channel-cancel",
+          "title": "Hàng đầy áp backpressure, hủy writer đang chờ",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Threading.Channels;\nvar queue=Channel.CreateBounded<int>(1);await queue.Writer.WriteAsync(1);using var cts=new CancellationTokenSource();var waiting=queue.Writer.WriteAsync(2,cts.Token).AsTask();Console.WriteLine(waiting.IsCompleted);cts.Cancel();try{await waiting;}catch(OperationCanceledException){Console.WriteLine(\"writer canceled\");}queue.Writer.Complete();await foreach(int item in queue.Reader.ReadAllAsync())Console.WriteLine(item);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "False\nwriter canceled\n1",
+          "explanation": "Capacity=1 được lấp trước WriteAsync thứ hai; cancellation có điều khiển, không Sleep và không bỏ task chờ.",
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Ghi job ID, trạng thái queued/running/completed/failed/canceled và scope lifetime. Khi shutdown kẹt, kiểm tra writer đã Complete chưa và task nào chưa được await. Không dùng Sleep để đoán queue đã drain; quan sát Completion hoặc task tổng."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Channel bounded giải quyết thêm gì so với semaphore?",
+          "answer": "Giới hạn hàng chờ và chuyển item, không chỉ số đang vào vùng.",
+          "explanation": "Backpressure có thể áp ngay producer WriteAsync.",
+          "misconception": "Hai primitive là một thứ đổi tên.",
+          "followUp": "Queue memory có sống sau crash không?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Worker có nên giữ request DbContext từ controller không?",
+          "answer": "Không, tạo scope/context cho đơn vị công việc của worker.",
+          "explanation": "Request lifetime kết thúc độc lập công việc nền.",
+          "misconception": "Task.Run kéo dài an toàn request scope.",
+          "followUp": "Message nên mang data hay HttpContext?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Complete writer có nghĩa hủy mọi item chưa đọc không?",
+          "answer": "Không, nó báo không thêm item và consumer có thể drain các item còn lại.",
+          "explanation": "Drain và cancel là policy khác nhau.",
+          "misconception": "Complete luôn làm mất queue ngay.",
+          "followUp": "ReadAllAsync kết thúc khi nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": ".NET10 phần trước await trong ExecuteAsync còn block startup như .NET8 không?",
+          "answer": "Không theo thay đổi framework, toàn bộ ExecuteAsync chạy nền.",
+          "explanation": "Phải dùng hook startup phù hợp nếu có công việc cần hoàn tất trước ready.",
+          "misconception": "Hành vi .NET8 luôn đúng cho .NET10.",
+          "followUp": "StartAsync/lifecycle dùng cho yêu cầu nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Retry job lỗi có chắc an toàn nếu crash giữa chừng?",
+          "answer": "Không, cần idempotency và lưu trữ bền vững theo yêu cầu.",
+          "explanation": "Channel không cung cấp exactly-once hay transaction ngoài process.",
+          "misconception": "Retry vô hạn là giao hàng chắc chắn.",
+          "followUp": "Shutdown timeout cần công bố điều gì với dữ liệu còn chờ?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "Hosted services và Worker",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/workers"
+        },
+        {
+          "title": "Thay đổi ExecuteAsync trong .NET10",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/compatibility/extensions/10.0/backgroundservice-executeasync-task"
+        },
+        {
+          "title": "System.Threading.Channels library",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/channels"
+        },
+        {
+          "title": "Cancellation hợp tác",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/cancellation-in-managed-threads"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N11",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Chạy producer/consumer bounded và dọn scope khi job lỗi.",
+    "Thiết kế shutdown/cancellation thay fire-and-forget từ request."
+  ],
+  "prerequisiteIds": [
+    "dependency-injection",
+    "semaphore-limits",
+    "async-await",
+    "task-composition"
+  ],
+  "relatedIds": [
+    "tasks-concurrency",
+    "dependency-injection",
+    "semaphore-limits",
+    "async-await"
+  ]
+}

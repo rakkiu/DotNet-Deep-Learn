@@ -1,0 +1,184 @@
+{
+  "id": "efcore-query-performance",
+  "title": "Tối ưu truy vấn EF Core và SQL",
+  "description": "Đọc SQL và lượng dữ liệu thực tải; chọn projection, tracking, index và pagination bằng bằng chứng.",
+  "category": "data",
+  "kind": "Mở rộng để ôn phỏng vấn",
+  "sourceParts": [],
+  "prerequisites": [],
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất và vấn đề cần giải quyết",
+      "group": "Hiểu đúng khái niệm",
+      "paragraphs": [
+        "Tối ưu query bắt đầu từ hợp đồng kết quả và SQL/provider thật, không từ độ ngắn LINQ. ToQueryString và command logs giúp hiểu dịch query; execution plan của engine giúp biết đường đọc/index. Không dùng SQLite benchmark để tuyên bố hệ số nhanh hơn SQL Server."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Đưa Where/Select/OrderBy/Take trước materialize khi provider hỗ trợ để hạn chế dòng/cột. AsNoTracking hữu ích cho đọc không sửa nhưng cần cân nhắc identity resolution. Include nhiều collection/N+1 tăng dữ liệu/round-trip; projection DTO thường phù hợp UI cần ít field. Streaming IAsyncEnumerable khác buffer ToList nhưng context/connection phải còn sống khi enumerate."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Sargability liên quan khả năng predicate dùng index của engine; trong SQL Server biểu thức lên cột như LEFT(Name,1) có thể khác pattern prefix theo collation/plan. Composite index phải phù hợp các cột filter/order. Keyset cần thứ tự ổn định. EF Core hiện đại giới hạn client evaluation theo vị trí query; không giả mọi lambda được dịch. ExecuteUpdate/Delete thực thi ngay, bỏ qua change tracker và không chờ SaveChanges, nên entity đang track có thể stale; phối hợp transaction/concurrency theo API cần đọc riêng."
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ, lỗi và cách kiểm chứng",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "projection-commands",
+          "title": "Projection và query split có cùng nhu cầu dữ liệu",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/DataLab/DataLab.csproj",
+          "project": "examples/DataLab/DataLab.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "projection-read-commands:1, projection:An,Bình; split-has-multiple-commands:True.",
+          "explanation": "Đọc SQL và số command của đúng sample, không suy benchmark. Graph Include và projection có độ rộng kết quả khác nên so theo yêu cầu UI, không đoán hiệu năng chỉ từ count.",
+          "verification": "lab-verified"
+        },
+        {
+          "id": "executeupdate-tracking",
+          "title": "Bulk update thực thi ngay nhưng tracker chưa đồng bộ",
+          "kind": "repository",
+          "label": "Project local đầy đủ",
+          "input": "Request và dữ liệu giả được ghi ở từng ca bên dưới.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project examples/DataLab/DataLab.csproj",
+          "project": "examples/DataLab/DataLab.csproj",
+          "files": {},
+          "requests": [],
+          "expected": "bulk-stale:6; bulk-reloaded:7.",
+          "explanation": "ExecuteUpdate gửi SQL trực tiếp; Reload mới đồng bộ instance đã track. Không gọi SaveChanges rồi tưởng bulk vẫn đang pending.",
+          "verification": "lab-verified"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Chẩn đoán và kiểm chứng",
+      "group": "Khi code không như dự kiến",
+      "paragraphs": [
+        "Xem ToQueryString, command count, rows/columns tải và execution plan của engine đích. Nếu tracked object stale sau ExecuteUpdate, Reload hoặc đổi unit-of-work policy. Không suy số lần truy vấn từ số toán tử LINQ trong source."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "ToList rồi Where có luôn filter trong DB không?",
+          "answer": "Không, phần sau có thể chạy trong bộ nhớ trên dữ liệu đã kéo.",
+          "explanation": "Cần nhìn ranh giới materialize/provider.",
+          "misconception": "IQueryable bảo đảm mọi bước luôn là SQL.",
+          "followUp": "AsEnumerable có tự materialize ngay không?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "ToQueryString chứng minh query nhanh không?",
+          "answer": "Không, nó cho thấy SQL dự kiến để phân tích.",
+          "explanation": "Cần dữ liệu/plan/metrics thật khi nói performance.",
+          "misconception": "SQL ngắn tức nhanh.",
+          "followUp": "Execution plan cho biết thêm gì?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Streaming có cho dispose context trước enumeration không?",
+          "answer": "Không, thao tác đọc vẫn cần nguồn/context/connection sống.",
+          "explanation": "Lifetime phải bao trùm việc enumerate.",
+          "misconception": "Có IAsyncEnumerable là dữ liệu đã tải hết.",
+          "followUp": "Ai sở hữu enumerator khi client hủy?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "ExecuteUpdate xong object tracked có tự đổi field không?",
+          "answer": "Không theo đường bulk bỏ tracker.",
+          "explanation": "Cần Reload/clear hoặc thiết kế không trộn state cũ.",
+          "misconception": "Bulk giống sửa entity rồi SaveChanges.",
+          "followUp": "Concurrency check của API bulk cần làm gì riêng?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "AsSplitQuery luôn là tối ưu tốt nhất không?",
+          "answer": "Không, đổi cartesian dữ liệu lấy nhiều round-trip và yêu cầu nhất quán.",
+          "explanation": "Cần xem graph, network, transaction và tải.",
+          "misconception": "Nhiều SQL nhỏ luôn nhanh hơn một SQL.",
+          "followUp": "Index cho filter/order nên được xác minh bằng gì?"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu chính thức và đọc tiếp",
+      "group": "Nguồn và bối cảnh",
+      "links": [
+        {
+          "title": "Truy vấn hiệu quả và giới hạn kết quả",
+          "url": "https://learn.microsoft.com/en-us/ef/core/performance/efficient-querying"
+        },
+        {
+          "title": "Tracking và no-tracking",
+          "url": "https://learn.microsoft.com/en-us/ef/core/querying/tracking"
+        },
+        {
+          "title": "Single vs. Split Queries",
+          "url": "https://learn.microsoft.com/en-us/ef/core/querying/single-split-queries"
+        },
+        {
+          "title": "ExecuteUpdate và ExecuteDelete",
+          "url": "https://learn.microsoft.com/en-us/ef/core/saving/execute-insert-update-delete"
+        }
+      ]
+    }
+  ],
+  "auditCode": "N08",
+  "origin": "extension",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Giữ cùng kết quả khi chuyển filter/projection trước materialize.",
+    "Nhìn trade-off round-trip, buffering và state khi bulk update."
+  ],
+  "prerequisiteIds": [
+    "linq-basics",
+    "efcore-context",
+    "efcore-relationships"
+  ],
+  "relatedIds": [
+    "linq-basics",
+    "efcore-context",
+    "efcore-relationships"
+  ]
+}

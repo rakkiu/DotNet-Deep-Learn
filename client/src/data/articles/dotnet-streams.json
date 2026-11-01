@@ -1,7 +1,7 @@
 {
   "id": "dotnet-streams",
   "title": "Stream, file và mã hóa văn bản",
-  "description": "Stream là abstraction đọc/ghi một chuỗi byte, được dùng cho file, bộ nhớ và mạng. FileStream nối với file trên hệ điều hành; StreamReader/StreamWriter chuyển byte thành văn bản theo encoding. Stream k…",
+  "description": "Stream là abstraction đọc/ghi một chuỗi byte, được dùng cho file, bộ nhớ và mạng. FileStream nối với file trên hệ điều hành; StreamReader/StreamWriter chuyển byte thành văn bản theo encoding. Stream không đồng nghĩa luồng thực thi Thread.",
   "category": "foundation",
   "kind": "API nhập/xuất dữ liệu",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Stream là abstraction đọc/ghi một chuỗi byte, được dùng cho file, bộ nhớ và mạng. FileStream nối với file trên hệ điều hành; StreamReader/StreamWriter chuyển byte thành văn bản theo encoding. Stream không đồng nghĩa luồng thực thi Thread."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Khái niệm và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Một lần Read có thể trả ít byte hơn buffer, cần dùng đúng số byte đọc được. Không giải mã mỗi mảnh UTF-8 riêng bằng cách giả định ranh giới byte là ranh giới ký tự; StreamReader xử lý decoder qua các lần đọc. File.OpenWrite không tự cắt phần đuôi file cũ; dùng File.Create khi muốn ghi đè và truncate.",
         "File.ReadAllText thuận tiện với tệp nhỏ; stream theo khối tiết kiệm bộ nhớ với tệp lớn. Dispose/Flush đẩy buffer theo hợp đồng stream nhưng không nên đồng nhất nó với bảo đảm dữ liệu bền vững trước mọi sự cố phần cứng."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,34 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "ReadAsync trả n byte thực sự đọc; chỉ xử lý buffer[..n], lặp tới 0 cho yêu cầu độ dài dương. ReadByte trả -1 khi hết stream. CanSeek kiểm tra trước thao tác Position/Length nếu nguồn không bảo đảm; NetworkStream không seek. CopyToAsync chuyển từng khối và nhận token.",
+        "FileMode.Create tạo/truncate; OpenWrite mở ghi nhưng có thể để phần đuôi cũ; Append ghi cuối file. FileAccess xác định đọc/ghi, FileShare quy định chia sẻ handle theo OS. StreamReader giữ decoder qua chunk UTF-8, leaveOpen xác định wrapper có đóng stream nền không."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Buffering giảm lượt I/O nhưng nhiều buffer không tự luôn nhanh hơn. Async I/O giảm việc giữ thread để chờ, không hứa tăng tốc ổ đĩa. Upload cần quota, streaming và token; Path.Combine không chặn ../ hoặc symlink tự động. Canonicalize và áp dụng policy root/OS thực tế; server file riêng còn cần kiểm tra quyền."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "using System.Text;\nusing var stream = new MemoryStream(Encoding.UTF8.GetBytes(\"ABC\"));\nConsole.WriteLine((char)stream.ReadByte());\nConsole.WriteLine(stream.Position);\nConsole.WriteLine(stream.Length);",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "A\n1\n3",
-        "steps": [
-          "UTF-8 mã hóa ABC thành ba byte 65, 66, 67.",
-          "ReadByte đọc byte đầu tiên; ép char ở đây hợp lệ vì dữ liệu ASCII đơn byte.",
-          "Position tăng từ 0 lên 1, Length vẫn là 3.",
-          "using var gọi Dispose khi rời phạm vi."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Text;\nusing var stream = new MemoryStream(Encoding.UTF8.GetBytes(\"ABC\"));\nConsole.WriteLine((char)stream.ReadByte());\nConsole.WriteLine(stream.Position);\nConsole.WriteLine(stream.Length);",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "A\n1\n3",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. UTF-8 mã hóa ABC thành ba byte 65, 66, 67. ReadByte đọc byte đầu tiên; ép char ở đây hợp lệ vì dữ liệu ASCII đơn byte. Position tăng từ 0 lên 1, Length vẫn là 3. using var gọi Dispose khi rời phạm vi.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "partial-read",
+          "title": "Stream giới hạn mỗi lần đọc và file bị giữ đuôi",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Text;\nstring folder=Path.Combine(Path.GetTempPath(),Guid.NewGuid().ToString(\"N\"));Directory.CreateDirectory(folder);\ntry\n{\n    byte[] bytes=Encoding.UTF8.GetBytes(\"Chào\");\n    using var input=new SmallReads(bytes);\n    using var output=new MemoryStream();\n    byte[] buffer=new byte[8];int n;\n    while((n=await input.ReadAsync(buffer))>0)await output.WriteAsync(buffer.AsMemory(0,n));\n    Console.WriteLine(Encoding.UTF8.GetString(output.ToArray()));\n    string file=Path.Combine(folder,\"demo.txt\");\n    await File.WriteAllTextAsync(file,\"ABCDE\",new UTF8Encoding(false));\n    using(var writer=File.OpenWrite(file))await writer.WriteAsync(Encoding.UTF8.GetBytes(\"X\"));\n    Console.WriteLine(await File.ReadAllTextAsync(file));\n    using(var writer=File.Create(file))await writer.WriteAsync(Encoding.UTF8.GetBytes(\"X\"));\n    Console.WriteLine(await File.ReadAllTextAsync(file));\n    using var pieces=new SmallReads(bytes);using var reader=new StreamReader(pieces,Encoding.UTF8);\n    Console.WriteLine(await reader.ReadToEndAsync());\n}\nfinally{Directory.Delete(folder,true);}\nclass SmallReads(byte[] bytes):MemoryStream(bytes)\n{\n public override int Read(byte[] b,int o,int c)=>base.Read(b,o,Math.Min(c,1));\n public override int Read(Span<byte> b)=>base.Read(b[..Math.Min(1,b.Length)]);\n public override ValueTask<int> ReadAsync(Memory<byte> b,CancellationToken t=default)=>base.ReadAsync(b[..Math.Min(1,b.Length)],t);\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Chào\nXBCDE\nX\nChào",
+          "explanation": "Một lần đọc chỉ một byte, decoder phải giữ trạng thái. Demo chỉ tạo/xóa thư mục GUID của nó trong temp, không chạm file người dùng.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -124,14 +169,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "ReadAsync trả 3 vào buffer dài 8 phải ghi mấy byte?",
+          "answer": "Chỉ 3 byte đầu.",
+          "explanation": "Phần còn lại không phải dữ liệu vừa đọc.",
+          "misconception": "Luôn ghi cả buffer cho đơn giản.",
+          "followUp": "ReadByte hết dữ liệu trả gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "OpenWrite ghi X lên ABCDE cho kết quả nào ở ví dụ?",
+          "answer": "XBCDE vì không tự truncate.",
+          "explanation": "File.Create chọn semantics thay toàn bộ nội dung.",
+          "misconception": "Mọi open ghi đều cắt file cũ.",
+          "followUp": "Append khác Create ở đâu?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Mỗi chunk UTF-8 có luôn giải mã độc lập được không?",
+          "answer": "Không, một scalar có thể bị chia giữa chunk.",
+          "explanation": "StreamReader/Decoder giữ trạng thái ghép byte.",
+          "misconception": "Một byte luôn là một ký tự.",
+          "followUp": "Chữ tiếng Việt và emoji cần phân biệt những đơn vị nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Path.Combine(root,userPath) có tự chống traversal không?",
+          "answer": "Không; cần kiểm tra đường dẫn chuẩn hóa và policy root, symlink/OS.",
+          "explanation": "Ghép cú pháp không xác minh quyền truy cập.",
+          "misconception": "Combine đủ làm file server an toàn.",
+          "followUp": "File riêng còn cần authorization nào?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "leaveOpen=true thay đổi trách nhiệm gì?",
+          "answer": "Dispose wrapper vẫn giữ stream nền mở, owner phải dọn nó.",
+          "explanation": "Ownership phải được quy định để tránh đóng sớm hoặc leak.",
+          "misconception": "StreamReader không bao giờ đóng stream nền.",
+          "followUp": "Cancellation khi copy cần truyền tới bước nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "io",
+          "title": "File and Stream I/O",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/io/"
         },
         {
-          "title": "how to read text from a file",
+          "title": "Read text from a file",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/io/how-to-read-text-from-a-file"
         }
       ],
@@ -140,5 +237,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A09",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Đọc đủ dữ liệu qua partial reads và giữ decoder đúng.",
+    "Chọn FileMode, ownership và streaming theo giới hạn bộ nhớ."
+  ],
+  "prerequisiteIds": [
+    "csharp-language",
+    "csharp-types"
+  ],
+  "relatedIds": []
 }

@@ -1,7 +1,7 @@
 {
   "id": "csharp-language",
   "title": "C# — ngôn ngữ và chương trình đầu tiên",
-  "description": "C# là ngôn ngữ lập trình kiểu tĩnh, đa mục đích, hỗ trợ hướng đối tượng, generic, pattern matching và async/await. C# diễn tả chương trình; compiler chuyển chương trình thành dạng thực thi trên nền tả…",
+  "description": "C# là ngôn ngữ lập trình kiểu tĩnh, đa mục đích, hỗ trợ hướng đối tượng, generic, pattern matching và async/await. C# diễn tả chương trình; compiler chuyển chương trình thành dạng thực thi trên nền tảng phù hợp, thường là .NET. Ngôn ngữ, runtime, framework web và IDE là bốn vai trò khác nhau.",
   "category": "foundation",
   "kind": "Ngôn ngữ lập trình",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "C# là ngôn ngữ lập trình kiểu tĩnh, đa mục đích, hỗ trợ hướng đối tượng, generic, pattern matching và async/await. C# diễn tả chương trình; compiler chuyển chương trình thành dạng thực thi trên nền tảng phù hợp, thường là .NET. Ngôn ngữ, runtime, framework web và IDE là bốn vai trò khác nhau."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Khái niệm và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -40,7 +40,7 @@
       "paragraphs": [
         "Không chọn C# chỉ vì muốn code chạy trực tiếp trong mọi trình duyệt như JavaScript; mô hình web client có yêu cầu riêng như WebAssembly. Với script ngắn xử lý dữ liệu trong hệ sinh thái đã dùng Python, chuyển ngôn ngữ có thể không mang lại lợi ích. Với hệ nhúng rất hạn chế tài nguyên, phải đánh giá toolchain/runtime."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -82,31 +82,96 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Top-level statements và Program.Main là hai cách viết điểm vào có ý nghĩa tương ứng, không hứa sinh IL giống hệt. Trong file dùng top-level, các câu lệnh phải đứng trước khai báo type. Local variable có scope theo khối; namespace tổ chức tên, using directive giúp viết tên ngắn và không cài package.",
+        "ImplicitUsings đưa một tập using phổ biến vào compilation theo SDK; tắt nó thì thêm using cần thiết. Access modifiers giới hạn truy cập type/member. ProjectReference nối mã của project khác trong solution/build graph; PackageReference nối gói NuGet có version. C# 14 là ngôn ngữ trong bối cảnh net10.0, không đồng nhất hai số version."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Compiler diagnostics chỉ ra sai cú pháp/kiểu; nullable diagnostics cảnh báo đường null; analyzer kiểm tra các quy tắc thêm. Chúng không chứng minh công thức nghiệp vụ đúng hoặc hạ tầng không lỗi. Lỗi compile-time cần sửa trước run; runtime và logic cần test hoặc debugger."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "string name = \"Khôi\";\nint lessons = 41;\nConsole.WriteLine($\"Xin chào {name}, có {lessons} phần kiến thức.\");",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Xin chào Khôi, có 41 phần kiến thức.",
-        "steps": [
-          "string khai báo chuỗi; int khai báo số nguyên. Kiểu của hai biến được kiểm tra khi build.",
-          "Dấu $ cho phép chèn biểu thức vào chuỗi; WriteLine ghi chuỗi ra console và xuống dòng."
-        ],
-        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "string name = \"Khôi\";\nint lessons = 41;\nConsole.WriteLine($\"Xin chào {name}, có {lessons} phần kiến thức.\");",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Xin chào Khôi, có 41 phần kiến thức.",
+          "explanation": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới. string khai báo chuỗi; int khai báo số nguyên. Kiểu của hai biến được kiểm tra khi build. Dấu $ cho phép chèn biểu thức vào chuỗi; WriteLine ghi chuỗi ra console và xuống dòng.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "entry-point",
+          "title": "Main tường minh, biến zero và lỗi logic",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System;\nclass Program\n{\n    static void Main()\n    {\n        int denominator = 0;\n        try { Console.WriteLine(10 / denominator); }\n        catch (DivideByZeroException) { Console.WriteLine(\"runtime: DivideByZeroException\"); }\n        int a = 2, b = 3;\n        Console.WriteLine($\"Sai: {a-b}; đúng: {a+b}\");\n    }\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "runtime: DivideByZeroException\nSai: -1; đúng: 5",
+          "explanation": "Phép chia dùng biến nên lỗi tại runtime; công thức trừ vẫn biên dịch nhưng sai hợp đồng cộng.",
+          "verification": "ran"
+        },
+        {
+          "id": "compile-member",
+          "title": "Member không tồn tại",
+          "kind": "compile-error",
+          "label": "Cố ý lỗi biên dịch",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "Console.NoSuchMethod();"
+          },
+          "expected": "CS0117",
+          "explanation": "Console không có member này; đổi thành WriteLine. Mẫu cố ý lỗi nằm trong project riêng.",
+          "verification": "expected-diagnostic",
+          "diagnostic": "CS0117"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -117,14 +182,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "using System có tải package không?",
+          "answer": "Không, nó giúp phân giải tên trong source.",
+          "explanation": "PackageReference mới khai báo dependency NuGet.",
+          "misconception": "using là lệnh tải thư viện mạng.",
+          "followUp": "ImplicitUsings thay đổi điều gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Top-level phải đặt ở đâu khi cùng file có class?",
+          "answer": "Trước các khai báo type trong file đó.",
+          "explanation": "Compiler cần xác định các câu lệnh thuộc điểm vào.",
+          "misconception": "Có thể đặt top-level tùy chỗ sau class.",
+          "followUp": "Chuyển sang Main tường minh thì tổ chức khác thế nào?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "10 / denominator với denominator=0 lỗi giai đoạn nào?",
+          "answer": "Khi chạy, ném DivideByZeroException cho số nguyên.",
+          "explanation": "Đây là biến, khác biểu thức hằng 1/0 bị compiler chẩn đoán.",
+          "misconception": "Type safety chặn mọi phép chia cho zero trước run.",
+          "followUp": "double chia zero có cùng hành vi không?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Build pass có chứng minh hàm cộng đúng?",
+          "answer": "Không, a-b vẫn là biểu thức int hợp lệ nhưng sai hợp đồng cộng.",
+          "explanation": "Cần test đầu vào và kết quả kỳ vọng theo nghiệp vụ.",
+          "misconception": "Không có warning nghĩa là không có bug.",
+          "followUp": "Test nào phát hiện lỗi đổi + thành -?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Đổi TargetFramework có đồng nghĩa mọi tính năng C# đều chạy?",
+          "answer": "Không; compiler, LangVersion và API/runtime cần tương thích.",
+          "explanation": "Một cú pháp mới và một API mới có yêu cầu khác nhau.",
+          "misconception": "C# và .NET có cùng số phiên bản.",
+          "followUp": "Khi CI khác SDK local cần xem file nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "learn.microsoft.com — tour of csharp",
+          "title": "C# documentation",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/"
         },
         {
-          "title": "learn.microsoft.com — top level statements",
+          "title": "Top-level statements - programs without Main methods",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/program-structure/top-level-statements"
         }
       ],
@@ -133,5 +250,25 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A02",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Chỉ ra điểm vào, scope và giai đoạn xảy ra lỗi.",
+    "Phân biệt version ngôn ngữ, target framework và hai loại reference."
+  ],
+  "prerequisiteIds": [],
+  "relatedIds": []
 }

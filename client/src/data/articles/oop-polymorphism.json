@@ -1,7 +1,7 @@
 {
   "id": "oop-polymorphism",
   "title": "Đa hình: override khác gì với new?",
-  "description": "Đa hình cho phép code gọi cùng một hợp đồng nhưng hành vi thực tế phụ thuộc đối tượng nhận lời gọi. Trong C#, virtual/override và interface dispatch là các cơ chế phổ biến. Overload chọn chữ ký phù hợ…",
+  "description": "Đa hình cho phép code gọi cùng một hợp đồng nhưng hành vi thực tế phụ thuộc đối tượng nhận lời gọi. Trong C#, virtual/override và interface dispatch là các cơ chế phổ biến. Overload chọn chữ ký phù hợp là chuyện khác với override chọn triển khai lúc chạy.",
   "category": "architecture",
   "kind": "Cơ chế của OOP",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Đa hình cho phép code gọi cùng một hợp đồng nhưng hành vi thực tế phụ thuộc đối tượng nhận lời gọi. Trong C#, virtual/override và interface dispatch là các cơ chế phổ biến. Overload chọn chữ ký phù hợp là chuyện khác với override chọn triển khai lúc chạy."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "new trong khai báo thành viên là che giấu; new Dog() là tạo đối tượng. Bỏ từ khóa new khi che một thành viên phù hợp thường tạo cảnh báo biên dịch, không tự biến thành override. Overload là nhiều chữ ký khác nhau; override là chuyên biệt hóa cùng giao ước virtual.",
         "Đa hình giúp mở rộng nhưng khiến hành vi phụ thuộc runtime, cần đọc cả giao ước và bản ghi đè. Interface cũng hỗ trợ đa hình nhưng cách triển khai interface không nên suy diễn chỉ từ ví dụ member hiding này. Ép kiểu downcast có thể thất bại nếu đối tượng thực tế không thuộc kiểu con."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -90,33 +90,101 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Kiểu tĩnh của biểu thức dùng chọn member/overload trong lời gọi tĩnh thông thường; virtual dispatch dùng kiểu runtime để chọn override. new chỉ khai báo che member; bỏ new không tự tạo override mà thường có warning hiding. dynamic có binding runtime riêng nên không áp dụng máy móc kết luận compile-time.",
+        "abstract member bắt lớp cụ thể cung cấp hành vi; virtual có triển khai mặc định; sealed override chặn ghi đè thêm. base.Method gọi triển khai lớp cơ sở theo ngữ cảnh. Interface dispatch cũng chọn implementation theo object; cast không thay nhu cầu thiết kế contract đúng."
+      ],
+      "tables": [
+        {
+          "caption": "Dispatch",
+          "headers": [
+            "Biến",
+            "virtual/override",
+            "new/hiding"
+          ],
+          "rows": [
+            [
+              "Base a = new Derived()",
+              "Derived.Virtual",
+              "Base.Hidden"
+            ],
+            [
+              "Derived b = new()",
+              "Derived.Virtual",
+              "Derived.Hidden"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Không gọi virtual từ constructor nếu hành vi derived cần state chưa khởi tạo xong. LSP giữ precondition/postcondition và invariant mà caller hợp lệ dựa vào; override biên dịch được vẫn có thể phá hợp đồng như subclass từ chối đầu vào mà base cho phép. Dùng is pattern khi thực sự cần kiểm tra loại, không dùng nhiều downcast để thay thế polymorphism đã có contract đủ."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "Animal pet = new Dog();\npet.Speak();\n\nclass Animal\n{\n    public virtual void Speak() => Console.WriteLine(\"Animal\");\n}\nclass Dog : Animal\n{\n    public override void Speak() => Console.WriteLine(\"Dog\");\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "Dog",
-        "steps": [
-          "Kiểu tĩnh Animal cho phép truy cập Speak.",
-          "Animal.Speak là virtual.",
-          "Đối tượng runtime là Dog; Dog override cùng thành viên nên in Dog."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "Animal pet = new Dog();\npet.Speak();\n\nclass Animal\n{\n    public virtual void Speak() => Console.WriteLine(\"Animal\");\n}\nclass Dog : Animal\n{\n    public override void Speak() => Console.WriteLine(\"Dog\");\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "Dog",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. Kiểu tĩnh Animal cho phép truy cập Speak. Animal.Speak là virtual. Đối tượng runtime là Dog; Dog override cùng thành viên nên in Dog.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "dispatch-matrix",
+          "title": "Bốn lời gọi qua base/derived và overload",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "Base a=new Derived();Derived b=new();\nConsole.WriteLine(a.Virtual());Console.WriteLine(b.Virtual());\nConsole.WriteLine(a.Hidden());Console.WriteLine(b.Hidden());\nMethods.Print(a);Methods.Print(b);\nstatic class Methods {public static void Print(Base x)=>Console.WriteLine(\"overload Base\");public static void Print(Derived x)=>Console.WriteLine(\"overload Derived\");}\nclass Base {public virtual string Virtual()=>\"base virtual\";public string Hidden()=>\"base hidden\";}\nclass Derived:Base {public override string Virtual()=>\"derived virtual\";public new string Hidden()=>\"derived hidden\";}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "derived virtual\nderived virtual\nbase hidden\nderived hidden\noverload Base\noverload Derived",
+          "explanation": "Kiểu tĩnh chọn overload trong Methods; virtual chọn override của object thực. Hiding chọn theo kiểu của biểu thức tại call site.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -127,14 +195,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Base a=new Derived(); a.Virtual() gọi gì?",
+          "answer": "Override của Derived.",
+          "explanation": "Virtual dispatch nhìn object runtime sau bước chọn member.",
+          "misconception": "Kiểu biến Base ép chạy mọi code Base.",
+          "followUp": "Nếu member chỉ new thì khác gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Derived dùng new có phải override không?",
+          "answer": "Không, nó che member theo kiểu biểu thức tại call site.",
+          "explanation": "Thiếu từ khóa new có thể cảnh báo, không tự đổi semantics thành override.",
+          "misconception": "new và override chỉ khác cách viết.",
+          "followUp": "Bốn lời gọi trong bảng khác nhau ở đâu?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Overload chỉ nhìn runtime type của argument phải không?",
+          "answer": "Không với lời gọi tĩnh thông thường, overload được chọn lúc compile.",
+          "explanation": "dynamic có cơ chế binding riêng cần nêu tách biệt.",
+          "misconception": "Overload và override cùng một cơ chế.",
+          "followUp": "Ép argument về Base thay đổi overload nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Gọi virtual trong constructor có nguy cơ gì?",
+          "answer": "Derived override có thể chạy trước khi state derived sẵn sàng.",
+          "explanation": "Caller đang ở giai đoạn khởi tạo chưa hoàn chỉnh.",
+          "misconception": "Constructor luôn chạy xong mọi lớp rồi mới virtual.",
+          "followUp": "Thiết kế nào tránh công việc phụ thuộc override tại lúc tạo?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Override biên dịch được có đủ giữ LSP không?",
+          "answer": "Không, nó vẫn có thể siết precondition hoặc phá postcondition.",
+          "explanation": "LSP xét hành vi caller dựa vào, không chỉ chữ ký.",
+          "misconception": "Compiler chứng minh toàn bộ hợp đồng nghiệp vụ.",
+          "followUp": "Ví dụ lớp con từ chối thao tác base cho phép gây hỏng caller ra sao?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "polymorphism",
+          "title": "Polymorphism",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/polymorphism"
         },
         {
-          "title": "new modifier",
+          "title": "new modifier (C# Reference)",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier"
         }
       ],
@@ -143,5 +263,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A14",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Dự đoán khác biệt override, hiding và overload.",
+    "Đánh giá hợp đồng LSP và rủi ro virtual trong constructor."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": []
 }

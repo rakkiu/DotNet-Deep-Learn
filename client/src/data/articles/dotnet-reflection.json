@@ -1,7 +1,7 @@
 {
   "id": "dotnet-reflection",
   "title": "Reflection và metadata: tra cứu một property",
-  "description": "Reflection cho phép chương trình khám phá thông tin kiểu/member/attribute lúc chạy và thực hiện một số thao tác động. Metadata mô tả type nằm trong assembly; attribute là dữ liệu khai báo gắn lên thàn…",
+  "description": "Reflection cho phép chương trình khám phá thông tin kiểu/member/attribute lúc chạy và thực hiện một số thao tác động. Metadata mô tả type nằm trong assembly; attribute là dữ liệu khai báo gắn lên thành phần code. Reflection là cơ chế của .NET, không phải công cụ đọc lại nguyên văn source code.",
   "category": "architecture",
   "kind": "API metadata và thực thi động",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Reflection cho phép chương trình khám phá thông tin kiểu/member/attribute lúc chạy và thực hiện một số thao tác động. Metadata mô tả type nằm trong assembly; attribute là dữ liệu khai báo gắn lên thành phần code. Reflection là cơ chế của .NET, không phải công cụ đọc lại nguyên văn source code."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Reflection có chi phí, có thể lỗi tên/kiểu lúc runtime và bị ảnh hưởng bởi trimming/Native AOT. Attribute chỉ là metadata, không tự thực thi hành vi; framework phải đọc và diễn giải nó.",
         "Dùng interface/generic khi kiểu đã biết lúc compile-time thường dễ kiểm tra hơn. Reflection phù hợp framework/plugin/inspection; không load assembly hoặc Invoke mã tùy ý từ nguồn không tin cậy."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,33 +86,79 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "typeof(T) dùng tên kiểu đã biết trong source; obj.GetType lấy kiểu runtime của object không null; Type.GetType dùng tên cần phân giải, có thể cần tên assembly. Namespace không phải assembly/type identity. GetProperty có thể null khi tên/flags không khớp.",
+        "GetMethod theo tên đơn có thể mơ hồ nếu overload; cung cấp parameter types và BindingFlags phù hợp. Custom attribute chỉ lưu metadata; code phải đọc và quyết định hành vi. Method đích ném lỗi qua Invoke thường được bọc trong TargetInvocationException với InnerException."
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Cache metadata hoặc tạo delegate mạnh kiểu nếu lookup lặp có chi phí đáng kể; không đưa hệ số chậm cố định không đo. Direct call/interface/generic ưu tiên khi type đã biết; source generator đẩy việc khám phá về build khi phù hợp. Trimming có thể bỏ member code động cần, phải đọc warning và annotation theo API; AOT không cấm mọi reflection. DLL/plugin load trong process không phải sandbox an toàn cho mã lạ."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "var student = new Student();\nstring propertyName = \"Name\";\nvar property = typeof(Student).GetProperty(propertyName);\nConsole.WriteLine(property?.GetValue(student) ?? \"(không có)\");\nclass Student\n{\n    public string Name { get; set; } = \"An\";\n    public string Group { get; set; } = \"C#\";\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "An",
-        "steps": [
-          "typeof chọn type Student.",
-          "GetProperty tìm Name public, trả thông tin property.",
-          "GetValue(student) đọc chuỗi An từ instance đó."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var student = new Student();\nstring propertyName = \"Name\";\nvar property = typeof(Student).GetProperty(propertyName);\nConsole.WriteLine(property?.GetValue(student) ?? \"(không có)\");\nclass Student\n{\n    public string Name { get; set; } = \"An\";\n    public string Group { get; set; } = \"C#\";\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "An",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. typeof chọn type Student. GetProperty tìm Name public, trả thông tin property. GetValue(student) đọc chuỗi An từ instance đó.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "reflection-attribute",
+          "title": "Overload, attribute và InnerException",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "using System.Reflection;\nvar type=typeof(Example);Console.WriteLine(new Example().GetType()==type);Console.WriteLine(type.GetProperty(\"Missing\") is null);\nvar method=type.GetMethod(\"Say\",new[]{typeof(string)})!;Console.WriteLine(method.Invoke(new Example(),new object[]{\"An\"}));\nvar mark=type.GetCustomAttribute<LabelAttribute>();Console.WriteLine(mark?.Text);\ntry{type.GetMethod(\"Fail\")!.Invoke(new Example(),null);}\ncatch(TargetInvocationException ex){Console.WriteLine(ex.InnerException?.GetType().Name);}\n[AttributeUsage(AttributeTargets.Class)]class LabelAttribute(string text):Attribute{public string Text=>text;}\n[Label(\"đọc metadata\")]class Example{public string Say(string s)=>s;public string Say(int n)=>n.ToString();public void Fail()=>throw new InvalidOperationException(\"demo\");}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "True\nTrue\nAn\nđọc metadata\nInvalidOperationException",
+          "explanation": "Attribute không tự in gì; chính GetCustomAttribute và Console.WriteLine tạo output. Parameter types chọn overload string.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -123,14 +169,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "typeof(Student) khác student.GetType ở đâu?",
+          "answer": "typeof dùng kiểu nêu trong source; GetType lấy kiểu runtime của object.",
+          "explanation": "Một biến base có thể giữ object derived.",
+          "misconception": "Cả hai luôn trả kiểu khai báo biến.",
+          "followUp": "Nếu student null thì GetType ra sao?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "GetProperty tên vắng trả gì?",
+          "answer": "Thường null theo API lookup.",
+          "explanation": "Cần kiểm tra trước GetValue.",
+          "misconception": "Nó tự tạo property mặc định.",
+          "followUp": "BindingFlags sai có thể làm lookup không thấy gì không?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Attribute tự thực thi hành vi được không?",
+          "answer": "Không, consumer phải đọc metadata và xử lý.",
+          "explanation": "Gắn nhãn không đồng nghĩa có code chạy khi tạo instance.",
+          "misconception": "Attribute là callback tự động mọi framework.",
+          "followUp": "Ví dụ nào trong bài thực sự đọc attribute?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Invoke ném TargetInvocationException cần xem đâu?",
+          "answer": "InnerException để biết lỗi method đích.",
+          "explanation": "Wrapper mô tả cách gọi động, không thay nguyên nhân bên trong.",
+          "misconception": "Chỉ log message wrapper là đủ.",
+          "followUp": "Khi nào nên dùng direct call để bắt lỗi sớm hơn?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "AOT có nghĩa không thể dùng reflection nào?",
+          "answer": "Không, khả năng phụ thuộc metadata và API/cấu hình publish.",
+          "explanation": "Cần phân tích trimming warning và dependency thật.",
+          "misconception": "Bật AOT cấm tuyệt đối mọi GetType.",
+          "followUp": "Source generator đổi thời điểm kiểm tra những gì?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "reflection and attributes",
+          "title": "Microsoft Learn · Attributes",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/"
         },
         {
-          "title": "trim warnings",
+          "title": "Fixing trim warnings",
           "url": "https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings"
         }
       ],
@@ -139,5 +237,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A35",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Khám phá member/attribute, xử lý vắng member và lỗi Invoke.",
+    "Chọn reflection hoặc API mạnh kiểu theo tính động và publish mode."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "oop-classes"
+  ],
+  "relatedIds": []
 }

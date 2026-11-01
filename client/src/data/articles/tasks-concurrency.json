@@ -1,7 +1,7 @@
 {
   "id": "tasks-concurrency",
   "title": "Thread, Task, concurrency và await",
-  "description": "Concurrency là tổ chức nhiều công việc cùng có tiến triển; parallelism là thực thi thực sự cùng lúc. Thread là luồng thực thi của hệ điều hành; Task mô tả công việc/kết quả theo abstraction cao hơn. A…",
+  "description": "Concurrency là tổ chức nhiều công việc cùng có tiến triển; parallelism là thực thi thực sự cùng lúc. Thread là luồng thực thi của hệ điều hành; Task mô tả công việc/kết quả theo abstraction cao hơn. Async là cách không giữ thread chỉ để chờ I/O khi API hỗ trợ.",
   "category": "concurrency",
   "kind": "Mô hình thực thi đồng thời",
   "sourceParts": [
@@ -16,7 +16,7 @@
       "paragraphs": [
         "Concurrency là tổ chức nhiều công việc cùng có tiến triển; parallelism là thực thi thực sự cùng lúc. Thread là luồng thực thi của hệ điều hành; Task mô tả công việc/kết quả theo abstraction cao hơn. Async là cách không giữ thread chỉ để chờ I/O khi API hỗ trợ."
       ],
-      "title": "Đây là công nghệ gì?",
+      "title": "Bản chất và vai trò",
       "group": "Nền tảng"
     },
     {
@@ -42,7 +42,7 @@
         "Không nói mọi await đều giải phóng thread ngay hoặc luôn trở lại một thread khác. Đừng dùng Task.Run để bọc mọi API I/O đã async. Chặn .Result/.Wait có thể gây deadlock ở ngữ cảnh UI và làm giảm khả năng phục vụ trong server.",
         "CPU-bound có thể dùng Task.Run để giữ UI phản hồi hoặc parallelism có giới hạn; I/O-bound ưu tiên API async tự nhiên. Tạo quá nhiều Task/Thread không tự tăng throughput; vẫn cần cancellation, giới hạn concurrency và quan sát lỗi."
       ],
-      "title": "Khi nào không nên dùng?",
+      "title": "Giới hạn và điều kiện áp dụng",
       "group": "Nền tảng"
     },
     {
@@ -86,34 +86,127 @@
       "group": "Bản chất & kiến trúc"
     },
     {
+      "id": "junior",
+      "title": "Nền tảng junior cần giải thích được",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Process có không gian tài nguyên của chương trình; thread là đường thực thi, ThreadPool tái dùng worker; Task đại diện hoàn tất/kết quả, không đồng nghĩa một thread ngủ. Async method có thể chạy đồng bộ trước điểm await chưa hoàn thành; WhenAll nhận các task, không tự start mọi tác vụ chưa được khởi chạy.",
+        "Chờ tuần tự: bắt đầu A, chờ A, bắt đầu B. Chờ chồng lấp: khởi tạo A/B độc lập rồi await tổng hợp. CPU parallel dùng nhiều core khi có tài nguyên. Timeline chỉ thể hiện quan hệ, không hứa tăng tốc vì scheduling, I/O và overhead khác nhau."
+      ],
+      "tables": [
+        {
+          "caption": "Chọn theo nút thắt",
+          "headers": [
+            "Nhu cầu",
+            "Công cụ cân nhắc",
+            "Giới hạn"
+          ],
+          "rows": [
+            [
+              "Chờ network/file",
+              "API async + await",
+              "Không tự làm thiết bị nhanh hơn"
+            ],
+            [
+              "CPU trên desktop",
+              "Task.Run/parallel có giới hạn",
+              "Đo overhead, giữ UI responsive"
+            ],
+            [
+              "Shared state",
+              "lock/Interlocked/concurrent API",
+              "Không bảo vệ process khác"
+            ],
+            [
+              "Giới hạn đang chạy",
+              "SemaphoreSlim",
+              "Không tự giới hạn backlog"
+            ],
+            [
+              "Producer/consumer",
+              "Bounded Channel",
+              "Không bền vững sau crash"
+            ]
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "caption": "I/O chồng lấp minh họa",
+          "steps": [
+            "Bắt đầu A và B, mỗi API trả Task",
+            "Caller await WhenAll, không giữ worker chỉ để chờ I/O tự nhiên",
+            "B hoàn tất trước A vẫn là kết quả theo thứ tự input",
+            "Lỗi/hủy cần được quan sát; không suy thread ID"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Đào sâu middle và các đánh đổi",
+      "group": "Đọc theo chiều sâu",
+      "paragraphs": [
+        "Race là phụ thuộc truy cập không đồng bộ; deadlock là vòng chờ; starvation là công việc không có đủ cơ hội/tài nguyên tiến triển. Quá nhiều task/threads tạo oversubscription và backlog. Với ASP.NET Core không dùng Task.Run mặc định cho I/O async, cũng không dùng .Result để giả đồng bộ. Bounded queue giới hạn cả backlog tốt hơn tạo một triệu task chỉ chờ gate."
+      ]
+    },
+    {
       "id": "hello",
-      "hello": {
-        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
-        "code": "var ready = new TaskCompletionSource<int>();\nTask<int> operation = ReadAsync(ready.Task);\nConsole.WriteLine(operation.IsCompleted);\nready.SetResult(7);\nConsole.WriteLine(await operation);\n\nstatic async Task<int> ReadAsync(Task<int> input)\n{\n    int value = await input;\n    return value + 1;\n}",
-        "file": "Program.cs",
-        "language": "csharp",
-        "files": {},
-        "output": "False\n8",
-        "steps": [
-          "ready.Task chưa hoàn thành, ReadAsync gặp await input rồi tạm dừng.",
-          "operation.IsCompleted là False tại điểm được in.",
-          "SetResult cung cấp 7; ReadAsync lấy 7 và cộng 1.",
-          "await operation thu được 8, không cần dự đoán thread ID."
-        ],
-        "request": null,
-        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
-      },
-      "title": "Hello World & khởi tạo",
-      "group": "Bắt đầu sử dụng"
+      "title": "Ví dụ mở đầu và cách chạy",
+      "group": "Bắt đầu sử dụng",
+      "examples": [
+        {
+          "id": "first",
+          "title": "Cơ chế tối thiểu",
+          "kind": "console",
+          "label": "Console local",
+          "input": "Dữ liệu được khai báo trong các file mẫu.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var ready = new TaskCompletionSource<int>();\nTask<int> operation = ReadAsync(ready.Task);\nConsole.WriteLine(operation.IsCompleted);\nready.SetResult(7);\nConsole.WriteLine(await operation);\n\nstatic async Task<int> ReadAsync(Task<int> input)\n{\n    int value = await input;\n    return value + 1;\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "False\n8",
+          "explanation": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Ứng dụng đọc không thực thi đoạn C# trong trình duyệt. ready.Task chưa hoàn thành, ReadAsync gặp await input rồi tạm dừng. operation.IsCompleted là False tại điểm được in. SetResult cung cấp 7; ReadAsync lấy 7 và cộng 1. await operation thu được 8, không cần dự đoán thread ID.",
+          "requests": [],
+          "verification": "ran"
+        }
+      ]
+    },
+    {
+      "id": "variations",
+      "title": "Biến thể, lỗi và tình huống thực tế",
+      "group": "Ví dụ có giải thích",
+      "examples": [
+        {
+          "id": "controlled-io",
+          "title": "Hai nguồn hoàn tất ngược thứ tự",
+          "kind": "console",
+          "label": "Mẫu có thể chạy",
+          "input": "Dữ liệu được khai báo trong mã; không gọi dịch vụ Internet.",
+          "shell": "PowerShell 7 hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <OutputType>Exe</OutputType>\n  </PropertyGroup>\n</Project>",
+            "Program.cs": "var first=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);var second=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);\nTask<string> a=Read(\"A\",first.Task);Task<string> b=Read(\"B\",second.Task);\nsecond.SetResult(\"B-result\");Console.WriteLine(a.IsCompleted);first.SetResult(\"A-result\");\nConsole.WriteLine(string.Join(\",\",await Task.WhenAll(a,b)));\nstatic async Task<string> Read(string name,Task<string> source){Console.WriteLine(\"start:\"+name);return await source;}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n [ModuleInitializer] internal static void Initialize()\n { Console.OutputEncoding = new System.Text.UTF8Encoding(false); System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture; }\n}\n"
+          },
+          "expected": "start:A\nstart:B\nFalse\nA-result,B-result",
+          "explanation": "Thứ tự start được cố định bởi lời gọi đồng bộ; không assert thứ tự continuation do scheduler. Hai nguồn là I/O giả điều khiển được, không đo benchmark.",
+          "verification": "ran"
+        }
+      ]
     },
     {
       "id": "structure",
-      "structure": {
-        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
-        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
-      },
       "title": "Cấu trúc thư mục & cấu hình",
-      "group": "Bắt đầu sử dụng"
+      "group": "Bắt đầu sử dụng",
+      "paragraphs": [
+        "Bố cục chính xác của từng ví dụ được liệt kê trong khối file của ví dụ đó. Đặt mỗi mẫu trong thư mục trống riêng; xem Hướng dẫn chạy chung để tạo Console, hiểu bin/obj và debug. Project nhiều file hoặc lab có nút tải đầy đủ và lệnh chạy riêng."
+      ],
+      "relatedGuide": true
     },
     {
       "id": "debug",
@@ -124,14 +217,66 @@
       "group": "Bắt đầu sử dụng"
     },
     {
+      "id": "questions",
+      "title": "Tự kiểm tra junior và middle",
+      "group": "Giải thích trước khi xem đáp án",
+      "questions": [
+        {
+          "id": "q1",
+          "level": "junior",
+          "prompt": "Task có phải luôn là thread riêng?",
+          "answer": "Không, nó biểu diễn hoàn tất/kết quả và có thể đại diện I/O.",
+          "explanation": "Task.FromResult không cần tạo một thread.",
+          "misconception": "Mỗi Task tương ứng một worker ngủ.",
+          "followUp": "ThreadPool có vai trò gì?"
+        },
+        {
+          "id": "q2",
+          "level": "junior",
+          "prompt": "Khởi tạo A/B rồi WhenAll khác await từng cái thế nào?",
+          "answer": "Có thể cho hai thao tác độc lập chồng thời gian chờ.",
+          "explanation": "Phải khởi tạo công việc trước, WhenAll chỉ tổ hợp các task.",
+          "misconception": "WhenAll tự khởi chạy mọi lambda.",
+          "followUp": "Khi hai việc phụ thuộc dữ liệu nhau thì sao?"
+        },
+        {
+          "id": "q3",
+          "level": "junior",
+          "prompt": "Shared counter cần xem điều gì?",
+          "answer": "Tính nguyên tử và mọi đường truy cập chung.",
+          "explanation": "Chạy đúng một lần không chứng minh không race.",
+          "misconception": "Thêm async tự sửa shared state.",
+          "followUp": "Interlocked phù hợp thao tác nào?"
+        },
+        {
+          "id": "q4",
+          "level": "middle",
+          "prompt": "Nhiều request block .Result có thể gây gì trên server?",
+          "answer": "Giữ worker không cần thiết và có thể dẫn tới ThreadPool starvation.",
+          "explanation": "ASP.NET Core mặc định không có UI context nhưng blocking vẫn có hại.",
+          "misconception": "Không UI context tức blocking miễn phí.",
+          "followUp": "Task.Run bọc I/O có giải quyết tải gốc không?"
+        },
+        {
+          "id": "q5",
+          "level": "middle",
+          "prompt": "Semaphore có giới hạn một triệu task đang chờ không?",
+          "answer": "Không, nó giới hạn số bên vào vùng nhưng backlog vẫn có thể lớn.",
+          "explanation": "Cần bounded producer/consumer để kiểm soát cả lượng chờ.",
+          "misconception": "Chỉ cần gate=4 là bộ nhớ luôn nhỏ.",
+          "followUp": "Channel bounded áp backpressure ở điểm nào?"
+        }
+      ]
+    },
+    {
       "id": "resources",
       "links": [
         {
-          "title": "async scenarios",
+          "title": "Asynchronous programming scenarios",
           "url": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-scenarios"
         },
         {
-          "title": "task parallel library tpl",
+          "title": "Task Parallel Library (TPL)",
           "url": "https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-parallel-library-tpl"
         }
       ],
@@ -140,5 +285,28 @@
       "group": "Bắt đầu sử dụng"
     }
   ],
-  "minutes": 6
+  "minutes": 6,
+  "auditCode": "A23",
+  "origin": "lecture",
+  "reviewedAt": "2026-11-01",
+  "version": {
+    "reviewedAt": "2026-11-01",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "goals": [
+    "Chọn công cụ theo I/O, CPU, state và mức đồng thời.",
+    "Phân biệt deadlock, starvation, race và oversubscription."
+  ],
+  "prerequisiteIds": [
+    "csharp-methods",
+    "csharp-exceptions"
+  ],
+  "relatedIds": []
 }

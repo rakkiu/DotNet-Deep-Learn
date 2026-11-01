@@ -1,0 +1,785 @@
+{
+  "checkedAt": "2026-11-01T10:00:14.935Z",
+  "results": [
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/?view=aspnetcore-10.0",
+      "title": "ASP.NET Core fundamentals overview"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-10.0",
+      "title": "Configuration in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments?view=aspnetcore-10.0",
+      "title": "ASP.NET Core runtime environments"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling-api?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling-api?view=aspnetcore-10.0",
+      "title": "Handle errors in ASP.NET Core APIs"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-10.0",
+      "title": "Handle errors in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-10.0",
+      "title": "ASP.NET Core middleware"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/static-files?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/static-files?view=aspnetcore-10.0",
+      "title": "Serve static files in ASP.NET Core apps"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/routing?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/routing?view=aspnetcore-10.0",
+      "title": "Routing to controller actions in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/model-binding?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/model-binding?view=aspnetcore-10.0",
+      "title": "Model Binding in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation?view=aspnetcore-10.0",
+      "title": "Model validation in ASP.NET Core MVC and Razor Pages"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/overview?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/mvc/overview?view=aspnetcore-10.0",
+      "title": "Overview of ASP.NET Core MVC"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0",
+      "title": "Views in ASP.NET Core MVC"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/views/razor?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/mvc/views/razor?view=aspnetcore-10.0",
+      "title": "Razor syntax reference for ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/distributed?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/distributed?view=aspnetcore-10.0",
+      "title": "Distributed caching in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/hybrid?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/hybrid?view=aspnetcore-10.0",
+      "title": "HybridCache library in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-10.0",
+      "title": "Cache in-memory in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0",
+      "title": "Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-10.0",
+      "title": "Configure JWT bearer authentication in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0",
+      "title": "Use cookie authentication without ASP.NET Core Identity"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-10.0",
+      "title": "How to use Identity to secure a Web API backend for SPAs"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0",
+      "title": "Introduction to Identity on ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authorization/resourcebased?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/security/authorization/resource-based?view=aspnetcore-10.0",
+      "title": "Resource-based authorization in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-10.0",
+      "title": "Enable Cross-Origin Requests (CORS) in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0",
+      "title": "Integration tests in ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/web-api/?view=aspnetcore-10.0",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/aspnet/core/web-api/?view=aspnetcore-10.0",
+      "title": "Create web APIs with ASP.NET Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.autoresetevent",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.autoresetevent?view=net-10.0",
+      "title": "AutoResetEvent Class"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.manualresetevent",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.manualresetevent?view=net-10.0",
+      "title": "ManualResetEvent Class"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.semaphoreslim.waitasync",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.semaphoreslim.waitasync?view=net-10.0",
+      "title": "SemaphoreSlim.WaitAsync Method"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenall",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenall?view=net-10.0",
+      "title": "Task.WhenAll Method"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenany",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenany?view=net-10.0",
+      "title": "Task.WhenAny Method"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles",
+      "title": "Architectural principles"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/compatibility/extensions/10.0/backgroundservice-executeasync-task",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/compatibility/extensions/10.0/backgroundservice-executeasync-task",
+      "title": "BackgroundService runs all of ExecuteAsync as a Task"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/deploying/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/deploying/",
+      "title": ".NET application publishing overview"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings",
+      "title": "Fixing trim warnings"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/channels",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/extensions/channels",
+      "title": "System.Threading.Channels library"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines",
+      "title": "Dependency injection guidelines"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview",
+      "title": ".NET dependency injection"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/httpclient-factory",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/extensions/httpclient-factory",
+      "title": "IHttpClientFactory with .NET"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/logging",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/extensions/logging/overview",
+      "title": "Logging in C# and .NET"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/options",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/extensions/options",
+      "title": "Options pattern in .NET"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/workers",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/extensions/workers",
+      "title": "Worker services in .NET"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/introduction",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/introduction",
+      "title": "Introduction to .NET"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/releases-and-support",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/releases-and-support",
+      "title": "Releases and support for .NET"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices",
+      "title": "Unit testing best practices for .NET"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/tools/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/tools/",
+      "title": ".NET CLI overview"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-publish",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-publish",
+      "title": "dotnet publish"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/",
+      "title": "Expression Trees"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/",
+      "title": "Attributes"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/",
+      "title": "Asynchronous programming with async and await"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-scenarios",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-scenarios",
+      "title": "Asynchronous programming scenarios"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/delegates-overview",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/delegates-overview",
+      "title": "Introduction to delegates and events in C#"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/exceptions/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/exceptions/",
+      "title": "Exceptions and Exception Handling"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/",
+      "title": "Overview of object oriented techniques in C#"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/polymorphism",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/polymorphism",
+      "title": "Polymorphism"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/program-structure/top-level-statements",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/program-structure/top-level-statements",
+      "title": "Top-level statements - programs without Main methods"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/",
+      "title": "The C# type system"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/classes",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/classes",
+      "title": "C# classes"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics",
+      "title": "Generic types and methods"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces",
+      "title": "Interfaces - define behavior for multiple types"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/records",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/records",
+      "title": "C# record types"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/",
+      "title": "C# language reference"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/arrays",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/arrays",
+      "title": "Arrays"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier",
+      "title": "new modifier (C# Reference)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/static",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/static",
+      "title": "static (C# Reference)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions",
+      "title": "Lambda expressions and anonymous functions"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/iteration-statements",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/iteration-statements",
+      "title": "Iteration statements - for, foreach, do, and while"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock",
+      "title": "The lock statement - ensure exclusive access to a shared resource"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements",
+      "title": "Selection statements - if, if-else, and switch"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/linq/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/linq/",
+      "title": "Language Integrated Query (LINQ)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/methods",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/methods",
+      "title": "Methods in C#"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/null-safety/nullable-reference-types",
+      "title": "Nullable reference types"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods",
+      "title": "Extension members (C# Programming Guide)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/events/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/events/",
+      "title": "Events (C# Programming Guide)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/constraints-on-type-parameters",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/constraints-on-type-parameters",
+      "title": "Constraints on type parameters (C# Programming Guide)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/equality-comparisons",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/expressions/equality",
+      "title": "C# Equality comparisons"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/",
+      "title": "C# documentation"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines",
+      "title": "Guidelines for using HttpClient"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/sockets/socket-services",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/sockets/socket-services",
+      "title": "Use Sockets to send and receive data over TCP"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/sockets/tcp-classes",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/sockets/tcp-classes",
+      "title": "TCP overview"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/base-types/best-practices-strings",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/base-types/best-practices-strings",
+      "title": "Best practices for comparing strings in .NET"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-encoding-introduction",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-encoding-introduction",
+      "title": "Character encoding in .NET"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/collections/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/collections/",
+      "title": "Collections and Data Structures"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/",
+      "title": "Thread-safe collections"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/datetime/choosing-between-datetime",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/datetime/choosing-between-datetime",
+      "title": "Choose between DateTime, DateOnly, DateTimeOffset, TimeSpan, TimeOnly, and TimeZoneInfo"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/datetime/system-text-json-support",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/datetime/system-text-json-support",
+      "title": "DateTime and DateTimeOffset support in System.Text.Json"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/datetime/timeprovider-overview",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/datetime/timeprovider-overview",
+      "title": "What is TimeProvider?"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/choosing-between-class-and-struct",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/choosing-between-class-and-struct",
+      "title": "Choosing Between Class and Struct"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals",
+      "title": "Fundamentals of garbage collection"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/unmanaged",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/unmanaged",
+      "title": "Cleaning up unmanaged resources"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/io/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/io/",
+      "title": "File and Stream I/O"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/io/how-to-read-text-from-a-file",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/io/how-to-read-text-from-a-file",
+      "title": "Read text from a file"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/linq/deferred-execution-lazy-evaluation",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/linq/deferred-execution-lazy-evaluation",
+      "title": "Deferred execution and lazy evaluation (LINQ to XML)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/memory-t-usage-guidelines",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/memory-t-usage-guidelines",
+      "title": "Memory&lt;T&gt; and Span&lt;T&gt; usage guidelines"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-based-asynchronous-programming",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-based-asynchronous-programming",
+      "title": "Task-based asynchronous programming"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-parallel-library-tpl",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-parallel-library-tpl",
+      "title": "Task Parallel Library (TPL)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview",
+      "title": "JSON serialization and deserialization in .NET - overview"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/cancellation-in-managed-threads",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/threading/cancellation-in-managed-threads",
+      "title": "Cancellation in Managed Threads"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/foreground-and-background-threads",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/threading/foreground-and-background-threads",
+      "title": "Foreground and background threads"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/overview-of-synchronization-primitives",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/threading/overview-of-synchronization-primitives",
+      "title": "Overview of synchronization primitives"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/semaphore-and-semaphoreslim",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/threading/semaphore-and-semaphoreslim",
+      "title": "Semaphore and SemaphoreSlim"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/using-threads-and-threading",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/threading/using-threads-and-threading",
+      "title": "Using threads and threading"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/",
+      "title": "Entity Framework Core"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/cli/dbcontext-creation",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/cli/dbcontext-creation",
+      "title": "Design-time DbContext Creation"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/",
+      "title": "DbContext Lifetime, Configuration, and Initialization"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/",
+      "title": "Migrations Overview"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying",
+      "title": "Applying Migrations"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/modeling/relationships",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/modeling/relationships",
+      "title": "Introduction to relationships"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/performance/efficient-querying",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/performance/efficient-querying",
+      "title": "Efficient Querying"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/querying/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/querying/",
+      "title": "Querying Data"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/querying/related-data/",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/querying/related-data/",
+      "title": "Loading Related Data"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/querying/single-split-queries",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/querying/single-split-queries",
+      "title": "Single vs. Split Queries"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/querying/tracking",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/querying/tracking",
+      "title": "Tracking vs. No-Tracking Queries"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/saving/concurrency",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/saving/concurrency",
+      "title": "Handling Concurrency Conflicts"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/saving/execute-insert-update-delete",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/saving/execute-insert-update-delete",
+      "title": "ExecuteUpdate and ExecuteDelete"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/saving/transactions",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/saving/transactions",
+      "title": "Using Transactions"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/ef/core/testing/choosing-a-testing-strategy",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/ef/core/testing/choosing-a-testing-strategy",
+      "title": "Choosing a testing strategy"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/nuget/what-is-nuget",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/nuget/what-is-nuget",
+      "title": "An introduction to NuGet"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/sql/sql-server/what-is-sql-server",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/sql/sql-server/what-is-sql-server?view=sql-server-ver17",
+      "title": "What is SQL Server?"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/visualstudio/get-started/csharp/tutorial-console?view=visualstudio",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/visualstudio/get-started/csharp/tutorial-console?view=visualstudio",
+      "title": "Tutorial: Create a simple C# console app in Visual Studio (part 1 of 2)"
+    },
+    {
+      "url": "https://refactoring.guru/design-patterns/abstract-factory/csharp/example",
+      "status": 200,
+      "finalUrl": "https://refactoring.guru/design-patterns/abstract-factory/csharp/example",
+      "title": "Abstract Factory in C#"
+    },
+    {
+      "url": "https://refactoring.guru/design-patterns/factory-method/csharp/example",
+      "status": 200,
+      "finalUrl": "https://refactoring.guru/design-patterns/factory-method/csharp/example",
+      "title": "Factory Method in C#"
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc9110.html",
+      "status": 200,
+      "finalUrl": "https://www.rfc-editor.org/rfc/rfc9110.html",
+      "title": "RFC 9110"
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc9110.html#name-content-length",
+      "status": 200,
+      "finalUrl": "https://www.rfc-editor.org/rfc/rfc9110.html",
+      "title": "RFC 9110"
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc9110.html#name-fields",
+      "status": 200,
+      "finalUrl": "https://www.rfc-editor.org/rfc/rfc9110.html",
+      "title": "RFC 9110"
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc9112.html",
+      "status": 200,
+      "finalUrl": "https://www.rfc-editor.org/rfc/rfc9112.html",
+      "title": "RFC 9112"
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc9112.html#name-message-body",
+      "status": 200,
+      "finalUrl": "https://www.rfc-editor.org/rfc/rfc9112.html",
+      "title": "RFC 9112"
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc9112.html#name-message-parsing",
+      "status": 200,
+      "finalUrl": "https://www.rfc-editor.org/rfc/rfc9112.html",
+      "title": "RFC 9112"
+    },
+    {
+      "url": "https://www.sqlite.org/lang.html",
+      "status": 200,
+      "finalUrl": "https://www.sqlite.org/lang.html",
+      "title": "SQL As Understood By SQLite"
+    },
+    {
+      "url": "https://www.sqlite.org/whentouse.html",
+      "status": 200,
+      "finalUrl": "https://www.sqlite.org/whentouse.html",
+      "title": "1. Situations Where SQLite Works Well"
+    },
+    {
+      "url": "https://xunit.net/docs/getting-started/v2/getting-started",
+      "status": 200,
+      "finalUrl": "https://xunit.net/docs/getting-started/v2/getting-started",
+      "title": "Getting Started with xUnit.net v2 2025 July 4"
+    }
+  ]
+}
