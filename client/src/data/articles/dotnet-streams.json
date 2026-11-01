@@ -1,0 +1,144 @@
+{
+  "id": "dotnet-streams",
+  "title": "Stream, file và mã hóa văn bản",
+  "description": "Stream là abstraction đọc/ghi một chuỗi byte, được dùng cho file, bộ nhớ và mạng. FileStream nối với file trên hệ điều hành; StreamReader/StreamWriter chuyển byte thành văn bản theo encoding. Stream k…",
+  "category": "foundation",
+  "kind": "API nhập/xuất dữ liệu",
+  "sourceParts": [
+    7
+  ],
+  "prerequisites": [
+    "Biết method, exception và try/finally ở bài 5–6"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Stream là abstraction đọc/ghi một chuỗi byte, được dùng cho file, bộ nhớ và mạng. FileStream nối với file trên hệ điều hành; StreamReader/StreamWriter chuyển byte thành văn bản theo encoding. Stream không đồng nghĩa luồng thực thi Thread."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Đọc nguyên một file lớn vào string buộc giữ toàn bộ nội dung trong RAM. Tự viết riêng logic byte cho file, socket và bộ nhớ gây lặp. Stream cho phép xử lý từng khối bằng API chung, trong khi lớp chuyên biệt quản lý thiết bị hay nguồn dữ liệu cụ thể."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Xử lý theo khối giữ mức bộ nhớ ổn định hơn với file lớn; CopyToAsync và ReadAsync tận dụng API I/O phù hợp. Với tệp cấu hình nhỏ, File.ReadAllText đơn giản và đủ tốt. Stream là công cụ kiểm soát luồng dữ liệu, không mặc nhiên làm mọi thao tác nhanh hơn."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không giả định mọi Stream có Length hoặc Seek; NetworkStream không hỗ trợ như MemoryStream. Không decode tùy tiện từng mảnh UTF-8 vì một ký tự có thể bị tách giữa hai lần đọc. Không nhận đường dẫn người dùng rồi nối thẳng vào thư mục hệ thống.",
+        "Một lần Read có thể trả ít byte hơn buffer, cần dùng đúng số byte đọc được. Không giải mã mỗi mảnh UTF-8 riêng bằng cách giả định ranh giới byte là ranh giới ký tự; StreamReader xử lý decoder qua các lần đọc. File.OpenWrite không tự cắt phần đuôi file cũ; dùng File.Create khi muốn ghi đè và truncate.",
+        "File.ReadAllText thuận tiện với tệp nhỏ; stream theo khối tiết kiệm bộ nhớ với tệp lớn. Dispose/Flush đẩy buffer theo hợp đồng stream nhưng không nên đồng nhất nó với bảo đảm dữ liệu bền vững trước mọi sự cố phần cứng."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Read điền tối đa số byte yêu cầu và trả số byte thực nhận; 0 thường biểu thị kết thúc stream khi yêu cầu đọc có độ dài dương. Buffer giảm số lần đi xuống I/O. Position chỉ có ý nghĩa trên stream hỗ trợ seek. Dispose giải phóng handle; flush buffer không tự bảo đảm chống mọi sự cố mất điện.",
+        "FileStream thao tác byte; StreamReader/Writer làm việc với text và encoding. BufferedStream thêm buffering, nhưng nhiều lớp buffer không mặc nhiên nhanh hơn. CanRead, CanWrite và CanSeek mô tả khả năng; NetworkStream không hỗ trợ seek như MemoryStream.",
+        "File.OpenWrite mở hoặc tạo file nhưng không tự truncate file cũ. Nếu ghi nội dung ngắn hơn, phần đuôi có thể còn; dùng FileMode.Create khi thực sự muốn thay nội dung. Dispose giải phóng tài nguyên; Flush thông thường không phải bảo đảm mọi byte đã bền vững trên thiết bị sau mất điện."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Stream",
+          "meaning": "Giao diện đọc/ghi một chuỗi byte; không phải mọi stream đều có thể seek hoặc biết Length.",
+          "example": "MemoryStream ở ví dụ cho phép đọc và thay Position."
+        },
+        {
+          "term": "Position và Length",
+          "meaning": "Position là vị trí tiếp theo sẽ đọc/ghi; Length là tổng số byte của stream nếu được hỗ trợ.",
+          "example": "Đọc A tại vị trí 0 làm Position thành 1, Length vẫn 3."
+        },
+        {
+          "term": "Encoding",
+          "meaning": "Quy tắc đổi văn bản thành byte và ngược lại.",
+          "example": "ABC trong UTF-8 có 3 byte, nhưng tiếng Việt thường cần nhiều byte hơn số ký tự."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "HTTP body, file upload và socket đều có thể đọc bằng stream. Encoding.UTF8 định nghĩa cách mã hóa text; serializer JSON có thể đọc trực tiếp stream. Cần phân biệt quyền file của tài khoản chạy process với quyền nghiệp vụ của người dùng web."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "using System.Text;\nusing var stream = new MemoryStream(Encoding.UTF8.GetBytes(\"ABC\"));\nConsole.WriteLine((char)stream.ReadByte());\nConsole.WriteLine(stream.Position);\nConsole.WriteLine(stream.Length);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "A\n1\n3",
+        "steps": [
+          "UTF-8 mã hóa ABC thành ba byte 65, 66, 67.",
+          "ReadByte đọc byte đầu tiên; ép char ở đây hợp lệ vì dữ liệu ASCII đơn byte.",
+          "Position tăng từ 0 lên 1, Length vẫn là 3.",
+          "using var gọi Dispose khi rời phạm vi."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Kiểm tra đường dẫn tuyệt đối thực tế, working directory, quyền truy cập và FileMode. Nếu file bị khóa, tìm stream chưa Dispose. Nếu nội dung lỗi dấu, so sánh encoding lúc ghi và đọc; nếu thiếu dữ liệu, xem số byte trả về của từng lần Read."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "io",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/io/"
+        },
+        {
+          "title": "how to read text from a file",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/io/how-to-read-text-from-a-file"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

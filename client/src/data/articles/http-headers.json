@@ -1,0 +1,147 @@
+{
+  "id": "http-headers",
+  "title": "HTTP headers và ranh giới thông điệp",
+  "description": "Header là metadata có tên/giá trị đi kèm request hoặc response. Host, Content-Type, Authorization và Content-Length có semantics riêng. Tên header không phân biệt hoa thường; điều đó không có nghĩa mọ…",
+  "category": "network",
+  "kind": "Thành phần giao thức HTTP",
+  "sourceParts": [
+    38
+  ],
+  "prerequisites": [
+    "Biết cấu trúc request line ở bài 37 và Dictionary ở bài 8"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Header là metadata có tên/giá trị đi kèm request hoặc response. Host, Content-Type, Authorization và Content-Length có semantics riêng. Tên header không phân biệt hoa thường; điều đó không có nghĩa mọi giá trị header hay đường dẫn URL cũng so sánh như vậy."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Chỉ biết GET / không đủ để chọn đúng website trên một IP dùng chung hoặc biết body là JSON bao nhiêu byte. Headers mang thông tin cần cho định tuyến, thương lượng nội dung, xác thực và framing. Chúng phải được phân tích theo quy tắc, không phải tùy tiện gom vào dictionary rồi coi đã hoàn chỉnh."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Tách IRequestReader khỏi Worker cho phép kiểm tra parsing không cần mạng; log có cấu trúc giúp tìm lỗi theo request. Dùng parser chuẩn của framework giảm rủi ro hai bên proxy/server hiểu khác ranh giới, một nguồn gốc của request smuggling."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không tự nối header từ input có ký tự xuống dòng. Không gộp mọi duplicate header theo cùng quy tắc. Không ghi Authorization/Cookie vào log. Không đọc đến vô hạn chờ dòng trống khi client không gửi đủ.",
+        "HTTP/1.1 cần Host hợp lệ; fixture chỉ báo có khóa, chưa validate authority, duplicate, kích thước, Content-Length hay Transfer-Encoding. Dictionary.Add ở đây từ chối duplicate thô; parser thật phải theo quy tắc của từng header, không gộp tùy tiện.",
+        "Mạng cung cấp từng mảnh byte, còn fixture ở đây đã có toàn bộ text. Reader thật cần giới hạn độ dài/số header và timeout; tách parse khỏi I/O để tránh lẫn lỗi giao thức với lỗi socket."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "HTTP/1.x dùng CRLF giữa các dòng; dòng trống kết thúc header section. Sau đó body được xác định theo method/status và quy tắc Content-Length/Transfer-Encoding tương ứng. Host là yêu cầu quan trọng của HTTP/1.1; parser cần xử lý syntax, duplicate, giới hạn và thông điệp không hợp lệ nhất quán.",
+        "Host quan trọng trong HTTP/1.1 vì nhiều website có thể dùng chung IP/port. Tên header case-insensitive không có nghĩa URI, token hay mọi giá trị header đều có cùng quy tắc so sánh.",
+        "RequestReader nên trả model đã parse hoặc lỗi có cấu trúc; Worker quản lý kết nối/cancellation. Log cần hữu ích khi chẩn đoán nhưng tránh ghi cookie, authorization header hoặc dữ liệu cá nhân không cần thiết."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Header field",
+          "meaning": "Cặp tên và giá trị cung cấp metadata cho request.",
+          "example": "Host chọn authority của HTTP/1.1; Connection: close thông báo đóng kết nối sau response."
+        },
+        {
+          "term": "Dòng trống",
+          "meaning": "Trong HTTP/1.x, CRLF trống ngăn header section với body.",
+          "example": "Sau dòng trống không tiếp tục coi dữ liệu body là header."
+        },
+        {
+          "term": "Case-insensitive name",
+          "meaning": "Tên header không phân biệt chữ hoa/thường; giá trị tùy semantics từng header.",
+          "example": "Host, host và HOST là cùng tên field."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Proxy có thể chuyển tiếp và bổ sung headers; app chỉ nên tin forwarded headers từ proxy được cấu hình tin cậy. Content-Type quyết định parser body, không quyết định quyền truy cập. Logger nên lưu trường đã chọn và correlation ID; không xuất dữ liệu nhạy cảm chỉ vì đang Development."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "string raw = \"GET / HTTP/1.1\\r\\nHost: example.test\\r\\nConnection: close\\r\\n\\r\\n\";\nusing var reader = new StringReader(raw);\n_ = reader.ReadLine();\nvar values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);\nstring? line;\nwhile (!string.IsNullOrEmpty(line = reader.ReadLine()))\n{\n    int colon = line.IndexOf(':');\n    if (colon <= 0) throw new FormatException(\"Header sai\");\n    values.Add(line[..colon], line[(colon + 1)..].Trim());\n}\nConsole.WriteLine(values.ContainsKey(\"host\"));\nConsole.WriteLine(values[\"Connection\"]);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "True\nclose",
+        "steps": [
+          "Bỏ qua request line để tập trung vào headers đã có đủ trong chuỗi.",
+          "Tách mỗi dòng tại dấu hai chấm đầu tiên; lưu vào dictionary không phân biệt hoa thường.",
+          "Dừng ở dòng trống, tra host thấy true và Connection có giá trị close."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "LearningServer/\n├── Program.cs             # tạo host và đăng ký DI\n├── Worker.cs              # accept loop và shutdown\n├── WebServerOptions.cs    # địa chỉ, port, giới hạn\n├── appsettings.json       # cấu hình local\n├── Protocol/              # request/response model, reader, writer\n├── Middleware/            # handler trong pipeline\n└── wwwroot/               # chỉ tài nguyên được phép phục vụ",
+        "note": "Bố cục mô tả server tổng hợp trong bài giảng; đoạn Hello World bên dưới chỉ cô lập phần giao thức để đọc cơ chế, chưa triển khai toàn bộ server. Với sản phẩm thực tế dùng server framework phù hợp thay parser mẫu."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "So sánh request thật trong DevTools/curl với text parser nhận. Kiểm tra CRLF, header/body delimiter, số byte và timeout. Nếu qua proxy mới lỗi, kiểm tra cấu hình proxy và ranh giới framing giữa hai hop; không sửa bằng cách chấp nhận mọi input mơ hồ."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "IETF — rfc9112.html",
+          "url": "https://www.rfc-editor.org/rfc/rfc9112.html#name-message-parsing"
+        },
+        {
+          "title": "IETF — rfc9110.html",
+          "url": "https://www.rfc-editor.org/rfc/rfc9110.html#name-fields"
+        },
+        {
+          "title": "logging",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-10.0"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/http",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

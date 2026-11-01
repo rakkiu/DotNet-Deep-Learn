@@ -1,0 +1,143 @@
+{
+  "id": "csharp-lambda",
+  "title": "Lambda: truyền một quy tắc như dữ liệu",
+  "description": "Lambda là cú pháp viết một hàm ẩn danh, ví dụ x => x > 0. Nó mô tả hành vi để truyền cho hàm khác hoặc lưu dưới dạng delegate/expression tree. Lambda không phải LINQ, dù LINQ thường dùng lambda làm đi…",
+  "category": "foundation",
+  "kind": "Biểu thức ngôn ngữ",
+  "sourceParts": [
+    9
+  ],
+  "prerequisites": [
+    "Biết method, kiểu trả về và collection ở bài 5, 8"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Lambda là cú pháp viết một hàm ẩn danh, ví dụ x => x > 0. Nó mô tả hành vi để truyền cho hàm khác hoặc lưu dưới dạng delegate/expression tree. Lambda không phải LINQ, dù LINQ thường dùng lambda làm điều kiện lọc hay phép biến đổi."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu muốn hàm lọc có thể nhận nhiều quy tắc, trước đây phải tạo phương thức có tên riêng hoặc viết lại vòng lặp cho từng điều kiện. Lambda đưa quy tắc nhỏ đến ngay nơi sử dụng, giúp thấy cả nguồn dữ liệu và ý nghĩa phép xử lý mà không phải nhảy sang một tên hàm dùng một lần."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "So với method riêng cho mọi điều kiện một dòng, lambda giảm mã phụ trợ và thể hiện ý định cục bộ. So với chuỗi truy vấn tự ghép, lambda vẫn được compiler kiểm tra kiểu. Một hàm dài nhiều nhánh vẫn nên có tên và trách nhiệm rõ ràng."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không nhét logic nghiệp vụ dài vào lambda lồng nhiều tầng. Không vô tình giữ object lớn bằng closure sống lâu hoặc sửa chung một biến từ nhiều task. Không cho rằng lambda truyền cho IQueryable luôn chạy như code C# thông thường trong RAM.",
+        "Đừng nhầm => trong expression-bodied method với một biến delegate luôn được tạo. Closure capture biến, không phải luôn đóng băng giá trị của biến. Expression tree lưu cấu trúc biểu thức, không phải delegate đã thực thi; provider có thể không dịch được mọi lambda.",
+        "Lambda ngắn diễn tả quy tắc lọc/chuyển đổi tốt. Logic dài, có nhiều nhánh hay cần dùng lại thường rõ hơn khi đặt thành method có tên. Tránh side effect trong predicate vì số lần gọi phụ thuộc cách duyệt."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Compiler suy luận kiểu tham số từ ngữ cảnh. Nếu đích là Func/Action, lambda trở thành delegate có thể gọi; nếu đích là Expression<Func<...>>, nó trở thành cây mô tả biểu thức. Lambda có thể capture biến ngoài phạm vi; biến được capture được giữ sống theo closure, chứ không phải luôn chụp một bản giá trị tại lúc viết.",
+        "Func<T,bool> biểu diễn hàm nhận T trả bool; Action<T> không có kết quả trả về. Lambda có thể viết biểu thức x => x > 0 hoặc thân khối x => { return x > 0; }. Kiểu của lambda được xác định theo ngữ cảnh tương thích.",
+        "Closure giữ liên kết tới biến được capture chứ không mặc nhiên chụp bản sao giá trị tại thời điểm tạo lambda. Nếu biến threshold đổi trước lúc predicate chạy, kết quả có thể đổi. static lambda ngăn capture từ scope ngoài."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Lambda",
+          "meaning": "Biểu thức biểu diễn một hàm vô danh; vế trái là tham số, vế phải là biểu thức hoặc thân lệnh.",
+          "example": "x => x >= 5 nhận x rồi tính ra bool."
+        },
+        {
+          "term": "Func và Action",
+          "meaning": "Func có kiểu trả về ở vị trí cuối; Action không trả về giá trị.",
+          "example": "Func<int,bool> nhận int và trả bool; Action<string> có thể in một chuỗi."
+        },
+        {
+          "term": "Closure",
+          "meaning": "Lambda có thể sử dụng biến bên ngoài được capture; cần theo dõi giá trị của biến đó tại lúc gọi.",
+          "example": "Nếu dùng x => x >= limit rồi đổi limit trước khi gọi, quy tắc nhìn thấy limit mới."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Enumerable.Where chạy delegate trên phần tử trong bộ nhớ. Queryable.Where gửi expression tree cho provider như EF Core để dịch sang SQL. Event/callback dùng delegate; lambda async trả Task phải được caller quan sát, tránh rơi vào API nhận Action dẫn tới async void."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "Func<int, bool> accepts = x => x >= 5;\nint[] scores = { 3, 5, 8 };\nforeach (int score in scores)\n    if (accepts(score)) Console.WriteLine(score);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "5\n8",
+        "steps": [
+          "accepts là delegate nhận int, trả bool. Việc gán lambda chưa duyệt scores.",
+          "Gọi accepts(3) nhận false nên không in.",
+          "Gọi với 5 và 8 nhận true nên in hai dòng theo thứ tự nguồn."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Đặt breakpoint bên trong thân lambda dạng block hoặc tách ra method để dễ theo dõi. Xem biến capture tại đúng lúc thực thi, đặc biệt với deferred execution. Nếu EF báo không dịch được, kiểm tra lời gọi method tùy ý trong expression và SQL được sinh."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "lambda expressions",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions"
+        },
+        {
+          "title": "expression trees",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

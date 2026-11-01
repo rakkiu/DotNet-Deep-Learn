@@ -1,0 +1,137 @@
+{
+  "id": "factory-pattern",
+  "title": "Factory và Abstract Factory",
+  "description": "Factory gom quyết định tạo object sau một API có ý nghĩa. Abstract Factory cung cấp hợp đồng tạo một họ sản phẩm liên quan mà caller không gắn với lớp cụ thể. Một hàm switch trả implementation là simp…",
+  "category": "architecture",
+  "kind": "Mẫu thiết kế khởi tạo",
+  "sourceParts": [
+    15
+  ],
+  "prerequisites": [
+    "Biến, method và class cơ bản"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Factory gom quyết định tạo object sau một API có ý nghĩa. Abstract Factory cung cấp hợp đồng tạo một họ sản phẩm liên quan mà caller không gắn với lớp cụ thể. Một hàm switch trả implementation là simple factory, chưa tự động là Abstract Factory đầy đủ."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Code đọc dòng từ console hay file cần hai cách khởi tạo và quản lý tài nguyên khác nhau. Nếu quyết định này nằm rải trong parser/lọc/output, đổi nguồn sẽ tác động nhiều nơi. Factory tập trung lựa chọn và cho caller nhận một contract ổn định."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Việc tạo object, kiểm tra cấu hình và chọn implementation được đặt một nơi. Caller dùng abstraction thay vì biết constructor từng lớp. So với new trực tiếp, lợi ích xuất hiện khi thực sự có biến thể/lifecycle cần quản lý, không chỉ vì muốn thêm tên pattern."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không tạo factory cho mọi class chỉ có một constructor đơn giản. Không gọi simple factory là Abstract Factory nếu không có họ sản phẩm và contract tương ứng. Không để factory che giấu tác vụ I/O nặng hoặc quyền sở hữu IDisposable mà caller không biết."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Caller truyền lựa chọn hoặc nhận một factory đã cấu hình; factory tạo implementation tương thích rồi trả qua interface. Với Abstract Factory, mỗi concrete factory tạo bộ sản phẩm cùng biến thể, tránh ghép sai thành viên giữa các họ. DI có thể cung cấp factory/dependency nhưng hai khái niệm không đồng nhất."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Product contract",
+          "meaning": "Hành vi mà sản phẩm phải cung cấp cho caller.",
+          "example": "ITextSource.Read không nói dữ liệu đến từ đâu."
+        },
+        {
+          "term": "Factory",
+          "meaning": "Nơi chịu trách nhiệm tạo/chọn implementation.",
+          "example": "SourceFactory.Create(\"memory\") tạo MemorySource."
+        },
+        {
+          "term": "Product family",
+          "meaning": "Nhóm sản phẩm cùng một biến thể trong Abstract Factory.",
+          "example": "Một factory UI cùng tạo button/menu của cùng bộ giao diện."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Composition root chọn concrete factory; service dùng sản phẩm qua contract. Nếu factory tạo stream/database session, hợp đồng cần nói bên nào Dispose. Configuration và validation của lựa chọn phải diễn ra trước khi dùng, không để tên type tùy ý từ người dùng dẫn tới load code."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "ITextSource source = SourceFactory.Create(\"memory\");\nConsole.WriteLine(source.Read());\n\ninterface ITextSource { string Read(); }\nclass MemorySource : ITextSource\n{\n    public string Read() => \"Nội dung từ bộ nhớ\";\n}\nstatic class SourceFactory\n{\n    public static ITextSource Create(string kind) => kind switch\n    {\n        \"memory\" => new MemorySource(),\n        _ => throw new ArgumentException(\"Nguồn không hỗ trợ\", nameof(kind))\n    };\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Nội dung từ bộ nhớ",
+        "steps": [
+          "Đây là simple factory tối thiểu để thấy nơi chọn implementation, không phải một họ Abstract Factory hoàn chỉnh.",
+          "Caller chỉ biết ITextSource; factory quyết định class MemorySource. Với họ sản phẩm, tách interface factory và nhiều concrete factory tương ứng."
+        ],
+        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Đặt breakpoint tại quyết định chọn implementation và kiểm tra cấu hình đầu vào. Khi object sai loại, theo đường tạo thay vì sửa caller bằng ép kiểu. Test mỗi biến thể và trạng thái đầu vào không hợp lệ để factory không âm thầm dùng default sai."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "learn.microsoft.com — constructor",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/constructor"
+        },
+        {
+          "title": "learn.microsoft.com — architectural principles",
+          "url": "https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

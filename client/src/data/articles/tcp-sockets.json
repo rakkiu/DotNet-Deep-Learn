@@ -1,0 +1,143 @@
+{
+  "id": "tcp-sockets",
+  "title": "TCP, Socket và Endpoint",
+  "description": "TCP là giao thức vận chuyển cung cấp luồng byte có thứ tự và cơ chế truyền tin cậy giữa hai đầu kết nối. Socket là API để ứng dụng dùng khả năng mạng của hệ điều hành. Endpoint gồm địa chỉ IP và port;…",
+  "category": "network",
+  "kind": "Giao thức mạng / API hệ điều hành",
+  "sourceParts": [
+    36
+  ],
+  "prerequisites": [
+    "Biết async/await, using và luồng byte ở bài 7, 34"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "TCP là giao thức vận chuyển cung cấp luồng byte có thứ tự và cơ chế truyền tin cậy giữa hai đầu kết nối. Socket là API để ứng dụng dùng khả năng mạng của hệ điều hành. Endpoint gồm địa chỉ IP và port; HTTP là giao thức tầng ứng dụng có thể chạy trên kết nối phù hợp, không đồng nghĩa với TCP."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Hai process ở hai máy cần quy tắc định địa chỉ, thiết lập kết nối và truyền dữ liệu. Tự xử lý packet mất, trùng và thứ tự trên IP rất phức tạp. TCP giải quyết nhiều phần vận chuyển, nhưng ứng dụng vẫn phải định nghĩa ranh giới thông điệp và xử lý disconnect."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Socket cho quyền kiểm soát khi cần giao thức riêng hoặc tìm hiểu tầng mạng. TcpClient/NetworkStream tiện hơn thao tác Socket mức thấp. Với gọi Web API thông thường, HttpClient phù hợp hơn tự xây HTTP trên socket vì đã xử lý nhiều chi tiết kết nối/giao thức."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không tự viết giao thức production nếu HTTP hoặc giao thức chuẩn đã đáp ứng. Không mở listener công khai bằng parser học tập thiếu timeout, quota và TLS. Không nghĩ một lần Send tương ứng một lần Receive hoặc TCP tự mã hóa dữ liệu.",
+        "Một Read/Receive không bảo đảm nhận đủ message; Socket.Send cũng có thể gửi một phần. ReadExactly báo lỗi nếu stream kết thúc sớm. Nếu thay bằng tên tiếng Việt, tính số byte UTF-8 và framing phải đổi; string.Length không phải số byte.",
+        "Fixture chỉ là một kết nối cục bộ, không có TLS hay giao thức chat hoàn chỉnh. Server thật cần timeout, cancellation, giới hạn số client, xử lý disconnect và kiểm soát bộ nhớ. Không mở listener công khai chỉ để làm bài tập."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Server bind địa chỉ/port, listen và accept để nhận socket kết nối; client connect tới endpoint server. TCP đưa một luồng byte, không giữ ranh giới các lần ghi. Ứng dụng dùng length prefix, delimiter hoặc quy tắc khác để framing; Read có thể trả ít byte hơn yêu cầu và kết thúc phải được phát hiện.",
+        "Listener nhận nhiều kết nối; mỗi kết nối là một byte stream riêng. Socket API mức thấp cần chú ý kết quả số byte gửi/nhận, shutdown và dispose; TcpClient/NetworkStream cung cấp wrapper thuận tiện cho bài đầu.",
+        "Byte UTF-8 có thể bị chia giữa hai lần read. Decoder hoặc reader có trạng thái giúp ghép đúng ký tự; không decode mỗi chunk tùy ý rồi giả định tiếng Việt luôn nguyên vẹn."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Endpoint",
+          "meaning": "Địa chỉ IP và port xác định một đầu kết nối.",
+          "example": "127.0.0.1 chỉ máy hiện tại; port 0 yêu cầu OS chọn một port trống cho server."
+        },
+        {
+          "term": "TCP byte stream",
+          "meaning": "Luồng byte có thứ tự, không giữ ranh giới của từng lần gửi.",
+          "example": "Một Write 100 byte có thể cần nhiều lần Read để nhận đủ."
+        },
+        {
+          "term": "Framing",
+          "meaning": "Quy tắc xác định ranh giới thông điệp trên luồng.",
+          "example": "Ví dụ đã thỏa thuận thông điệp đúng 2 byte; giao thức thật có thể dùng length prefix."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Encoding chuyển text sang byte; TLS thêm bảo vệ kênh khi dùng đúng certificate/config. NAT, firewall và binding loopback/all interfaces ảnh hưởng khả năng truy cập. Giới hạn kết nối, kích thước message, timeout và cancellation là phần thiết kế server."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "using System.Net;\nusing System.Net.Sockets;\nusing System.Text;\nusing var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));\nvar token = timeout.Token;\nvar listener = new TcpListener(IPAddress.Loopback, 0);\nlistener.Start();\ntry\n{\n    int port = ((IPEndPoint)listener.LocalEndpoint).Port;\n    using var client = new TcpClient();\n    await client.ConnectAsync(IPAddress.Loopback, port, token);\n    using var server = await listener.AcceptTcpClientAsync(token);\n    byte[] payload = Encoding.UTF8.GetBytes(\"An\");\n    await client.GetStream().WriteAsync(payload, token);\n    byte[] received = new byte[2];\n    await server.GetStream().ReadExactlyAsync(received, token);\n    Console.WriteLine(Encoding.UTF8.GetString(received));\n}\nfinally { listener.Stop(); }",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "An",
+        "steps": [
+          "Listener bind loopback với port được OS cấp.",
+          "Client connect, server accept được kết nối tương ứng.",
+          "Client gửi hai byte ASCII, ReadExactlyAsync chờ đủ hai byte rồi decode."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Thử loopback trước, xem endpoint thực sau khi bind và lỗi SocketException. Connection refused thường liên quan không có listener/địa chỉ sai; timeout có thể do đường mạng hoặc firewall. Dùng Wireshark khi cần xem gói và kiểm tra framing ở ứng dụng, không log payload nhạy cảm."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "tcp classes",
+          "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/sockets/tcp-classes"
+        },
+        {
+          "title": "socket services",
+          "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/sockets/socket-services"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

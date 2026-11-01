@@ -1,0 +1,147 @@
+{
+  "id": "task-composition",
+  "title": "Task.WhenAll, WhenAny và quan sát lỗi",
+  "description": "Task đại diện trạng thái hoàn thành, lỗi/hủy và có thể có kết quả của công việc. WhenAll và WhenAny tổ hợp nhiều task; Task.Run xếp công việc lên ThreadPool; FromResult tạo task đã có kết quả. Đây là …",
+  "category": "concurrency",
+  "kind": "API tổ hợp tác vụ",
+  "sourceParts": [
+    35
+  ],
+  "prerequisites": [
+    "Biết async/await và Task<T> ở bài 34"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Task đại diện trạng thái hoàn thành, lỗi/hủy và có thể có kết quả của công việc. WhenAll và WhenAny tổ hợp nhiều task; Task.Run xếp công việc lên ThreadPool; FromResult tạo task đã có kết quả. Đây là các API có mục đích khác nhau, không phải những cách tương đương để tạo thread."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Khi lấy dữ liệu từ ba dịch vụ độc lập, chờ từng dịch vụ xong mới bắt đầu dịch vụ sau làm tổng thời gian chờ cộng dồn. Tự viết callback/bộ đếm để biết cả ba xong dễ sai. Task tổ hợp cung cấp điểm chờ và kênh lỗi/kết quả có cấu trúc."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Khởi tạo các thao tác độc lập rồi await WhenAll cho phép thời gian chờ chồng lấp. WhenAny hữu ích cho cuộc đua hoặc theo dõi hoàn thành đầu tiên. So với WaitAll, WhenAll có thể await mà không block caller, nhưng không tự quyết định chính sách tải hay hủy."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không WhenAll một danh sách khổng lồ không giới hạn. Không dùng chung DbContext trong các query đồng thời. Không bỏ các task thua sau WhenAny nếu chúng vẫn giữ tài nguyên hoặc có thể lỗi; cần await/quan sát/hủy theo chính sách.",
+        "WhenAll không tự khởi chạy mọi công việc song song trên CPU. IsCompleted bao gồm cả faulted và canceled, không đồng nghĩa thành công. Khi nhiều task lỗi, task tổng hợp giữ tập lỗi; cần xem chính sách log/quan sát phù hợp ngoài exception được await ném lại.",
+        "WaitAll chặn thread, WhenAll cho phép await. Khi một task thất bại, các task khác không tự bị hủy; thiết kế cancellation rõ ràng. WhenAny không tự hủy hoặc await các task thua."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "WhenAll hoàn tất khi mọi input hoàn tất; kết quả Task<T[]> giữ thứ tự input, không theo thứ tự xong. Nếu có lỗi, task tổng hợp lưu tập exception; await thường ném một lỗi đại diện nên cần xem thêm tập lỗi khi muốn log đầy đủ. WhenAny trả task thắng và caller còn phải await task đó để lấy kết quả/quan sát lỗi.",
+        "Task.FromResult tạo task đã hoàn tất với giá trị; Task.FromException tạo task faulted; Task.CompletedTask dùng khi không có kết quả. Chúng không phải cách tự chạy việc CPU nặng.",
+        "Khi gom nhiều I/O độc lập, khởi tạo các thao tác trước rồi await WhenAll có thể cho phép chờ chồng lấp. Vẫn cần giới hạn số thao tác; WhenAll trên một triệu request không phải chiến lược tải an toàn."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "WhenAll",
+          "meaning": "Task tổng hợp hoàn tất khi mọi input task hoàn tất.",
+          "example": "Một input chưa xong làm all.IsCompleted vẫn false."
+        },
+        {
+          "term": "Thứ tự kết quả",
+          "meaning": "Với WhenAll<T>, mảng kết quả theo thứ tự input, không theo lúc xong.",
+          "example": "first.Task nằm trước nên giá trị first in trước dù second xong sớm."
+        },
+        {
+          "term": "WhenAny",
+          "meaning": "Trả task đại diện cho task input hoàn tất đầu tiên.",
+          "example": "Cần await task chiến thắng để lấy kết quả hoặc quan sát exception của nó."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Dùng SemaphoreSlim hoặc worker queue để giữ tải đồng thời có giới hạn. CancellationTokenSource liên kết có thể phối hợp hủy khi lỗi, nhưng WhenAll/WhenAny không tự hủy các task còn lại. Task.Run phù hợp một số CPU-bound workload, đặc biệt desktop; web phải cân nhắc ThreadPool và tải CPU."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "var first = new TaskCompletionSource<int>();\nvar second = new TaskCompletionSource<int>();\nTask<int[]> all = Task.WhenAll(first.Task, second.Task);\nsecond.SetResult(20);\nConsole.WriteLine(all.IsCompleted);\nfirst.SetResult(10);\nConsole.WriteLine(string.Join(\",\", await all));",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "False\n10,20",
+        "steps": [
+          "WhenAll nhận first rồi second theo thứ tự đó.",
+          "Second hoàn tất nhưng first chưa xong nên all vẫn chưa hoàn tất.",
+          "First hoàn tất, await all trả [10,20] theo thứ tự input."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Xem IsCompletedSuccessfully thay vì chỉ IsCompleted. Lưu biến task tổng hợp khi cần kiểm tra Exception.InnerExceptions. Theo dõi task nào chưa kết thúc và tại sao; kiểm tra mọi nhánh đều hoàn tất TaskCompletionSource đúng một lần nếu tự bắc cầu callback."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "task based asynchronous programming",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-based-asynchronous-programming"
+        },
+        {
+          "title": "system.threading.tasks.task.whenall",
+          "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenall"
+        },
+        {
+          "title": "system.threading.tasks.task.whenany",
+          "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenany"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

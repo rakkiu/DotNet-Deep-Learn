@@ -1,0 +1,147 @@
+{
+  "id": "http-response",
+  "title": "HTTP response và streaming body",
+  "description": "Response HTTP biểu diễn kết quả bằng status, headers và body theo quy tắc giao thức. Body có thể là HTML, JSON, ảnh hoặc dữ liệu nhị phân; không phải luôn là string. IResponseBodyWriter trong bài là a…",
+  "category": "network",
+  "kind": "Thành phần giao thức / thiết kế I/O",
+  "sourceParts": [
+    39
+  ],
+  "prerequisites": [
+    "Biết byte, encoding và HTTP headers ở bài 7, 38"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Response HTTP biểu diễn kết quả bằng status, headers và body theo quy tắc giao thức. Body có thể là HTML, JSON, ảnh hoặc dữ liệu nhị phân; không phải luôn là string. IResponseBodyWriter trong bài là abstraction tách cách ghi body khỏi cách điều phối request."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Ghép mọi response vào một string hoặc byte[] lớn làm lãng phí bộ nhớ với file lớn. Gửi Content-Length theo số ký tự thay số byte khiến client chờ thiếu/thừa dữ liệu. Tách writer cho text, file và body rỗng làm quy tắc encode/stream rõ hơn."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Streaming giữ lượng buffer giới hạn và cho phép bắt đầu gửi khi chưa nạp toàn bộ file. Null Object biểu diễn hành vi không làm gì, giảm nhánh null ở nơi sử dụng. Pattern chỉ có ích khi implementation thực sự giữ đúng hợp đồng, không tự loại bỏ mọi OutOfMemory."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không ghi body cho những trường hợp giao thức không cho phép như response tương ứng HEAD theo cách thông thường. Không đổi status/header tùy ý sau khi response đã bắt đầu. Không dùng string.Length làm Content-Length của UTF-8 tiếng Việt.",
+        "Fixture tạo response đơn giản cho GET thành công, chưa xử lý HEAD, chunking hay status không có body. Tách IResponseBodyWriter không tự bảo đảm hết lỗi OutOfMemory; implementation phải thực sự stream và giới hạn buffering.",
+        "Null Object có thể đại diện body rỗng để giảm nhánh null, nhưng không tự chứng minh hiệu năng. Content-Length phải khớp byte thực sự được gửi; gzip hay encoding khác có thể làm số byte khác."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Với response HTTP/1.1 đơn giản: status line, headers, CRLF trống rồi body bytes. Content-Length mô tả số byte message body theo framing; chunking có quy tắc riêng. Writer encode text bằng Encoding, hoặc copy stream theo khối; backpressure buộc tôn trọng khả năng nhận của client, không bơm vô hạn vào RAM.",
+        "Response gồm status line, headers, dòng trống và body theo quy tắc framing. Byte body có thể là HTML, JSON, file hay dữ liệu binary; không ép mọi thứ thành string.",
+        "File body writer nên copy theo stream có cancellation và backpressure. NullResponseBodyWriter có thể đại diện body rỗng; điều đó không thay thế quy tắc status/HEAD và không tự giải quyết giới hạn bộ nhớ của writer khác."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Status line",
+          "meaning": "Version, status code và reason phrase ở dòng đầu HTTP/1.x response.",
+          "example": "HTTP/1.1 200 OK báo một response thành công."
+        },
+        {
+          "term": "Content-Length",
+          "meaning": "Số byte của message body trong cách framing đang minh họa.",
+          "example": "Chào có 4 ký tự .NET nhưng 5 byte UTF-8."
+        },
+        {
+          "term": "Body writer",
+          "meaning": "Thành phần chịu trách nhiệm ghi nội dung theo quy tắc serialization.",
+          "example": "Text writer encode UTF-8; file writer nên stream thay vì đọc cả file vào RAM."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Content-Type cho client biết kiểu nội dung; charset áp dụng với text tương ứng. Compression có thể đổi số byte gửi nên length cần nhất quán với pipeline. ASP.NET Core cung cấp Response/Results/File APIs để không tự viết serializer giao thức."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "using System.Text;\nstring body = \"Chào\";\nint length = Encoding.UTF8.GetByteCount(body);\nstring response = \"HTTP/1.1 200 OK\\r\\n\" +\n    \"Content-Type: text/plain; charset=utf-8\\r\\n\" +\n    $\"Content-Length: {length}\\r\\n\\r\\n\" + body;\nConsole.WriteLine(length);\nConsole.WriteLine(response.Replace(\"\\r\", \"\\\\r\").Replace(\"\\n\", \"\\\\n\"));",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "5\nHTTP/1.1 200 OK\\r\\nContent-Type: text/plain; charset=utf-8\\r\\nContent-Length: 5\\r\\n\\r\\nChào",
+        "steps": [
+          "Encode Chào bằng UTF-8 cần 5 byte.",
+          "Ghi status line, hai header và dòng CRLF trống trước body.",
+          "Dòng in thứ hai hiển thị ký tự \\r\\n dạng nhìn thấy để kiểm tra framing."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "LearningServer/\n├── Program.cs             # tạo host và đăng ký DI\n├── Worker.cs              # accept loop và shutdown\n├── WebServerOptions.cs    # địa chỉ, port, giới hạn\n├── appsettings.json       # cấu hình local\n├── Protocol/              # request/response model, reader, writer\n├── Middleware/            # handler trong pipeline\n└── wwwroot/               # chỉ tài nguyên được phép phục vụ",
+        "note": "Bố cục mô tả server tổng hợp trong bài giảng; đoạn Hello World bên dưới chỉ cô lập phần giao thức để đọc cơ chế, chưa triển khai toàn bộ server. Với sản phẩm thực tế dùng server framework phù hợp thay parser mẫu."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Dùng curl -v và file tải về để đối chiếu status, headers, byte count và nội dung. Với client chờ mãi, kiểm tra length/framing và việc đóng stream. Với file lớn làm tăng RAM, profile buffer/allocation ở writer chứ không chỉ kiểm tra có interface hay không."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "IETF — rfc9110.html",
+          "url": "https://www.rfc-editor.org/rfc/rfc9110.html#name-content-length"
+        },
+        {
+          "title": "IETF — rfc9112.html",
+          "url": "https://www.rfc-editor.org/rfc/rfc9112.html#name-message-body"
+        },
+        {
+          "title": "middleware",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-10.0"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/http",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

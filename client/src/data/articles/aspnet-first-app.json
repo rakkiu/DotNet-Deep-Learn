@@ -1,0 +1,146 @@
+{
+  "id": "aspnet-first-app",
+  "title": "ASP.NET Core: từ request đến action",
+  "description": "ASP.NET Core là framework xây ứng dụng web và HTTP API trên .NET. Nó cung cấp hosting, middleware, routing, DI, cấu hình và logging; MVC là một mô hình xây giao diện/controller trong framework. Đây kh…",
+  "category": "web",
+  "kind": "Framework web",
+  "sourceParts": [
+    19
+  ],
+  "prerequisites": [
+    "Biết class, method và interface; chưa cần từng viết web"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "ASP.NET Core là framework xây ứng dụng web và HTTP API trên .NET. Nó cung cấp hosting, middleware, routing, DI, cấu hình và logging; MVC là một mô hình xây giao diện/controller trong framework. Đây không phải ngôn ngữ và cũng không phải web server database."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Tự làm web từ socket buộc xử lý giao thức, request parsing, routing, bảo mật, logging và vòng đời connection. Các thế hệ ASP.NET cũ như Web Forms có mô hình riêng và thường gắn Windows. ASP.NET Core gom nền tảng web hiện đại, hỗ trợ nhiều host và mô hình lập trình."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Pipeline thống nhất, DI tích hợp và cấu hình theo môi trường giúp tổ chức ứng dụng dễ hơn việc tự ghép mọi thứ. Có thể triển khai trên Linux/container nếu dependency phù hợp. MVC không phải lựa chọn duy nhất: Minimal API và Razor Pages có thể đơn giản hơn cho nhu cầu tương ứng."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không chuyển app Web Forms cũ sang Core bằng cách chỉ đổi target framework. Không chọn MVC cho một API nhỏ chỉ vì thầy dùng MVC; cân nhắc độ phức tạp. Website tĩnh chỉ phục vụ nội dung không cần chạy server .NET riêng.",
+        "ASP.NET Core có MVC, Razor Pages, Minimal API và các lựa chọn khác. Không phải mọi method public đều là action: [NonAction] và quy tắc discovery có thể loại trừ. App này chỉ trả text, chưa đọc cơ sở dữ liệu.",
+        "Model–View–Controller tách trách nhiệm, không có nghĩa mọi nghiệp vụ phải nhét vào controller. wwwroot chứa static assets; cần cấu hình phục vụ static files phù hợp với phiên bản framework."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Program.cs tạo builder, đăng ký services, build app và cấu hình pipeline. Kestrel nhận HTTP, tạo HttpContext rồi chuyển request qua middleware. Routing chọn endpoint; endpoint thực hiện logic và ghi response. Những phần trước/sau next cho phép middleware xử lý cả chiều vào lẫn chiều ra.",
+        "Program.cs xây host, đăng ký dịch vụ và cấu hình pipeline. appsettings.json chứa configuration; không đưa secret vào repo. Controllers xử lý request, Views tạo giao diện, model có thể là dữ liệu đầu vào, dữ liệu view hoặc domain model với trách nhiệm khác nhau.",
+        "Tạo project thử bằng dotnet new web rồi dùng file Program.cs của bài. Lời gọi AddControllersWithViews đăng ký các dịch vụ MVC; MapControllerRoute khai báo endpoint theo convention. Thêm UseStaticFiles hay static asset APIs phù hợp khi cần phục vụ wwwroot; folder tồn tại không có nghĩa mọi file trong project đều được public."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Request",
+          "meaning": "Yêu cầu HTTP gồm method, địa chỉ tài nguyên, headers và có thể có body.",
+          "example": "GET / yêu cầu tài nguyên ở trang chủ."
+        },
+        {
+          "term": "Routing",
+          "meaning": "Chọn endpoint phù hợp dựa trên đường dẫn, HTTP method và các quy tắc đã đăng ký.",
+          "example": "Route mặc định chọn HomeController.Index khi thiếu controller và action."
+        },
+        {
+          "term": "Action result",
+          "meaning": "Kết quả mà MVC thực thi để tạo response.",
+          "example": "Content trả văn bản; không phải mọi action đều phải trả View."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "DI đưa DbContext, API client và service vào controller; configuration đọc appsettings, biến môi trường và nguồn khác theo thứ tự. Trình duyệt nhận HTML/JSON qua HTTP; database thường nằm sau server, không nối trực tiếp từ Razor/JS bằng connection string bí mật."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new web -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs, tạo thêm các file được ghi bên dưới\ndotnet run --urls http://localhost:5090",
+        "code": "using Microsoft.AspNetCore.Mvc;\nvar builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddControllersWithViews();\nvar app = builder.Build();\napp.MapControllerRoute(\"default\", \"{controller=Home}/{action=Index}/{id?}\");\napp.Run();\npublic class HomeController : Controller\n{\n    public IActionResult Index() => Content(\"Xin chào An\");\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Xin chào An",
+        "steps": [
+          "Builder đăng ký dịch vụ MVC trước khi Build.",
+          "GET / khớp route mặc định Home/Index.",
+          "MVC tạo HomeController, gọi Index và ghi nội dung Xin chào An vào response."
+        ],
+        "request": {
+          "method": "GET",
+          "path": "/"
+        },
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "WebApp/\n├── WebApp.csproj\n├── Program.cs            # host, services, pipeline, routes\n├── appsettings.json      # cấu hình theo môi trường\n├── Controllers/          # action nhận request\n├── Models/               # input model / view model\n├── Views/                # Razor .cshtml (nếu dùng MVC)\n│   └── Shared/_Layout.cshtml\n├── wwwroot/              # CSS, JS và tài nguyên công khai\n└── Properties/launchSettings.json # chạy local",
+        "note": "Đây là quy ước MVC. API thuần có thể không có Views; Minimal API có thể bắt đầu từ Program.cs. Khi chia class ra file, thêm namespace/using nhất quán. Không đặt cấu hình nhạy cảm dưới wwwroot."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Chạy dotnet run và dùng đúng URL Listening on in trong terminal. Lỗi 404 kiểm tra route; lỗi 500 xem log server và exception. Developer exception page chỉ dùng trong Development; log production cần request ID và tránh ghi secret."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "fundamentals",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/?view=aspnetcore-10.0"
+        },
+        {
+          "title": "overview",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/overview?view=aspnetcore-10.0"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/asp.net-core",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

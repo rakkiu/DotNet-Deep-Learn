@@ -1,0 +1,144 @@
+{
+  "id": "csharp-control-flow",
+  "title": "Rẽ nhánh, vòng lặp và theo dấu chương trình",
+  "description": "if, switch, for, while, do/while và foreach quyết định câu lệnh nào chạy và chạy bao nhiêu lần. Chúng là cú pháp điều khiển luồng của C#, không phải framework. Một chương trình có dữ liệu đúng vẫn có …",
+  "category": "foundation",
+  "kind": "Cấu trúc điều khiển",
+  "sourceParts": [
+    4
+  ],
+  "prerequisites": [
+    "Biết biến và truy cập phần tử mảng ở bài 2–3"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "if, switch, for, while, do/while và foreach quyết định câu lệnh nào chạy và chạy bao nhiêu lần. Chúng là cú pháp điều khiển luồng của C#, không phải framework. Một chương trình có dữ liệu đúng vẫn có thể sai nếu đi nhầm nhánh hoặc lặp sai số lượt."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Code chỉ chạy tuần tự không thể chọn xử lý theo điều kiện hay duyệt số lượng dữ liệu thay đổi. Viết lặp lại từng câu lệnh vừa khó bảo trì vừa không xử lý được đầu vào chưa biết trước. Rẽ nhánh và lặp biểu diễn quy tắc xử lý thay vì liệt kê thủ công các trường hợp."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Dùng vòng lặp rõ ràng giúp thấy trạng thái và thứ tự thay đổi; switch phù hợp phân loại theo giá trị/pattern. So với các điều kiện lồng nhau dài, guard clause và tách method giúp giảm độ sâu. LINQ có thể ngắn hơn cho truy vấn, nhưng không làm mọi vòng lặp trở nên lỗi thời."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng while(true) nếu không có điều kiện dừng hoặc chính sách cancellation. Không lồng nhiều if chỉ vì có thể: một bảng tra hoặc đa hình có thể diễn đạt tốt hơn. Không thay một thuật toán O(n²) bằng cú pháp ngắn rồi gọi đó là tối ưu hiệu năng.",
+        "while kiểm tra trước; do...while chạy thân ít nhất một lần. for (i = 0; i < array.Length; i++) dừng trước Length; <= thường vượt chỉ số. Khi debug, kiểm tra giá trị trước và sau từng lần lặp thay vì chỉ nhìn output cuối.",
+        "foreach đơn giản khi chỉ cần duyệt phần tử. for cần thiết nếu phải biết vị trí hoặc cập nhật theo index. Hai vòng lặp lồng nhau có thể thành O(n²); trước khi tối ưu hãy làm rõ thuật toán tìm kiếm/sắp xếp và dữ liệu biên."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "if đánh giá biểu thức bool để chọn nhánh. for thực hiện khởi tạo một lần, kiểm tra điều kiện trước mỗi lượt và chạy bước cập nhật sau thân. foreach dùng cơ chế enumeration; do/while kiểm tra sau nên thân chạy ít nhất một lần. break thoát cấu trúc gần nhất; continue chuyển sang lượt kế tiếp.",
+        "break thoát vòng lặp gần nhất; continue bỏ phần còn lại của lượt hiện tại. Trong vòng lặp lồng nhau, break không tự thoát tất cả các vòng. switch chọn nhánh theo pattern; switch expression là biểu thức trả giá trị, khác cú pháp switch statement.",
+        "Bài tìm kiếm tuyến tính: duyệt từ index 0, so sánh từng phần tử, trả index đầu khớp hoặc -1. Hãy thử mảng rỗng, không có kết quả và có nhiều giá trị trùng. Bài sắp xếp cần kiểm tra điều kiện hoán đổi và số lượt, không chỉ đặt tên thuật toán theo cảm giác."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Điều kiện bool",
+          "meaning": "if chọn nhánh dựa trên true hoặc false; >= bao gồm giá trị biên, > thì không.",
+          "example": "5 >= 5 là true nhưng 5 > 5 là false."
+        },
+        {
+          "term": "Một lượt lặp",
+          "meaning": "Mỗi lượt foreach lấy phần tử tiếp theo, rồi chạy thân khối.",
+          "example": "value lần lượt là 2, 5, 8; không duyệt một phần tử ngẫu nhiên."
+        },
+        {
+          "term": "Biến tích lũy",
+          "meaning": "Giá trị được cập nhật qua các lượt lặp, cần xác định giá trị khởi đầu.",
+          "example": "sum bắt đầu 0; cộng 5 rồi 8 tạo tổng 13."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Điều kiện thường xuất phát từ validation, kết quả API hoặc trạng thái nghiệp vụ. Vòng lặp trên dữ liệu database đã materialize chạy trong bộ nhớ; truy vấn IQueryable có thể được dịch phía database. Với vòng lặp I/O bất đồng bộ, chờ tuần tự và chạy đồng thời là hai lựa chọn có tải hệ thống khác nhau."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "int[] values = { 2, 5, 8 };\nint sum = 0;\nforeach (int value in values)\n{\n    if (value >= 5) sum += value;\n}\nConsole.WriteLine(sum);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "13",
+        "steps": [
+          "sum khởi đầu bằng 0.",
+          "Với 2, điều kiện false: sum vẫn 0.",
+          "Với 5, điều kiện true: sum thành 5.",
+          "Với 8, sum thành 13. Chỉ sau khi duyệt xong mới in."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Dùng F10 theo từng lượt, Watch biến đếm, điều kiện dừng và biến tích lũy. Kiểm tra trường hợp rỗng, một phần tử và giá trị đúng tại biên. Nếu app treo, Pause debugger rồi xem Call Stack và giá trị điều kiện thay vì chỉ thêm print vô hạn."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "iteration statements",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/iteration-statements"
+        },
+        {
+          "title": "selection statements",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

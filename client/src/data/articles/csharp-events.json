@@ -1,0 +1,143 @@
+{
+  "id": "csharp-events",
+  "title": "Delegate và event: ai được phát thông báo?",
+  "description": "Delegate là kiểu tham chiếu đại diện cho phương thức có chữ ký tương thích. Event giới hạn cách bên ngoài đăng ký nhận thông báo dựa trên delegate, thường theo mô hình publisher/subscriber. Chúng là c…",
+  "category": "architecture",
+  "kind": "Cơ chế callback và thông báo",
+  "sourceParts": [
+    17
+  ],
+  "prerequisites": [
+    "Biết lambda, method và class ở các bài trước"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Delegate là kiểu tham chiếu đại diện cho phương thức có chữ ký tương thích. Event giới hạn cách bên ngoài đăng ký nhận thông báo dựa trên delegate, thường theo mô hình publisher/subscriber. Chúng là cơ chế trong process, không phải message broker bền vững qua mạng."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu một bộ xử lý file trực tiếp gọi Console.WriteLine mỗi khi có tiến độ, nó bị gắn chặt với UI console. Delegate cho phép truyền hành vi; event cho phép công bố rằng một thay đổi đã xảy ra để nhiều subscriber phản ứng mà publisher không biết từng giao diện."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Callback tách thuật toán khỏi cách hiển thị hoặc xử lý tiếp. Event cho phép nhiều nơi đăng ký mà không cho bên ngoài tùy tiện raise/ghi đè sự kiện. So với gọi service trực tiếp, event có thể giảm coupling nhưng làm đường gọi và xử lý lỗi khó theo dõi hơn."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng event trong bộ nhớ để bảo đảm giao dịch liên service hoặc gửi thông báo chắc chắn sau crash. Không giữ subscriber dài hơn vòng đời của nó; publisher sống lâu có thể giữ object UI không được GC. Tránh async void handler nếu cần caller chờ và quan sát lỗi.",
+        "Event không tự tạo thread và không phải hàng đợi bền vững. Một subscriber ném lỗi có thể làm các subscriber sau không được gọi theo cách invoke thông thường. Giữ tham chiếu handler để hủy đăng ký, tránh publisher sống lâu giữ subscriber ngoài ý muốn.",
+        "Event phù hợp thông báo thay đổi trong tiến trình; method call hoặc trả kết quả thường đơn giản hơn cho quan hệ một caller–một callee. Với xử lý bất đồng bộ cần quyết định cách await/quan sát lỗi, không dùng async void tùy tiện ngoài event handler."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Delegate lưu phương thức đích và có thể giữ object target; multicast delegate có danh sách gọi theo thứ tự. Với event dạng thông thường, publisher có quyền invoke còn subscriber chỉ += hoặc -=. Handler mặc định chạy đồng bộ trên thread phát sự kiện; event không tự tạo thread hay hàng đợi.",
+        "Multicast delegate gọi danh sách subscriber theo thứ tự invocation khi được invoke thông thường. Với delegate trả kết quả, giá trị trả trực tiếp là từ phần tử cuối; exception chưa xử lý có thể dừng việc gọi tiếp.",
+        "EventHandler(sender,args) là quy ước phổ biến. EventHandler<TEventArgs> thường dùng một type dữ liệu sự kiện theo convention; không coi việc kế thừa EventArgs là ràng buộc generic bắt buộc của mọi phiên bản hiện đại. Hủy đăng ký khi vòng đời subscriber ngắn hơn publisher nếu không muốn bị giữ tham chiếu."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Delegate",
+          "meaning": "Một giá trị đại diện cho lời gọi method phù hợp chữ ký; có thể chứa danh sách nhiều lời gọi.",
+          "example": "handler nhận sender và EventArgs, mỗi lần chạy tăng received."
+        },
+        {
+          "term": "Event",
+          "meaning": "Cung cấp cơ chế đăng ký/hủy đăng ký, giới hạn thao tác phát sự kiện ở phía publisher theo quy tắc C#.",
+          "example": "Caller dùng += hoặc -=, không được gọi processor.Completed(...) từ bên ngoài."
+        },
+        {
+          "term": "Publisher và subscriber",
+          "meaning": "Publisher phát tín hiệu; subscriber quyết định hành động khi nhận.",
+          "example": "Processor không biết biến received; handler do caller đăng ký mới tăng biến đó."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "UI dùng EventHandler<TEventArgs> để báo hành động; LINQ dùng Func<T,bool> cho predicate. Với tác vụ async cần chính sách await từng handler hoặc tập task rõ ràng. Nếu cần liên process, dùng giao thức/message broker phù hợp thay vì mong event .NET tự chuyển qua mạng."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "int received = 0;\nvar processor = new Processor();\nEventHandler handler = (_, _) => received++;\nprocessor.Completed += handler;\nprocessor.Run();\nConsole.WriteLine(received);\n\nclass Processor\n{\n    public event EventHandler? Completed;\n    public void Run() => Completed?.Invoke(this, EventArgs.Empty);\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "1",
+        "steps": [
+          "received ban đầu 0, sau đó handler được đăng ký một lần.",
+          "Run gọi Completed nếu có người nghe.",
+          "Handler tăng received thành 1; lời gọi event ở đây chạy đồng bộ."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Đặt breakpoint ở nơi raise và từng subscriber. Kiểm tra số lần đăng ký để tránh xử lý lặp; hủy đúng cùng delegate đã đăng ký. Nếu có leak, xem đường tham chiếu từ publisher tới target trong memory profiler."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "delegates overview",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/delegates-overview"
+        },
+        {
+          "title": "events",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/events/"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

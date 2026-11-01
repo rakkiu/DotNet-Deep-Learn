@@ -1,0 +1,147 @@
+{
+  "id": "http-request-line",
+  "title": "HTTP request và kiến trúc Web Server",
+  "description": "HTTP định nghĩa cách client yêu cầu tài nguyên và server phản hồi. Bài của thầy xây server HTTP/1.1 tối giản trên TCP để nhìn thấy request line và luồng xử lý. Server học tập này khác Kestrel hoàn chỉ…",
+  "category": "network",
+  "kind": "Giao thức tầng ứng dụng",
+  "sourceParts": [
+    37
+  ],
+  "prerequisites": [
+    "Biết TCP byte stream ở bài 36 và HTTP request/response ở bài 19"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "HTTP định nghĩa cách client yêu cầu tài nguyên và server phản hồi. Bài của thầy xây server HTTP/1.1 tối giản trên TCP để nhìn thấy request line và luồng xử lý. Server học tập này khác Kestrel hoàn chỉnh và không đại diện parser HTTP/2 hay HTTP/3."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Socket chỉ truyền byte; không tự biết byte nào là GET, đường dẫn tài nguyên hay trạng thái lỗi. HTTP đưa quy ước chung để browser và server của các bên khác nhau hiểu nhau. Tự viết phần nhỏ giúp hiểu framework đang làm việc gì bên dưới."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Giao thức chuẩn có hệ sinh thái browser, proxy, công cụ và cache rộng. Kiến trúc tách accept loop, reader, router và writer dễ hiểu hơn một Worker xử lý tất cả. Trong ứng dụng thật, framework server đã được kiểm chứng giúp giảm công tự triển khai đầy đủ grammar và bảo vệ giao thức."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng parser Split đơn giản như server public. Không coi URL là đường dẫn file trực tiếp. Không chỉ hỗ trợ GET rồi trả 200 cho mọi method; hành vi và status phải phản ánh đúng khả năng và loại lỗi.",
+        "Đây là parser tối giản của một request line đã có đủ dữ liệu, chưa phải HTTP server dùng production. HTTP thật có grammar, limits, escaping, headers, body framing và kết nối tái sử dụng. Response 405 thật còn cần header Allow phù hợp.",
+        "Bài tổng hợp có thể đặt socket accept loop trong Worker Service, bind WebServerOptions từ configuration và truyền CancellationToken. Tách IRequestReader khỏi Worker để test parser bằng fixture mà không mở mạng."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Trong HTTP/1.1, request line có method, request target và version, sau đó là headers, dòng trống và body theo framing. Server đọc dữ liệu có giới hạn, parse request thành model, chọn resource và tạo response. Byte có thể tới thành nhiều mảnh; timeout phải ngăn client giữ kết nối quá lâu chỉ để gửi dần header.",
+        "Tách server thành accept loop, request reader, resource router và response writer. Configuration binding lấy host/port từ options để tránh hằng số rải rác; validate options trước khi bắt đầu listen.",
+        "Server học tập chỉ hỗ trợ GET cần công bố giới hạn rõ ràng. Với website thật nên dùng Kestrel/ASP.NET Core thay vì mở parser tự viết ra Internet; parser mẫu chưa xử lý request smuggling, giới hạn và toàn bộ framing."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Request line",
+          "meaning": "Dòng đầu HTTP/1.x chứa method, request target và version.",
+          "example": "GET /docs HTTP/1.1 có ba thành phần tách bằng khoảng trắng."
+        },
+        {
+          "term": "Resource routing",
+          "meaning": "Chọn tài nguyên sau khi đọc được request target.",
+          "example": "/docs có trong fixture; /missing không có."
+        },
+        {
+          "term": "Status code",
+          "meaning": "Mã mô tả kết quả HTTP, khác với lỗi compiler hay exception C#.",
+          "example": "200 thành công, 404 không có tài nguyên, 405 method không hỗ trợ."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Worker Service có host, DI, options và logging để quản lý accept loop/shutdown. WebServerOptions giữ địa chỉ/port; reader không nên tự quyết định nội dung business. Reverse proxy, TLS và giới hạn request là những phần còn thiếu của một demo TCP nhỏ."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "string requestLine = \"GET /docs HTTP/1.1\";\nstring[] parts = requestLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);\nif (parts.Length != 3 || parts[2] != \"HTTP/1.1\")\n    Console.WriteLine(\"400\");\nelse if (parts[0] != \"GET\")\n    Console.WriteLine(\"405\");\nelse\n    Console.WriteLine(parts[1] == \"/docs\" ? \"200\" : \"404\");",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "200",
+        "steps": [
+          "Split lấy GET, /docs và HTTP/1.1.",
+          "Cấu trúc fixture và method được chấp nhận.",
+          "/docs khớp tài nguyên nên in 200."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "LearningServer/\n├── Program.cs             # tạo host và đăng ký DI\n├── Worker.cs              # accept loop và shutdown\n├── WebServerOptions.cs    # địa chỉ, port, giới hạn\n├── appsettings.json       # cấu hình local\n├── Protocol/              # request/response model, reader, writer\n├── Middleware/            # handler trong pipeline\n└── wwwroot/               # chỉ tài nguyên được phép phục vụ",
+        "note": "Bố cục mô tả server tổng hợp trong bài giảng; đoạn Hello World bên dưới chỉ cô lập phần giao thức để đọc cơ chế, chưa triển khai toàn bộ server. Với sản phẩm thực tế dùng server framework phù hợp thay parser mẫu."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Dùng curl -v xem request/response trên loopback. Log method, target, status, duration và request ID thay vì toàn bộ credential. Với lỗi parse, giữ fixture text an toàn để tái hiện riêng reader; lỗi bind/listen thuộc tầng socket, không phải lỗi routing."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "IETF — rfc9110.html",
+          "url": "https://www.rfc-editor.org/rfc/rfc9110.html"
+        },
+        {
+          "title": "IETF — rfc9112.html",
+          "url": "https://www.rfc-editor.org/rfc/rfc9112.html"
+        },
+        {
+          "title": "workers",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/workers"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/http",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

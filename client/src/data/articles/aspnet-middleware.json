@@ -1,0 +1,146 @@
+{
+  "id": "aspnet-middleware",
+  "title": "Middleware, pipeline và static files",
+  "description": "Middleware là thành phần trong chuỗi xử lý request, có thể làm việc trước/sau bước kế tiếp hoặc kết thúc sớm. Chain of Responsibility mô tả ý tưởng mỗi handler xử lý hay chuyển tiếp. Bài 40 áp dụng ch…",
+  "category": "network",
+  "kind": "Mô hình xử lý request",
+  "sourceParts": [
+    40
+  ],
+  "prerequisites": [
+    "Biết DI và request/response ở bài 27, 37–39"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Middleware là thành phần trong chuỗi xử lý request, có thể làm việc trước/sau bước kế tiếp hoặc kết thúc sớm. Chain of Responsibility mô tả ý tưởng mỗi handler xử lý hay chuyển tiếp. Bài 40 áp dụng chuỗi cho server tự viết; ASP.NET Core có pipeline chuẩn để đối chiếu."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu logging, xác thực, static files và routing đều nằm trong một hàm server, khó thay thứ tự hay thêm trách nhiệm độc lập. Pipeline tách các mối quan tâm nhưng vẫn cho một đường đi request rõ ràng. Middleware không phải tầng database hay một framework khác."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Một middleware logging có thể bao quanh cả request, còn static handler kết thúc sớm khi đã tìm thấy file. Exception middleware đặt ngoài có thể bắt lỗi phía trong. So với các if phân tán, thứ tự được cấu hình tập trung và từng bước có hợp đồng rõ."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không thêm middleware chỉ để tạo nhiều lớp khi một endpoint đủ xử lý. Không gọi next sau khi đã hoàn tất response nếu không hiểu hậu quả. Không nối URL vào đường dẫn ổ đĩa hoặc cho phép traversal ra ngoài web root.",
+        "Thứ tự middleware ảnh hưởng authentication, authorization, exception handling và static files. Không viết response sau khi nó đã bắt đầu rồi đổi headers/status tùy ý. Middleware tự viết phải có chính sách xử lý lỗi rõ ràng.",
+        "Static content thật cần giới hạn đường dẫn trong web root, chống traversal và chọn content type phù hợp. Framework cung cấp static asset APIs; bài không tự nhận pipeline mẫu này là server file production hoàn chỉnh."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Đoạn trước await next chạy chiều vào; khi phần sau hoàn tất, phần sau await chạy theo chiều ngược. Không gọi next là short-circuit. Thứ tự quyết định middleware nào nhìn thấy user, endpoint hoặc exception. Fallback xử lý request chưa có endpoint phù hợp; static file service cần kiểm soát root, MIME và chính sách truy cập.",
+        "Chain of Responsibility cho phép mỗi handler quyết định xử lý hay chuyển tiếp. DI/factory cung cấp dependency cho request reader và response writer; chỉ thêm interface khi có trách nhiệm hoặc điểm thay thế rõ ràng.",
+        "Bài minh họa dùng ASP.NET Core để đối chiếu hành vi middleware. Nếu tự viết static content server, phải canonicalize và giới hạn đường dẫn trong web root, xử lý MIME type và giới hạn file; không nối URL trực tiếp vào đường dẫn file."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Middleware",
+          "meaning": "Thành phần có thể xử lý request rồi gọi phần sau hoặc dừng pipeline.",
+          "example": "Middleware đặt header X-Lesson trước khi gọi next."
+        },
+        {
+          "term": "Short-circuit",
+          "meaning": "Kết thúc xử lý mà không gọi tiếp phần sau.",
+          "example": "Middleware kiểm tra điều kiện rồi ghi response có thể không gọi next."
+        },
+        {
+          "term": "Fallback",
+          "meaning": "Endpoint cuối cho các request chưa được endpoint phù hợp xử lý.",
+          "example": "GET /hello tới MapGet; đường dẫn khác tới fallback 404."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "UseAuthentication phải phối hợp trước authorization thích hợp; endpoint metadata ảnh hưởng policy. Static assets công khai không nên chứa secret; file riêng cần endpoint kiểm tra quyền. Factory/DI lắp ghép dependency của handler, không thay chính sách bảo mật hoặc chuẩn HTTP."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new web -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs, tạo thêm các file được ghi bên dưới\ndotnet run --urls http://localhost:5090",
+        "code": "var builder = WebApplication.CreateBuilder(args);\nvar app = builder.Build();\napp.Use(async (context, next) => {\n    context.Response.Headers[\"X-Lesson\"] = \"40\";\n    await next(context);\n});\napp.MapGet(\"/hello\", () => \"Xin chào\");\napp.MapFallback(async context => {\n    context.Response.StatusCode = 404;\n    await context.Response.WriteAsync(\"Không tìm thấy\");\n});\napp.Run();",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Xin chào",
+        "steps": [
+          "Request GET /hello đi qua middleware, nhận header X-Lesson.",
+          "next cho pipeline đi tiếp đến endpoint /hello.",
+          "Endpoint trả Xin chào; fallback không được chọn."
+        ],
+        "request": {
+          "method": "GET",
+          "path": "/hello"
+        },
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "WebApp/\n├── WebApp.csproj\n├── Program.cs            # host, services, pipeline, routes\n├── appsettings.json      # cấu hình theo môi trường\n├── Controllers/          # action nhận request\n├── Models/               # input model / view model\n├── Views/                # Razor .cshtml (nếu dùng MVC)\n│   └── Shared/_Layout.cshtml\n├── wwwroot/              # CSS, JS và tài nguyên công khai\n└── Properties/launchSettings.json # chạy local",
+        "note": "Đây là quy ước MVC. API thuần có thể không có Views; Minimal API có thể bắt đầu từ Program.cs. Khi chia class ra file, thêm namespace/using nhất quán. Không đặt cấu hình nhạy cảm dưới wwwroot."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Log thứ tự vào/ra pipeline với request ID để thấy short-circuit và bước không được gọi. Với response đã bắt đầu, kiểm tra nơi đầu tiên ghi body. Với static file 404, xem web root/content root, URL và middleware phục vụ file đã được cấu hình đúng chưa."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "middleware",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-10.0"
+        },
+        {
+          "title": "static files",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/static-files?view=aspnetcore-10.0"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/asp.net-core",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

@@ -1,0 +1,139 @@
+{
+  "id": "design-testing-patterns",
+  "title": "SOLID và phân chia trách nhiệm",
+  "description": "SOLID là nhóm nguyên lý định hướng thiết kế object: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation và Dependency Inversion. Chúng là công cụ đánh giá khả năng thay đổi …",
+  "category": "architecture",
+  "kind": "Nguyên lý thiết kế phần mềm",
+  "sourceParts": [
+    15
+  ],
+  "prerequisites": [
+    "Biết interface, LINQ và quản lý tài nguyên với using"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "SOLID là nhóm nguyên lý định hướng thiết kế object: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation và Dependency Inversion. Chúng là công cụ đánh giá khả năng thay đổi của code, không phải framework hay bộ thư mục bắt buộc. Bài 15 của thầy kết hợp chúng với unit test và các pattern."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu một class cùng đọc file, phân tích tham số, lọc dòng và in kết quả, mỗi thay đổi dễ tác động tới phần không liên quan. Phụ thuộc trực tiếp vào I/O còn khiến kiểm tra một quy tắc phải chạy cả chương trình. Phân chia theo trách nhiệm tách các nguyên nhân thay đổi và tạo ranh giới có thể kiểm tra riêng."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Một parser thuần có thể test nhanh không cần mở file; một nguồn dòng có thể được thay bởi bộ nhớ. Code dễ mở rộng khi việc thêm hành vi không buộc sửa mọi tầng. Giá trị phải được chứng minh bằng thay đổi thực tế dễ hơn, không bằng số lượng interface hay design pattern."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không áp dụng tất cả nguyên lý máy móc vào chương trình vài dòng. Không tách mỗi field thành một service, hoặc thêm nhiều tầng chỉ để đi theo sơ đồ. Abstraction sai làm thay đổi khó hơn; hãy bắt đầu từ trách nhiệm có thật và các dependency cần kiểm soát.",
+        "Một factory tập trung cách tạo object; không phải mọi hàm new đều cần Abstract Factory. Decorator không tự làm code nhanh hay thread-safe. Test nên bao phủ không tìm thấy, phân biệt hoa thường và input rỗng; không chỉ lặp lại implementation trong assertion.",
+        "Pattern có lợi khi thực sự có nhiều nguồn hoặc nhiều lớp hành vi cần ghép. Với một phép lọc ngắn dùng một lần, LINQ trực tiếp đơn giản hơn. Chi phí thêm interface/class chỉ đáng khi nó làm yêu cầu và kiểm thử rõ hơn."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "SRP tìm các lý do thay đổi khác nhau; OCP chọn điểm mở rộng; LSP yêu cầu implementation giữ hợp đồng có ý nghĩa cho caller. ISP thu hẹp contract theo nhu cầu; DIP để policy cao cấp phụ thuộc abstraction phù hợp thay vì chi tiết I/O. Composition ghép các mảnh qua constructor và luồng dữ liệu rõ ràng.",
+        "Với lệnh tìm dòng, tách ba trách nhiệm: đọc nguồn, chọn dòng, định dạng kết quả. Một factory chọn nguồn Console/File chưa nhất thiết là Abstract Factory; mẫu Abstract Factory tạo họ object liên quan, cần đủ ngữ cảnh để gọi đúng tên.",
+        "Test lọc bằng dữ liệu cố định: có kết quả, không có, khác hoa thường, dòng rỗng, đảo kết quả và đánh số dòng. Có thể dùng xUnit cho dự án thật; ví dụ chính trong bài không cần package test để chạy. Decorator bọc cùng interface giúp ghép hành vi, nhưng quá nhiều lớp bọc có thể làm việc theo dõi call khó hơn."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Trách nhiệm đơn lẻ",
+          "meaning": "Một module có lý do thay đổi tập trung, không phải mỗi class chỉ được có một method.",
+          "example": "FixedLines cung cấp dòng; ContainsFilter chọn dòng; bên gọi định dạng output."
+        },
+        {
+          "term": "Decorator",
+          "meaning": "Object implement cùng hợp đồng và bọc một object khác để thêm hành vi.",
+          "example": "ContainsFilter nhận ILineSource rồi lọc kết quả Read của object được bọc."
+        },
+        {
+          "term": "Test có kiểm soát",
+          "meaning": "Cho đầu vào cố định và so sánh hành vi mong đợi, không chỉ kiểm tra code chạy không lỗi.",
+          "example": "Ba chuỗi mẫu giúp test lọc C# phải giữ đúng hai dòng."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Factory chọn cách tạo nguồn, decorator thêm lọc/log/cache và DI lắp ghép chúng ở composition root. Unit test kiểm tra từng quy tắc; integration test kiểm tra các ranh giới I/O thật. Interface là một cách hỗ trợ những nguyên lý này chứ không phải bằng chứng thiết kế đã tốt."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "ILineSource source = new FixedLines();\nILineSource filtered = new ContainsFilter(source, \"C#\");\nConsole.WriteLine(string.Join(\" | \", filtered.Read()));\n\ninterface ILineSource { IEnumerable<string> Read(); }\nclass FixedLines : ILineSource\n{\n    public IEnumerable<string> Read() => new[] { \"Học C#\", \"Học SQL\", \"Ôn C#\" };\n}\nclass ContainsFilter : ILineSource\n{\n    private readonly ILineSource inner;\n    private readonly string keyword;\n    public ContainsFilter(ILineSource inner, string keyword)\n    { this.inner = inner; this.keyword = keyword; }\n    public IEnumerable<string> Read() => inner.Read().Where(x => x.Contains(keyword, StringComparison.Ordinal));\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Học C# | Ôn C#",
+        "steps": [
+          "FixedLines trả ba dòng theo thứ tự xác định.",
+          "ContainsFilter gọi inner.Read rồi dùng Contains với Ordinal, có phân biệt hoa thường.",
+          "Hai dòng có C# được giữ; string.Join nối bằng dấu phân cách."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Khi phải sửa nhiều file cho một thay đổi nhỏ, theo Call Stack và đánh dấu nơi policy nghiệp vụ đang phụ thuộc I/O. Log ở ranh giới thay vì mỗi lớp wrapper. Dùng test phát hiện hành vi trước/sau refactor để không đánh đổi kiến trúc lấy lỗi mới."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "architectural principles",
+          "url": "https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

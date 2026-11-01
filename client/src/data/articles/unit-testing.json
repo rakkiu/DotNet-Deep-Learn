@@ -1,0 +1,137 @@
+{
+  "id": "unit-testing",
+  "title": "Unit test — kiểm tra một hành vi độc lập",
+  "description": "Unit test là code tự động kiểm tra một đơn vị hành vi nhỏ theo đầu vào và kết quả mong đợi. xUnit, NUnit và MSTest là các test framework phổ biến trong .NET. Đây là kiến thức về phát triển phần mềm tr…",
+  "category": "architecture",
+  "kind": "Kỹ thuật và công cụ kiểm thử",
+  "sourceParts": [
+    15
+  ],
+  "prerequisites": [
+    "Biến, method và class cơ bản"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Unit test là code tự động kiểm tra một đơn vị hành vi nhỏ theo đầu vào và kết quả mong đợi. xUnit, NUnit và MSTest là các test framework phổ biến trong .NET. Đây là kiến thức về phát triển phần mềm trong bài giảng, không phải chức năng giao bài tập hay trắc nghiệm của website."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu mỗi lần sửa hàm parse phải mở console, nhập tay và nhìn output, rất dễ bỏ sót trường hợp biên. Test lưu lại ví dụ có thể chạy lặp để phát hiện hồi quy. Một test có giá trị kiểm tra quy tắc quan sát được, không chỉ xác nhận lại từng dòng implementation."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Test nhanh giúp refactor có phản hồi sớm và ghi lại hợp đồng. Tách I/O khỏi hàm thuần giúp kiểm tra không cần mạng/database thật. Unit test không thay integration test, vì fake không chứng minh SQL/provider hoặc HTTP endpoint thật được cấu hình đúng."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không mock mọi class nội bộ chỉ để kiểm tra thứ tự gọi thay vì hành vi. Không test ngẫu nhiên phụ thuộc đồng hồ hoặc mạng ngoài nếu không kiểm soát được. Không coi coverage cao là bằng chứng đầy đủ, và không viết test chỉ để giữ nguyên bug."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Test runner khám phá test qua metadata/attribute, thực thi và thu kết quả assertion. Arrange chuẩn bị input, Act gọi hành vi, Assert đối chiếu kết quả. Mỗi test nên cô lập state; test tham số hóa diễn đạt nhiều dữ liệu cho cùng quy tắc. Failure phải giúp biết hành vi nào bị vi phạm."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Assertion",
+          "meaning": "Điều kiện kiểm chứng một kết quả quan sát được.",
+          "example": "Assert.Equal(5, actual) báo rõ expected và actual khi khác."
+        },
+        {
+          "term": "Test isolation",
+          "meaning": "Một test không phụ thuộc state do test trước để lại.",
+          "example": "Mỗi test tự tạo dữ liệu đầu vào cần thiết."
+        },
+        {
+          "term": "Fake / integration test",
+          "meaning": "Fake thay phụ thuộc khi cần cô lập; integration test kiểm tra ranh giới thật.",
+          "example": "Fake repository không chứng minh migration SQL chạy được."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "CI chạy dotnet test trước khi merge; thư mục test tham chiếu project production bằng ProjectReference. Stub/fake thay dependency ngoài khi kiểm tra policy, integration test dùng hệ thống thật có kiểm soát cho ranh giới. Log test hỗ trợ chẩn đoán nhưng assertion mới quyết định pass/fail."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new xunit -n TheoryTests\ncd TheoryTests\n# Tạo TotalTests.cs bằng code bên dưới\ndotnet test",
+        "code": "using Xunit;\n\npublic class TotalTests\n{\n    [Fact]\n    public void Add_TwoPositiveNumbers_ReturnsSum()\n    {\n        int actual = Add(2, 3);\n        Assert.Equal(5, actual);\n    }\n\n    private static int Add(int a, int b) => a + b;\n}",
+        "file": "TotalTests.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "Test pass khi Add(2, 3) trả về 5; đây là kết quả của test runner, không phải Console.WriteLine.",
+        "steps": [
+          "[Fact] đánh dấu test không nhận tham số theo xUnit template.",
+          "Assert.Equal so sánh giá trị kỳ vọng 5 với kết quả thực. Nếu khác nhau, runner báo fail."
+        ],
+        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryTests/\n├── TheoryTests.csproj    # test SDK và xUnit packages\n├── TotalTests.cs         # test theo hành vi\n└── obj/, bin/            # output sinh tự động",
+        "note": "Với app thật, đặt source trong src/ và test trong tests/ theo quy mô. Test project tham chiếu production project; không nhúng test vào runtime UI."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Chạy riêng test bị fail và đọc expected/actual. Đặt breakpoint trong test rồi Step Into hàm được kiểm tra. Với test lúc pass lúc fail, tìm shared static state, thứ tự test, thời gian và tài nguyên ngoài không được cô lập."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "learn.microsoft.com — unit testing best practices",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices"
+        },
+        {
+          "title": "xunit.net — getting started",
+          "url": "https://xunit.net/docs/getting-started/v2/getting-started"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

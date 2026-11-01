@@ -1,0 +1,144 @@
+{
+  "id": "tasks-concurrency",
+  "title": "Thread, Task, concurrency và await",
+  "description": "Concurrency là tổ chức nhiều công việc cùng có tiến triển; parallelism là thực thi thực sự cùng lúc. Thread là luồng thực thi của hệ điều hành; Task mô tả công việc/kết quả theo abstraction cao hơn. A…",
+  "category": "concurrency",
+  "kind": "Mô hình thực thi đồng thời",
+  "sourceParts": [
+    18
+  ],
+  "prerequisites": [
+    "Biết method, exception và delegate"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Concurrency là tổ chức nhiều công việc cùng có tiến triển; parallelism là thực thi thực sự cùng lúc. Thread là luồng thực thi của hệ điều hành; Task mô tả công việc/kết quả theo abstraction cao hơn. Async là cách không giữ thread chỉ để chờ I/O khi API hỗ trợ."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Một luồng UI bị chặn bởi tải file hoặc gọi mạng sẽ không phản hồi; server dùng một thread chờ mỗi request dễ cạn thread khi tải tăng. Tạo thủ công thêm thread cho mọi việc lại tốn bộ nhớ, context switch và công quản lý vòng đời."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "API async cho phép chờ I/O mà không cần giữ một worker thread nhàn rỗi suốt thời gian chờ. ThreadPool/TPL hỗ trợ phân phối công việc CPU và ghép kết quả. Chọn cơ chế theo CPU-bound hay I/O-bound giúp giải quyết đúng nút thắt thay vì chỉ tăng số thread."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng Task.Run để bọc mọi API I/O vốn đã có async. Không chạy nhiều việc CPU hơn mức tài nguyên cho phép rồi kỳ vọng nhanh hơn tuyến tính. Không dùng .Result/.Wait trên UI hoặc chuỗi gọi async nếu có thể await xuyên suốt.",
+        "Không nói mọi await đều giải phóng thread ngay hoặc luôn trở lại một thread khác. Đừng dùng Task.Run để bọc mọi API I/O đã async. Chặn .Result/.Wait có thể gây deadlock ở ngữ cảnh UI và làm giảm khả năng phục vụ trong server.",
+        "CPU-bound có thể dùng Task.Run để giữ UI phản hồi hoặc parallelism có giới hạn; I/O-bound ưu tiên API async tự nhiên. Tạo quá nhiều Task/Thread không tự tăng throughput; vẫn cần cancellation, giới hạn concurrency và quan sát lỗi."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "OS lập lịch thread lên CPU; nhiều thread hơn core phải chia thời gian. Thread trong process chia sẻ heap nhưng có call stack riêng. Một thao tác async bắt đầu chạy đồng bộ, có thể trả Task chưa hoàn tất khi cần chờ. Hoàn thành I/O sẽ kích hoạt phần tiếp tục theo runtime/context, không bảo đảm luôn là thread cũ hay luôn là thread mới.",
+        "Process có không gian địa chỉ và tài nguyên của tiến trình; nhiều thread trong cùng process chia sẻ dữ liệu thích hợp nhưng có stack riêng. Tăng số thread làm tăng chi phí lập lịch và bộ nhớ, không tự tăng tốc.",
+        "CPU-bound bị giới hạn bởi lượng tính toán; I/O-bound dành nhiều thời gian chờ thiết bị/mạng. Dùng API async cho I/O để không giữ thread chỉ để chờ. Task.Run có thể đưa việc CPU lên ThreadPool nhưng vẫn cần giới hạn concurrency và cân nhắc môi trường server."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Task",
+          "meaning": "Đối tượng biểu diễn trạng thái hoàn tất, kết quả hoặc lỗi của một thao tác; không đồng nghĩa một thread riêng.",
+          "example": "operation chưa xong khi input chưa có kết quả."
+        },
+        {
+          "term": "await",
+          "meaning": "Nếu awaitable chưa xong, phương thức có thể tạm dừng và trả quyền điều khiển; nếu đã xong có thể đi tiếp đồng bộ.",
+          "example": "SetResult(7) hoàn tất input; sau đó ReadAsync có thể trả 8."
+        },
+        {
+          "term": "Concurrency và parallelism",
+          "meaning": "Concurrent là các công việc có khoảng thời gian tiến triển chồng lấp; parallel là thực thi cùng lúc.",
+          "example": "Nhiều request chờ I/O có thể concurrent mà không cần một thread bị giữ riêng cho mỗi lần chờ."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Web controller await EF Core/HttpClient; tác vụ CPU trên desktop có thể dùng Task.Run để giữ UI phản hồi. Shared state cần lock, semaphore hoặc thiết kế không chia sẻ. Cancellation là giao ước hợp tác xuyên API, không phải lệnh giết ngay công việc."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "var ready = new TaskCompletionSource<int>();\nTask<int> operation = ReadAsync(ready.Task);\nConsole.WriteLine(operation.IsCompleted);\nready.SetResult(7);\nConsole.WriteLine(await operation);\n\nstatic async Task<int> ReadAsync(Task<int> input)\n{\n    int value = await input;\n    return value + 1;\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "False\n8",
+        "steps": [
+          "ready.Task chưa hoàn thành, ReadAsync gặp await input rồi tạm dừng.",
+          "operation.IsCompleted là False tại điểm được in.",
+          "SetResult cung cấp 7; ReadAsync lấy 7 và cộng 1.",
+          "await operation thu được 8, không cần dự đoán thread ID."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Dùng cửa sổ Threads, Tasks/Parallel Stacks và đo CPU. CPU thấp nhưng request chậm có thể là I/O hoặc blocking; CPU cao có thể là tính toán hoặc vòng lặp. Kiểm tra ThreadPool starvation khi sync-over-async hoặc blocking nhiều, thay vì chỉ thêm timeout."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "async scenarios",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-scenarios"
+        },
+        {
+          "title": "task parallel library tpl",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-parallel-library-tpl"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

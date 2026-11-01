@@ -1,0 +1,139 @@
+{
+  "id": "oop-interfaces",
+  "title": "Interface: gọi theo hợp đồng, thay được phần triển khai",
+  "description": "Interface định nghĩa các khả năng mà một type cam kết cung cấp. Caller dùng hợp đồng như IMessageSender thay vì gắn chặt với EmailSender. Interface không chứa trạng thái instance theo cách class làm; …",
+  "category": "architecture",
+  "kind": "Hợp đồng kiểu / thiết kế API",
+  "sourceParts": [
+    14
+  ],
+  "prerequisites": [
+    "Biết class và đa hình ở bài 11–12"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Interface định nghĩa các khả năng mà một type cam kết cung cấp. Caller dùng hợp đồng như IMessageSender thay vì gắn chặt với EmailSender. Interface không chứa trạng thái instance theo cách class làm; C# hiện đại có thêm default implementation và static abstract member với quy tắc riêng."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu một service tự new lớp gửi email cụ thể, test phải chạm dịch vụ thật và thay nhà cung cấp sẽ kéo theo sửa caller. Interface tạo ranh giới giữa điều cần và cách làm, giúp mô tả dependency nhỏ đúng nhu cầu."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Một class có thể implement nhiều interface; mỗi caller chỉ cần nhìn phần khả năng liên quan. So với abstract class, interface phù hợp hợp đồng giữa các type không chung cây kế thừa hay state. Không phải mọi class đều cần một interface giống hệt để trông có kiến trúc."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không tạo interface có hàng chục phương thức không liên quan, buộc implementation ném NotSupportedException. Không coi việc có chữ I là đã đạt loose coupling nếu caller vẫn ép kiểu về class cụ thể. Nếu không có ranh giới hay nhu cầu thay thế rõ, dùng class trực tiếp có thể tốt hơn.",
+        "Interface không chỉ là tập method không thân trong C# hiện đại: có default interface implementation từ C# 8 và static abstract members từ C# 11. Không được new trực tiếp một interface. Quy tắc chữ I là convention, không phải yêu cầu cú pháp của compiler.",
+        "Interface nhỏ theo nhu cầu caller giúp tránh buộc implement hành vi không liên quan. Abstract class phù hợp chia sẻ state/triển khai trong một họ đối tượng; interface mô tả khả năng và cho phép một type implement nhiều hợp đồng."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Compiler kiểm tra implementation cung cấp các member cần thiết. Biến interface có thể giữ tham chiếu đến implementation tương thích; lời gọi được dispatch đến member thích hợp của object. Explicit interface implementation cho phép cung cấp hành vi chỉ qua view interface. Contract phải bao gồm cả ngữ nghĩa, không chỉ chữ ký.",
+        "Class có thể implement nhiều interface nhưng chỉ kế thừa trực tiếp một class. Interface mô tả hành vi, abstract class còn có thể chia sẻ state/constructor và implementation. Chọn theo quan hệ thay thế và nhu cầu chia sẻ, không chỉ theo số method.",
+        "C# 8 cho phép default interface implementations; C# 11 hỗ trợ static abstract interface members. Vì vậy không nói mọi member interface đều không có thân hoặc static member luôn phải có implementation sẵn. Tiền tố I là quy ước đặt tên, không phải cú pháp bắt buộc của ngôn ngữ."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Interface",
+          "meaning": "Một hợp đồng member mà code bên gọi có thể dựa vào.",
+          "example": "INameSource nói rằng có thể gọi GetName, không quy định tên phải được đọc từ đâu."
+        },
+        {
+          "term": "Implementation",
+          "meaning": "Type cung cấp hành vi phù hợp với hợp đồng.",
+          "example": "FixedNameSource và GuestNameSource đều implement GetName."
+        },
+        {
+          "term": "Thay thế dependency",
+          "meaning": "Bên gọi nhận cùng một giao diện nhưng có thể dùng đối tượng triển khai khác.",
+          "example": "Chỉ đổi chỗ tạo object; dòng source.GetName() không đổi."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "DI ánh xạ interface tới implementation; fake/mock dùng cùng contract trong test. IDisposable và IEnumerable là interface nền của using và foreach. Một interface repository không tự bảo đảm truy vấn nhanh, bảo mật hay tính nhất quán database."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "INameSource source = new FixedNameSource();\nConsole.WriteLine(source.GetName());\n\ninterface INameSource { string GetName(); }\nclass FixedNameSource : INameSource\n{\n    public string GetName() => \"An\";\n}\nclass GuestNameSource : INameSource\n{\n    public string GetName() => \"Khách\";\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "An",
+        "steps": [
+          "Biến source có kiểu tĩnh INameSource.",
+          "Object thực tế là FixedNameSource.",
+          "Lời gọi GetName được chuyển tới triển khai tương ứng và trả An."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Kiểm tra implementation được DI đăng ký và GetType lúc chạy. Với lỗi thiếu member, đối chiếu cả kiểu trả về, generic parameter và accessibility. Nếu object có member nhưng không gọi qua class được, xem có explicit interface implementation không."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "interfaces",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

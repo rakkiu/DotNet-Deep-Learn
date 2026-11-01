@@ -1,0 +1,143 @@
+{
+  "id": "dependency-injection",
+  "title": "Dependency Injection và ba vòng đời service",
+  "description": "Dependency Injection đưa dependency từ bên ngoài vào một object thay vì object tự tạo tất cả. Constructor injection thể hiện điều class cần ngay trong constructor. IoC là ý tưởng rộng về đảo quyền điề…",
+  "category": "architecture",
+  "kind": "Kỹ thuật thiết kế / container dịch vụ",
+  "sourceParts": [
+    27
+  ],
+  "prerequisites": [
+    "Biết interface và constructor; đã gặp đăng ký dịch vụ trong ASP.NET Core"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Dependency Injection đưa dependency từ bên ngoài vào một object thay vì object tự tạo tất cả. Constructor injection thể hiện điều class cần ngay trong constructor. IoC là ý tưởng rộng về đảo quyền điều khiển; Dependency Inversion là nguyên lý phụ thuộc, không phải tên khác hoàn toàn tương đương với DI."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Service tự new repository và email client khó test, khó cấu hình và phải sửa khi đổi implementation. Việc tạo cả graph object ở nhiều nơi còn dẫn tới vòng đời không nhất quán. DI tập trung lắp ghép tại composition root và cho phép caller chỉ phụ thuộc contract cần thiết."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Thay implementation/fake mà không sửa logic dùng nó; container còn quản lý lifetime và Dispose cho các trường hợp nó sở hữu. So với service locator, constructor bộc lộ dependency và compiler hỗ trợ phát hiện thiếu tham số. DI không bắt buộc phải có container: chương trình nhỏ có thể lắp ghép thủ công."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không inject IServiceProvider vào mọi class để tự tìm dependency vì nó che giấu contract. Không để singleton giữ scoped DbContext từ request. Không đăng ký mọi thứ singleton để mong nhanh hơn; shared mutable state và tài nguyên sống dài có thể gây lỗi.",
+        "DI là kỹ thuật, IoC là nguyên lý rộng hơn, DIP là nguyên lý về hướng phụ thuộc; ba khái niệm không đồng nghĩa. Singleton không nên giữ scoped dependency; bật scope validation để bắt cấu hình sai.",
+        "Singleton có thể bị nhiều request gọi đồng thời nên implementation phải phù hợp. GetService có thể trả null; GetRequiredService ném lỗi khi thiếu đăng ký. Ưu tiên constructor injection thay vì giấu dependency trong service locator."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "IServiceCollection lưu mô tả đăng ký; ServiceProvider resolve graph và tạo object. Transient thường tạo mới theo lần resolve; scoped dùng một instance cho một scope; singleton dùng một instance theo provider. Trong web, scope thường gắn request. Singleton không tự thread-safe; container tạo đúng lifetime không thay bạn bảo vệ state.",
+        "ServiceCollection giữ registrations; ServiceProvider tạo/resolve và quản lý instance theo lifetime. Constructor injection làm dependency hiện rõ ở chữ ký; interface không phải điều kiện bắt buộc để dùng DI.",
+        "Scope thường tương ứng request trong ASP.NET Core, nhưng job nền cần tự tạo scope khi dùng service scoped. Container chỉ dispose instance theo quyền sở hữu của nó; tránh resolve scoped từ root provider rồi giữ sống lâu."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Dependency Injection",
+          "meaning": "Cấp dependency từ bên ngoài thay vì để đối tượng tự chọn và tạo mọi dependency.",
+          "example": "Constructor nhận IMessageWriter giúp test dùng một implementation thay thế."
+        },
+        {
+          "term": "Lifetime",
+          "meaning": "Quy tắc tái sử dụng instance của container.",
+          "example": "Scoped dùng chung trong một scope, khác scope có thể là instance khác."
+        },
+        {
+          "term": "Scope",
+          "meaning": "Ranh giới quản lý các service và tài nguyên có vòng đời giới hạn.",
+          "example": "ASP.NET Core thường tạo scope cho mỗi request; ví dụ tự tạo hai scope."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "ASP.NET Core tạo controller/service qua container; AddDbContext, AddHttpClient và logging tích hợp sẵn. Worker cần tự tạo scope khi gọi scoped service từ background singleton. Container dispose tài nguyên do nó quản lý theo lifetime; tránh resolve từ root để vô tình kéo dài vòng đời."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thêm FrameworkReference vào .csproj theo hướng dẫn bên dưới\n# Thay Program.cs rồi chạy\ndotnet run",
+        "code": "using Microsoft.Extensions.DependencyInjection;\nvar services = new ServiceCollection();\nservices.AddScoped<Marker>();\nusing var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });\nusing var scope1 = provider.CreateScope();\nusing var scope2 = provider.CreateScope();\nvar first = scope1.ServiceProvider.GetRequiredService<Marker>();\nvar second = scope1.ServiceProvider.GetRequiredService<Marker>();\nvar other = scope2.ServiceProvider.GetRequiredService<Marker>();\nConsole.WriteLine(ReferenceEquals(first, second));\nConsole.WriteLine(ReferenceEquals(first, other));\nclass Marker { }",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "True\nFalse",
+        "steps": [
+          "Đăng ký Marker là Scoped rồi build provider.",
+          "Hai lần resolve trong scope1 nhận cùng instance.",
+          "scope2 nhận instance riêng nên ReferenceEquals lần hai là false."
+        ],
+        "request": null,
+        "note": "Thêm <ItemGroup><FrameworkReference Include=\"Microsoft.AspNetCore.App\" /></ItemGroup> bên trong <Project> của .csproj. Đây là console dùng các thư viện framework để cô lập cơ chế, chưa phải website đăng nhập hay server hoàn chỉnh."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "ServicesDemo/\n├── ServicesDemo.csproj    # framework/package reference\n├── Program.cs            # composition root / đăng ký DI\n├── Contracts/            # interface theo nhu cầu\n├── Services/             # implementation\n└── Decorators/           # lớp bọc nếu thực sự cần",
+        "note": "Đăng ký lifetime tại Program.cs, không rải việc tạo container khắp service. Cấu hình TTL/endpoint có thể lấy từ options. Các thư mục này chỉ là gợi ý tổ chức, không phải yêu cầu của compiler."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Lỗi Unable to resolve service: đọc type thiếu và constructor đang cần nó. Lỗi circular dependency: vẽ lại chuỗi A cần B cần A, thường cần tách trách nhiệm. Bật scope validation trong môi trường phù hợp và kiểm tra object bị capture bởi singleton."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "overview",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview"
+        },
+        {
+          "title": "dependency injection guidelines",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-guidelines"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

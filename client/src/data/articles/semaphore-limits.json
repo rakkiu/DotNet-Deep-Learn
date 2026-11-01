@@ -1,0 +1,143 @@
+{
+  "id": "semaphore-limits",
+  "title": "Semaphore và SemaphoreSlim",
+  "description": "Semaphore giới hạn số bên được vào vùng tài nguyên cùng lúc bằng bộ đếm permit. SemaphoreSlim là biến thể nhẹ trong một process, có WaitAsync cho async code. Semaphore với một permit không hoàn toàn g…",
+  "category": "concurrency",
+  "kind": "Primitive giới hạn đồng thời",
+  "sourceParts": [
+    32
+  ],
+  "prerequisites": [
+    "Biết chờ tín hiệu và timeout ở bài 31"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Semaphore giới hạn số bên được vào vùng tài nguyên cùng lúc bằng bộ đếm permit. SemaphoreSlim là biến thể nhẹ trong một process, có WaitAsync cho async code. Semaphore với một permit không hoàn toàn giống Mutex: ownership và tính reentrant có quy tắc khác."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Gửi hàng nghìn request hoặc truy vấn cùng lúc có thể làm cạn connection và quá tải dịch vụ ngoài. lock chỉ cho một bên vào; không diễn đạt được giới hạn như tối đa 4 thao tác. Semaphore giữ giới hạn N mà không cần tự cài bộ đếm và hàng chờ."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Giới hạn tải rõ ràng, WaitAsync có thể chờ mà không giữ worker thread. Dễ áp dụng quanh API cần kiểm soát mức đồng thời. Đây là giới hạn concurrency, không tự là rate limiter kiểu 100 request/phút hay hàng đợi công việc bền vững."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không Release nếu chưa lấy được permit. Không quên Release khi công việc ném lỗi. Không dùng semaphore trong một process để bảo vệ tài nguyên giữa nhiều server; mỗi process có bộ đếm riêng và tổng tải vẫn có thể vượt giới hạn.",
+        "Mutex có ownership theo thread; semaphore không phải mutex đổi tên. Release sai có thể vượt max và ném SemaphoreFullException hoặc phá giới hạn. Chỉ Release khi đã acquire thành công.",
+        "Trong nghiệp vụ thật: await WaitAsync(token); try { await WorkAsync(token); } finally { Release(); }. Ví dụ chỉ thử permit rồi dispose để nhìn count; không phải mẫu thay thế finally trong service sống lâu."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Wait/WaitAsync lấy một permit khi count dương; nếu hết, caller phải chờ. Release hoàn trả permit, thường đặt trong finally sau khi acquire thành công. Cancellation có thể hủy việc chờ; nếu WaitAsync ném trước khi lấy được permit thì không được Release cho lần đó. Fairness không nên được giả định như hợp đồng FIFO tuyệt đối.",
+        "Semaphore giới hạn số caller ở trong vùng, không nhất thiết gắn mỗi permit với một thread. SemaphoreSlim dùng trong tiến trình và có WaitAsync; Semaphore hệ điều hành còn có các khả năng khác theo nền tảng.",
+        "Acquire thành công rồi mới try/finally giải phóng; cancellation trước khi acquire không tạo nghĩa vụ Release. Chọn giới hạn theo nguồn lực thật như connection pool hay rate limit, không theo số tùy ý càng lớn càng tốt."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Permit / slot",
+          "meaning": "Mỗi lần Wait thành công lấy một đơn vị sức chứa.",
+          "example": "Hai slot cho phép hai lần vào trước khi cần Release."
+        },
+        {
+          "term": "WaitAsync",
+          "meaning": "Chờ permit theo API bất đồng bộ, có overload cancellation.",
+          "example": "await gate.WaitAsync(token) phù hợp giới hạn I/O concurrent."
+        },
+        {
+          "term": "Release",
+          "meaning": "Trả permit sau khi đã lấy thành công.",
+          "example": "Dùng try/finally để trả slot dù phần việc ném exception."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Bao quanh HttpClient, thao tác file hoặc query độc lập cần giới hạn tải. DbContext vẫn không thread-safe dù có giới hạn lớn hơn 1; các task database đồng thời cần context riêng theo thiết kế. Rate limiting và bounded queue có thể cần thêm để kiểm soát backlog."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "using var gate = new SemaphoreSlim(2, 2);\nConsole.WriteLine(gate.Wait(0));\nConsole.WriteLine(gate.Wait(0));\nConsole.WriteLine(gate.CurrentCount);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "True\nTrue\n0",
+        "steps": [
+          "Count ban đầu 2.",
+          "Hai lần Wait(0) lần lượt lấy permit, đều true.",
+          "Count cuối là 0; không có lần chờ blocking trong fixture này."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Log thời điểm chờ/vào/ra và kiểm tra code acquire/release cân bằng. SemaphoreFullException thường chỉ ra Release dư; treo dần có thể do thiếu Release. Không dùng CurrentCount để ra quyết định nghiệp vụ nguyên tử vì count có thể đổi ngay sau khi đọc."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "semaphore and semaphoreslim",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/threading/semaphore-and-semaphoreslim"
+        },
+        {
+          "title": "system.threading.semaphoreslim.waitasync",
+          "url": "https://learn.microsoft.com/en-us/dotnet/api/system.threading.semaphoreslim.waitasync"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

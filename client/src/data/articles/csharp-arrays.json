@@ -1,0 +1,140 @@
+{
+  "id": "csharp-arrays",
+  "title": "Mảng: chỉ số, kích thước và mảng nhiều chiều",
+  "description": "Array là object lưu một số lượng phần tử cố định có cùng kiểu phần tử. int[] là mảng một chiều, int[,] là mảng chữ nhật, còn int[][] là mảng chứa các tham chiếu tới mảng con. Mảng thuộc thư viện/ngôn …",
+  "category": "foundation",
+  "kind": "Cấu trúc dữ liệu",
+  "sourceParts": [
+    3
+  ],
+  "prerequisites": [
+    "Biết khai báo biến và phân biệt value/reference type ở bài 2"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Array là object lưu một số lượng phần tử cố định có cùng kiểu phần tử. int[] là mảng một chiều, int[,] là mảng chữ nhật, còn int[][] là mảng chứa các tham chiếu tới mảng con. Mảng thuộc thư viện/ngôn ngữ nền tảng, không cần cài package."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Khi cần lưu nhiều điểm số, khai báo score1, score2, score3 làm code phình ra và không thể duyệt theo dữ liệu đầu vào. Mảng biểu diễn cả dãy dưới một tên, cho phép truy cập theo chỉ số và xử lý bằng vòng lặp thay vì viết riêng từng biến."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Truy cập theo index có chi phí hằng số và kích thước rõ ràng; phù hợp buffer, bảng dữ liệu cố định và API nhận vùng dữ liệu. So với List<T>, array đơn giản khi không cần thêm/xóa. Đây là lựa chọn theo đặc tính dữ liệu, không phải công nghệ mới luôn thay thế collection."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không chọn array nếu liên tục chèn/xóa phần tử và chưa biết kích thước: List<T> thường dễ hơn. Không dùng mã sinh viên hay ID database làm index vì chúng có thể thưa và không bắt đầu từ 0. Không dùng mảng chữ nhật cho dữ liệu có số cột thay đổi theo từng dòng.",
+        "int[] x; là biến cục bộ chưa được gán: đọc nó bị lỗi definite assignment khi biên dịch. int[]? x = null; rồi truy cập x[0] mới là lỗi null khi chạy. Mảng dài 3 không có phần tử ở index 3.",
+        "Mảng phù hợp dữ liệu cố định hoặc làm việc theo chỉ số. List<T> phù hợp thêm bớt. Array.Copy/ToArray tạo mảng mới nhưng nếu phần tử là object thì vẫn có thể chia sẻ chính object đó; đây không phải deep clone."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "new int[3] tạo ba ô với giá trị mặc định 0. Runtime kiểm tra biên khi truy cập; index hợp lệ nằm từ 0 tới Length - 1. Biến array giữ tham chiếu: b = a chia sẻ cùng mảng. ToArray/Clone có thể tạo vùng phần tử mới nhưng nếu phần tử là object, các object đó vẫn có thể được chia sẻ.",
+        "new int[2,3] là mảng chữ nhật 2 dòng, 3 cột; truy cập bằng grid[row,col]. grid.Length là tổng 6 phần tử; GetLength(0) là số dòng. int[][] có thể có các dòng dài khác nhau và dòng con có thể null.",
+        "Khi debug lỗi index, xem cả giá trị index lẫn Length tại đúng điểm truy cập. Nếu cần nhân đôi vùng lưu phần tử, dùng ToArray hoặc Clone phù hợp; phép gán tên biến không tạo mảng mới."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Mảng",
+          "meaning": "Object chứa số lượng phần tử cố định của cùng một kiểu; chỉ số đầu tiên là 0.",
+          "example": "scores có 3 phần tử ở chỉ số 0, 1, 2; Length là 3."
+        },
+        {
+          "term": "Sao chép tham chiếu",
+          "meaning": "Hai biến mảng có thể trỏ đến cùng object mảng.",
+          "example": "alias = scores không sao chép ba điểm số; sửa alias[1] làm scores[1] đổi."
+        },
+        {
+          "term": "Rectangular và jagged array",
+          "meaning": "int[,] dùng nhiều chiều trong một mảng; int[][] là mảng chứa các tham chiếu tới mảng con.",
+          "example": "new int[2][] tạo hai ô tham chiếu null; cần tạo từng mảng con trước khi dùng."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Mảng thường là đầu vào cho LINQ, thuật toán và bộ đệm I/O. JSON array có thể deserialize thành T[]; database thường trả tập dòng được materialize thành array/list. Khi trao đổi byte với file/socket, dùng số byte thực đọc, không coi toàn bộ buffer là dữ liệu hợp lệ."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "int[] scores = { 4, 7, 9 };\nint[] alias = scores;\nalias[1] = 8;\nConsole.WriteLine(scores[1]);\nConsole.WriteLine(scores.Length);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "8\n3",
+        "steps": [
+          "Khởi tạo mảng [4, 7, 9].",
+          "alias và scores cùng trỏ tới mảng đó.",
+          "alias[1] = 8 đổi phần tử thứ hai thành 8, không đổi Length.",
+          "In scores[1] được 8; in Length được 3."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Với IndexOutOfRangeException, đặt breakpoint ngay trước truy cập và so sánh index với Length. Với jagged array, xem từng mảng con đã khởi tạo chưa. Với dữ liệu bỗng thay đổi, xem biến nào cùng giữ tham chiếu; đừng chỉ nhìn giá trị ở thời điểm cuối."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "arrays",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/arrays"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

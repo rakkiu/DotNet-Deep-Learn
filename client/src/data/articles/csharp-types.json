@@ -1,0 +1,143 @@
+{
+  "id": "csharp-types",
+  "title": "Biến, kiểu dữ liệu, var và null",
+  "description": "Kiểu dữ liệu xác định tập giá trị một biến có thể chứa và các phép toán hợp lệ trên giá trị đó. C# kiểm tra kiểu tĩnh lúc biên dịch; int, decimal, bool, string và kiểu tự định nghĩa đều tham gia hệ th…",
+  "category": "foundation",
+  "kind": "Hệ thống kiểu của C#",
+  "sourceParts": [
+    2
+  ],
+  "prerequisites": [
+    "Đã chạy chương trình Console ở bài 1"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Kiểu dữ liệu xác định tập giá trị một biến có thể chứa và các phép toán hợp lệ trên giá trị đó. C# kiểm tra kiểu tĩnh lúc biên dịch; int, decimal, bool, string và kiểu tự định nghĩa đều tham gia hệ thống kiểu chung của .NET. Đây là tính năng ngôn ngữ, không phải một database hay thư viện cài riêng."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu mọi giá trị đều được xử lý như dữ liệu không có kiểu rõ ràng, lỗi cộng chuỗi thay vì cộng số hoặc gọi phương thức không tồn tại chỉ lộ ra khi chạy. Phân loại kiểu cho phép compiler phát hiện nhiều lỗi sớm, đồng thời giúp API diễn đạt chính xác dữ liệu bắt buộc, dữ liệu có thể thiếu và phạm vi giá trị."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Kiểu tĩnh làm refactor và gợi ý mã đáng tin cậy hơn. var giảm lặp tên kiểu nhưng vẫn được suy luận cố định tại compile time. Nullable annotations bổ sung phân tích null; chúng giúp tìm nguy cơ trước khi chạy, dù không thay cho validation dữ liệu từ file, API hay database."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng dynamic chỉ để né lỗi compiler; nó dời việc kiểm tra sang runtime. Không dùng double cho số tiền khi nghiệp vụ cần số thập phân và quy tắc làm tròn chính xác. Không biến mọi biến thành nullable nếu nghiệp vụ thực sự yêu cầu nó phải có giá trị.",
+        "var không phải dynamic. String là reference type bất biến; không cần viết new để dùng literal. Nullable reference types chủ yếu tạo cảnh báo compile-time, không bảo đảm mọi object runtime khác null. Đừng dùng vị trí stack/heap làm định nghĩa của value/reference type.",
+        "Dùng int cho số nguyên trong khoảng giá trị của nó, decimal khi cần số thập phân tài chính với quy tắc làm tròn rõ ràng; double phù hợp tính toán số thực gần đúng. int.Parse có thể ném lỗi; TryParse phù hợp dữ liệu nhập sai thường gặp. Interpolation thuận tiện nhưng không bảo đảm không cấp phát."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Với value type, phép gán sao chép giá trị; với reference type, phép gán sao chép tham chiếu tới object. Hai biến reference vì thế có thể quan sát cùng một thay đổi. Nullable<T> biểu diễn value type có thể thiếu; string? là annotation phục vụ phân tích của compiler, không phải một object wrapper tương tự Nullable<int>. Vị trí stack hay heap là chi tiết triển khai, không phải định nghĩa value/reference.",
+        "Phép gán struct sao chép giá trị của các field; nếu một field là reference thì hai bản struct vẫn có thể chia sẻ object đó. Vì thế “value type được copy” không có nghĩa luôn deep clone toàn bộ graph.",
+        "string là reference type bất biến: không sửa trực tiếp nội dung một string đã tồn tại. API có thể trả một string khác hoặc tái sử dụng instance trong một số trường hợp; không khẳng định mỗi thao tác đều cấp phát mới. StringBuilder hữu ích khi ghép lặp nhiều lần; phải đo trước khi kết luận hiệu năng."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Biến và kiểu tĩnh",
+          "meaning": "Tên biến gắn với một giá trị có kiểu, xác định các thao tác hợp lệ.",
+          "example": "quantity là int; var quantity = 2 cũng suy ra int, không trở thành dynamic."
+        },
+        {
+          "term": "Value type và reference type",
+          "meaning": "Phép gán value type sao chép giá trị; phép gán reference type sao chép tham chiếu, không tự nhân đôi object.",
+          "example": "copy nhận số 2, rồi quantity đổi thành 5 không làm copy đổi."
+        },
+        {
+          "term": "Nullable",
+          "meaning": "int? có thể không có giá trị; nullable reference annotation là cơ chế cảnh báo phân tích null của compiler.",
+          "example": "int? age = null dùng HasValue hoặc ??; string? không tự sinh kiểm tra runtime ở mọi lời gọi."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "JSON, form và cột database có thể cung cấp dữ liệu null hoặc sai định dạng. Tại ranh giới này dùng TryParse, DTO và validation trước khi đưa vào mô hình nghiệp vụ. Boxing chuyển value type sang object có thể tạo allocation; generic collection thường tránh được boxing ở thao tác lưu trữ thông thường."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "int quantity = 2;\nint copy = quantity;\nquantity = 5;\nConsole.WriteLine(copy);\nConsole.WriteLine(quantity);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "2\n5",
+        "steps": [
+          "quantity ban đầu giữ số nguyên 2.",
+          "copy nhận bản sao của số 2; hai biến int là hai vị trí lưu giá trị độc lập.",
+          "Gán quantity = 5 không sửa copy; hai lệnh in cho 2 rồi 5."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Dùng Watch để xem cả kiểu runtime lẫn giá trị; theo dõi từng phép gán khi hai biến vô tình cùng trỏ một object. Với NullReferenceException, dừng ở dòng ném lỗi và xác định biểu thức nào null. Với lỗi số, kiểm tra kiểu, khoảng giá trị, culture và phép làm tròn."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "types",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/"
+        },
+        {
+          "title": "nullable references",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

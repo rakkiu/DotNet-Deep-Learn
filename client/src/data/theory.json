@@ -1,0 +1,717 @@
+{
+  "version": 2,
+  "title": "DotNet Deep Learn — Thư viện lý thuyết",
+  "sourceDocument": "tech_thầy_đã_dạy.docx",
+  "sourceNote": "Phạm vi được đối chiếu với 41 mục trong bản ghi bài giảng do người dùng cung cấp. Nội dung giải thích được biên soạn lại và mở rộng; không phải bản chép nguyên văn, không tuyên bố đã xem trực tiếp video. Ví dụ đặt trong bối cảnh .NET 10; bản ghi của thầy có bối cảnh .NET 8. Những khác biệt quan trọng được ghi trong bài.",
+  "categories": [
+    {
+      "id": "foundation",
+      "title": "C# & nền tảng .NET",
+      "description": "Ngôn ngữ, công cụ và cách tổ chức dữ liệu.",
+      "symbol": "01"
+    },
+    {
+      "id": "architecture",
+      "title": "OOP & thiết kế",
+      "description": "Đối tượng, hợp đồng và những ranh giới trong code.",
+      "symbol": "02"
+    },
+    {
+      "id": "web",
+      "title": "ASP.NET Core & MVC",
+      "description": "Từ một HTTP request đến giao diện và bảo mật.",
+      "symbol": "03"
+    },
+    {
+      "id": "data",
+      "title": "Dữ liệu & EF Core",
+      "description": "Database, truy vấn và quản lý thay đổi.",
+      "symbol": "04"
+    },
+    {
+      "id": "concurrency",
+      "title": "Đồng thời & bất đồng bộ",
+      "description": "Thread, Task và phối hợp tài nguyên.",
+      "symbol": "05"
+    },
+    {
+      "id": "network",
+      "title": "Mạng & HTTP",
+      "description": "Theo dấu byte, kết nối và vòng đời request.",
+      "symbol": "06"
+    }
+  ],
+  "parts": [
+    {
+      "number": 1,
+      "title": "Cài đặt Visual Studio và viết chương trình .NET đầu tiên",
+      "lessons": [
+        "dotnet-first-program",
+        "csharp-language",
+        "visual-studio"
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Các kiểu dữ liệu trong .NET",
+      "lessons": [
+        "csharp-types"
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Array",
+      "lessons": [
+        "csharp-arrays"
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Sử dụng các cấu trúc điều khiển",
+      "lessons": [
+        "csharp-control-flow"
+      ]
+    },
+    {
+      "number": 5,
+      "title": "Phương thức",
+      "lessons": [
+        "csharp-methods"
+      ]
+    },
+    {
+      "number": 6,
+      "title": "Làm việc với exception",
+      "lessons": [
+        "csharp-exceptions"
+      ]
+    },
+    {
+      "number": 7,
+      "title": "Stream và File",
+      "lessons": [
+        "dotnet-streams"
+      ]
+    },
+    {
+      "number": 8,
+      "title": "Sử dụng Collection trong .NET",
+      "lessons": [
+        "csharp-collections"
+      ]
+    },
+    {
+      "number": 9,
+      "title": "Biểu thức Lambda",
+      "lessons": [
+        "csharp-lambda"
+      ]
+    },
+    {
+      "number": 10,
+      "title": "LINQ",
+      "lessons": [
+        "linq-basics"
+      ]
+    },
+    {
+      "number": 11,
+      "title": "Lập trình hướng đối tượng trong .NET",
+      "lessons": [
+        "oop-classes"
+      ]
+    },
+    {
+      "number": 12,
+      "title": "Đa hình",
+      "lessons": [
+        "oop-polymorphism"
+      ]
+    },
+    {
+      "number": 13,
+      "title": "Sử dụng từ khóa Static",
+      "lessons": [
+        "csharp-static"
+      ]
+    },
+    {
+      "number": 14,
+      "title": "Interface",
+      "lessons": [
+        "oop-interfaces"
+      ]
+    },
+    {
+      "number": 15,
+      "title": "Giải bài tập, unit test, abstract factory và decorator design pattern",
+      "lessons": [
+        "design-testing-patterns",
+        "unit-testing",
+        "factory-pattern",
+        "decorator-pattern"
+      ]
+    },
+    {
+      "number": 16,
+      "title": "Generic trong C#",
+      "lessons": [
+        "csharp-generics"
+      ]
+    },
+    {
+      "number": 17,
+      "title": "Delegate và Event",
+      "lessons": [
+        "csharp-events"
+      ]
+    },
+    {
+      "number": 18,
+      "title": "Multithreading và Asynchronous Programming",
+      "lessons": [
+        "tasks-concurrency"
+      ]
+    },
+    {
+      "number": 19,
+      "title": "ASP.NET Core - Giới thiệu và Tạo project đầu tiên",
+      "lessons": [
+        "aspnet-first-app"
+      ]
+    },
+    {
+      "number": 20,
+      "title": "ASP.NET Core - Controller và View",
+      "lessons": [
+        "mvc-views"
+      ]
+    },
+    {
+      "number": 21,
+      "title": "ASP.NET Core - Routing",
+      "lessons": [
+        "mvc-routing"
+      ]
+    },
+    {
+      "number": 22,
+      "title": "ASP.NET Core - Form và Model Binding",
+      "lessons": [
+        "mvc-binding"
+      ]
+    },
+    {
+      "number": 23,
+      "title": "ASP.NET Core - Entity Framework Core (Phần 1)",
+      "lessons": [
+        "efcore-context",
+        "relational-databases"
+      ]
+    },
+    {
+      "number": 24,
+      "title": "ASP.NET Core - Entity Framework Core (Phần 2) - Migrations và LINQ to Entities",
+      "lessons": [
+        "efcore-migrations"
+      ]
+    },
+    {
+      "number": 25,
+      "title": "ASP.NET Core - Entity Framework Core (Phần 3) - Relationships",
+      "lessons": [
+        "efcore-relationships"
+      ]
+    },
+    {
+      "number": 26,
+      "title": "ASP.NET Core - Authentication và Authorization",
+      "lessons": [
+        "aspnet-authorization"
+      ]
+    },
+    {
+      "number": 27,
+      "title": "Dependency Injection",
+      "lessons": [
+        "dependency-injection"
+      ]
+    },
+    {
+      "number": 28,
+      "title": "Caching (và decorator design pattern)",
+      "lessons": [
+        "memory-caching"
+      ]
+    },
+    {
+      "number": 29,
+      "title": "Reflection",
+      "lessons": [
+        "dotnet-reflection"
+      ]
+    },
+    {
+      "number": 30,
+      "title": "Làm quen với Thread",
+      "lessons": [
+        "dotnet-threads"
+      ]
+    },
+    {
+      "number": 31,
+      "title": "Sử dụng EventWaitHandle để đồng bộ hoạt động nhiều thread",
+      "lessons": [
+        "thread-signals"
+      ]
+    },
+    {
+      "number": 32,
+      "title": "Sử dụng Semaphore",
+      "lessons": [
+        "semaphore-limits"
+      ]
+    },
+    {
+      "number": 33,
+      "title": "Sử dụng lock, Monitor để kiểm soát các critical section",
+      "lessons": [
+        "thread-lock"
+      ]
+    },
+    {
+      "number": 34,
+      "title": "Xử lý bất đồng bộ với hàm async",
+      "lessons": [
+        "async-await"
+      ]
+    },
+    {
+      "number": 35,
+      "title": "Sử dụng lớp Task",
+      "lessons": [
+        "task-composition"
+      ]
+    },
+    {
+      "number": 36,
+      "title": "Lập trình mạng với Socket",
+      "lessons": [
+        "tcp-sockets"
+      ]
+    },
+    {
+      "number": 37,
+      "title": "Giải bài tập viết Web server (phần 1)",
+      "lessons": [
+        "http-request-line"
+      ]
+    },
+    {
+      "number": 38,
+      "title": "Giải bài tập viết Web server (phần 2)",
+      "lessons": [
+        "http-headers"
+      ]
+    },
+    {
+      "number": 39,
+      "title": "Giải bài tập viết Web server (phần 3)",
+      "lessons": [
+        "http-response"
+      ]
+    },
+    {
+      "number": 40,
+      "title": "Giải bài tập viết Web server (phần 4)",
+      "lessons": [
+        "aspnet-middleware"
+      ]
+    },
+    {
+      "number": 41,
+      "title": "Sử dụng thư viện HttpClient",
+      "lessons": [
+        "httpclient-json"
+      ]
+    }
+  ],
+  "lessons": [
+    {
+      "id": "dotnet-first-program",
+      "title": ".NET — nền tảng, SDK và runtime",
+      "sourceParts": [
+        1
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "csharp-language",
+      "title": "C# — ngôn ngữ và chương trình đầu tiên",
+      "sourceParts": [
+        1
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "visual-studio",
+      "title": "Visual Studio, .NET CLI và NuGet",
+      "sourceParts": [
+        1
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "csharp-types",
+      "title": "Biến, kiểu dữ liệu, var và null",
+      "sourceParts": [
+        2
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "csharp-arrays",
+      "title": "Mảng: chỉ số, kích thước và mảng nhiều chiều",
+      "sourceParts": [
+        3
+      ],
+      "resourceCount": 2
+    },
+    {
+      "id": "csharp-control-flow",
+      "title": "Rẽ nhánh, vòng lặp và theo dấu chương trình",
+      "sourceParts": [
+        4
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "csharp-methods",
+      "title": "Phương thức: tham số, return, ref và out",
+      "sourceParts": [
+        5
+      ],
+      "resourceCount": 2
+    },
+    {
+      "id": "csharp-exceptions",
+      "title": "Exception: bắt đúng lỗi, dọn đúng tài nguyên",
+      "sourceParts": [
+        6
+      ],
+      "resourceCount": 2
+    },
+    {
+      "id": "dotnet-streams",
+      "title": "Stream, file và mã hóa văn bản",
+      "sourceParts": [
+        7
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "csharp-collections",
+      "title": "Collection: List, Dictionary, Queue và Stack",
+      "sourceParts": [
+        8
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "csharp-lambda",
+      "title": "Lambda: truyền một quy tắc như dữ liệu",
+      "sourceParts": [
+        9
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "linq-basics",
+      "title": "LINQ: lọc, sắp xếp và chọn dữ liệu",
+      "sourceParts": [
+        10
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "oop-classes",
+      "title": "Class, object và đóng gói một trạng thái hợp lệ",
+      "sourceParts": [
+        11
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "oop-polymorphism",
+      "title": "Đa hình: override khác gì với new?",
+      "sourceParts": [
+        12
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "csharp-static",
+      "title": "static, vòng đời state và phương thức mở rộng",
+      "sourceParts": [
+        13
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "oop-interfaces",
+      "title": "Interface: gọi theo hợp đồng, thay được phần triển khai",
+      "sourceParts": [
+        14
+      ],
+      "resourceCount": 2
+    },
+    {
+      "id": "design-testing-patterns",
+      "title": "SOLID và phân chia trách nhiệm",
+      "sourceParts": [
+        15
+      ],
+      "resourceCount": 2
+    },
+    {
+      "id": "unit-testing",
+      "title": "Unit test — kiểm tra một hành vi độc lập",
+      "sourceParts": [
+        15
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "factory-pattern",
+      "title": "Factory và Abstract Factory",
+      "sourceParts": [
+        15
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "decorator-pattern",
+      "title": "Decorator — mở rộng bằng cách bọc",
+      "sourceParts": [
+        15
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "csharp-generics",
+      "title": "Generic, ràng buộc kiểu và boxing",
+      "sourceParts": [
+        16
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "csharp-events",
+      "title": "Delegate và event: ai được phát thông báo?",
+      "sourceParts": [
+        17
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "tasks-concurrency",
+      "title": "Thread, Task, concurrency và await",
+      "sourceParts": [
+        18
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "aspnet-first-app",
+      "title": "ASP.NET Core: từ request đến action",
+      "sourceParts": [
+        19
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "mvc-views",
+      "title": "Controller, View và Razor mạnh kiểu",
+      "sourceParts": [
+        20
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "mvc-routing",
+      "title": "Routing: URL, HTTP method và tham số",
+      "sourceParts": [
+        21
+      ],
+      "resourceCount": 2
+    },
+    {
+      "id": "mvc-binding",
+      "title": "Model binding và validation: hai bước khác nhau",
+      "sourceParts": [
+        22
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "efcore-context",
+      "title": "Entity Framework Core và DbContext",
+      "sourceParts": [
+        23
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "relational-databases",
+      "title": "SQL, SQL Server và SQLite",
+      "sourceParts": [
+        23
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "efcore-migrations",
+      "title": "EF Core Migrations và LINQ to Entities",
+      "sourceParts": [
+        24
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "efcore-relationships",
+      "title": "EF Core — quan hệ và tải dữ liệu",
+      "sourceParts": [
+        25
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "aspnet-authorization",
+      "title": "Authentication, Authorization và Identity",
+      "sourceParts": [
+        26
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "dependency-injection",
+      "title": "Dependency Injection và ba vòng đời service",
+      "sourceParts": [
+        27
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "memory-caching",
+      "title": "Cache: hit, miss, hết hạn và dữ liệu cũ",
+      "sourceParts": [
+        28
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "dotnet-reflection",
+      "title": "Reflection và metadata: tra cứu một property",
+      "sourceParts": [
+        29
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "dotnet-threads",
+      "title": "Thread và vòng đời luồng",
+      "sourceParts": [
+        30
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "thread-signals",
+      "title": "AutoResetEvent và ManualResetEvent",
+      "sourceParts": [
+        31
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "semaphore-limits",
+      "title": "Semaphore và SemaphoreSlim",
+      "sourceParts": [
+        32
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "thread-lock",
+      "title": "lock, Monitor và collection đồng thời",
+      "sourceParts": [
+        33
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "async-await",
+      "title": "async/await — cơ chế bất đồng bộ",
+      "sourceParts": [
+        34
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "task-composition",
+      "title": "Task.WhenAll, WhenAny và quan sát lỗi",
+      "sourceParts": [
+        35
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "tcp-sockets",
+      "title": "TCP, Socket và Endpoint",
+      "sourceParts": [
+        36
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "http-request-line",
+      "title": "HTTP request và kiến trúc Web Server",
+      "sourceParts": [
+        37
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "http-headers",
+      "title": "HTTP headers và ranh giới thông điệp",
+      "sourceParts": [
+        38
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "http-response",
+      "title": "HTTP response và streaming body",
+      "sourceParts": [
+        39
+      ],
+      "resourceCount": 4
+    },
+    {
+      "id": "aspnet-middleware",
+      "title": "Middleware, pipeline và static files",
+      "sourceParts": [
+        40
+      ],
+      "resourceCount": 3
+    },
+    {
+      "id": "httpclient-json",
+      "title": "HttpClient và System.Text.Json",
+      "sourceParts": [
+        41
+      ],
+      "resourceCount": 4
+    }
+  ]
+}

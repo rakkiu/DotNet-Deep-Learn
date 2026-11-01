@@ -1,0 +1,140 @@
+{
+  "id": "csharp-methods",
+  "title": "Phương thức: tham số, return, ref và out",
+  "description": "Method là một đơn vị hành vi có tên, danh sách tham số và kiểu trả về. Nó nhận đầu vào, thực hiện công việc và có thể trả kết quả hoặc gây tác dụng phụ. Trong C#, method thuộc type; local function có …",
+  "category": "foundation",
+  "kind": "Tính năng ngôn ngữ",
+  "sourceParts": [
+    5
+  ],
+  "prerequisites": [
+    "Biết biến, if và vòng lặp ở bài 2–4"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Method là một đơn vị hành vi có tên, danh sách tham số và kiểu trả về. Nó nhận đầu vào, thực hiện công việc và có thể trả kết quả hoặc gây tác dụng phụ. Trong C#, method thuộc type; local function có thể được khai báo bên trong một hàm, còn top-level statements được compiler tổ chức thành điểm vào."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Nếu toàn bộ chương trình nằm trong Main, một quy tắc được chép nhiều nơi sẽ rất khó sửa đồng bộ. Method đóng gói hành vi để tái sử dụng, đặt tên và kiểm tra độc lập. Nó cũng tạo ranh giới rõ giữa phần biết cách tính và phần quyết định khi nào cần tính."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Hàm nhỏ có tên theo mục đích dễ đọc và debug hơn đoạn code lặp dài. Hợp đồng đầu vào/đầu ra giúp caller dùng mà không cần đọc chi tiết. Tuy vậy tách quá nhỏ thành nhiều hàm một dòng không có ý nghĩa cũng khiến việc theo dấu phức tạp hơn."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng ref/out chỉ để tránh viết kiểu trả về; với nhiều kết quả có thể cân nhắc record hoặc tuple. Không đặt tên GetTotal cho hàm vừa tính tổng vừa ghi database nếu tác dụng phụ không rõ. Không dùng overload khác nhau quá tinh vi khiến lời gọi khó đoán.",
+        "Truyền reference type theo giá trị không giống truyền biến bằng ref. Hàm có thể sửa trạng thái object dùng chung nhưng gán parameter sang object mới không tự đổi biến caller. Local function là cú pháp C# hợp lệ; không bắt buộc mọi hàm phải được viết thành method tường minh trong class trong mã nguồn.",
+        "Ưu tiên return để biểu đạt một kết quả tính toán. ref/out hữu ích khi cần ngữ nghĩa tham chiếu hoặc API theo mẫu Try, nhưng làm caller phải theo dõi thêm tác dụng phụ. Tên hàm nên nói hành động, và mọi đường trả bình thường của hàm non-void phải cung cấp giá trị."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Khi gọi method, biểu thức đối số được đánh giá và tham số được khởi tạo. Mặc định truyền theo giá trị, kể cả khi giá trị là một tham chiếu object. ref cho phép thao tác lên biến caller; out yêu cầu gán trước khi trả về bình thường. return kết thúc lần gọi; đường gọi được biểu diễn trong Call Stack để debugger theo dõi.",
+        "Tham số là tên khai báo trong method; đối số là giá trị/biểu thức ở chỗ gọi. Named arguments có thể chỉ rõ tên tham số thay vì chỉ theo vị trí. Overload dùng tên giống nhau với danh sách tham số phân biệt được.",
+        "Truyền mặc định là by value: với class, giá trị được copy chính là tham chiếu. Method có thể sửa object dùng chung nhưng gán lại parameter sang object khác không gán lại biến caller. ref cho phép truy cập chính biến caller; out yêu cầu method gán giá trị trước khi trả về, in hạn chế gán qua tham số."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Parameter và argument",
+          "meaning": "Parameter là biến trong khai báo hàm; argument là giá trị/biểu thức truyền tại điểm gọi.",
+          "example": "value là parameter, count ở lời gọi là argument."
+        },
+        {
+          "term": "Truyền theo giá trị mặc định",
+          "meaning": "Hàm nhận một bản sao của giá trị argument. Với reference type, giá trị được sao chép chính là tham chiếu.",
+          "example": "Sửa value của int không sửa count; sửa thuộc tính object qua tham chiếu lại có thể thấy từ caller."
+        },
+        {
+          "term": "ref và out",
+          "meaning": "ref cho phép làm việc với biến của caller; out yêu cầu hàm gán giá trị trước khi trả bình thường.",
+          "example": "TryParse(text, out int number) vừa trả bool, vừa cung cấp giá trị qua out."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Controller gọi service method; service gọi repository hoặc API client. Kiểu Task<T> diễn đạt kết quả bất đồng bộ; CancellationToken truyền yêu cầu hủy xuyên chuỗi gọi. Hợp đồng method phải nói rõ dữ liệu có thể null, ngoại lệ có thể xảy ra và ai sở hữu tài nguyên trả về."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "int count = 3;\nIncrease(count);\nConsole.WriteLine(count);\n\nstatic void Increase(int value)\n{\n    value += 1;\n}\nstatic int IncreaseAndReturn(int value) => value + 1;",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "3",
+        "steps": [
+          "count giữ 3.",
+          "Increase nhận bản sao 3 ở parameter value.",
+          "value tăng lên 4, nhưng count vẫn 3.",
+          "Sau khi hàm trả, Console.WriteLine in count nên được 3."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Dùng Step Into để vào hàm, Step Over để chạy qua lời gọi và Step Out để quay về caller. Xem parameter lúc vào và kết quả lúc return. Với object bị sửa ngoài ý muốn, phân biệt sửa field của object dùng chung với gán lại biến tham số."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "methods",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/methods"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

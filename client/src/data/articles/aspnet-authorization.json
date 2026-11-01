@@ -1,0 +1,147 @@
+{
+  "id": "aspnet-authorization",
+  "title": "Authentication, Authorization và Identity",
+  "description": "Authentication xác định request đại diện cho ai; authorization quyết định danh tính đó được làm gì. Cookie authentication là một cơ chế mang phiên đăng nhập; ASP.NET Core Identity là hệ thống quản lý …",
+  "category": "web",
+  "kind": "Cơ chế bảo mật / thư viện danh tính",
+  "sourceParts": [
+    26
+  ],
+  "prerequisites": [
+    "Biết request/response và interface; không cần có tài khoản thật để chạy fixture"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Authentication xác định request đại diện cho ai; authorization quyết định danh tính đó được làm gì. Cookie authentication là một cơ chế mang phiên đăng nhập; ASP.NET Core Identity là hệ thống quản lý user, password, role, token và các luồng tài khoản. Identity không đồng nghĩa mọi hình thức xác thực."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Tự lưu mật khẩu thô, dùng một biến isLoggedIn hay chỉ ẩn nút Admin đều không bảo vệ endpoint. Web cần kiểm tra danh tính ở từng request và quyền trên từng tài nguyên. Hệ thống chuẩn cung cấp cơ chế xử lý ticket, hash mật khẩu và policy thay vì tự nghĩ giao thức bảo mật."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "Framework cung cấp middleware và API có quy ước rõ; Identity hỗ trợ password hashing và token account thay cho cách tự làm đơn giản dễ sai. Cookie phù hợp nhiều website cùng origin; bearer token phù hợp một số API/client. Lựa chọn phụ thuộc kiến trúc chứ không vì JWT luôn hiện đại hơn."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không lưu plaintext password, không tin role do client tự gửi, không chỉ kiểm tra quyền ở giao diện. Không coi JWT mặc định dễ thu hồi như session server. Cookie, token và CORS đều không tự thay thế kiểm tra quyền sở hữu dữ liệu ở server.",
+        "Cookie authentication không tự xác minh mật khẩu hoặc cung cấp trang đăng ký. Ticket được bảo vệ bằng Data Protection; cấu hình scheme, HTTPS, cookie flags và vòng đời khóa đều quan trọng. Không tạo claims quyền hạn chỉ từ dữ liệu user tự khai.",
+        "Identity hỗ trợ quản lý user, hash mật khẩu, token và các luồng đăng nhập nhưng cần cấu hình store, UI/endpoints và chính sách. [Authorize] mặc định yêu cầu user authenticated; resource-based policy còn kiểm tra đối tượng cụ thể."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Sau xác minh thông tin hợp lệ, cookie handler có thể tạo authentication ticket được Data Protection bảo vệ; browser gửi cookie theo quy tắc cookie. Middleware dựng ClaimsPrincipal từ ticket hợp lệ. Authorization đánh giá requirement/policy hoặc role; resource-based authorization còn xét chính object được truy cập. Identity quản lý kho tài khoản và các quy trình liên quan, không tự hoàn thiện mọi policy nghiệp vụ.",
+        "Authentication middleware xác lập HttpContext.User theo scheme. Authorization dùng danh tính đó để đánh giá policy; resource-based authorization có thể kiểm tra cả chủ sở hữu tài nguyên.",
+        "Trong web dùng cookie, bảo vệ login flow, chống CSRF, cấu hình HTTPS và vòng đời ticket. Không lưu mật khẩu vào cookie. Với API, phản hồi 401 và 403 có ý nghĩa khác nhau; hành vi redirect hay status còn phụ thuộc scheme và cấu hình host."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Authentication",
+          "meaning": "Xác định danh tính từ credential được hệ thống tin cậy.",
+          "example": "Cookie handler đọc ticket đã được bảo vệ; ví dụ không kiểm tra mật khẩu."
+        },
+        {
+          "term": "Authorization",
+          "meaning": "Quyết định quyền truy cập tài nguyên/hành động dựa trên user và policy.",
+          "example": "Policy Manage ở đây yêu cầu role Admin."
+        },
+        {
+          "term": "ClaimsPrincipal",
+          "meaning": "Biểu diễn danh tính và claims trong ứng dụng.",
+          "example": "Claim role Admin do fixture tạo để kiểm tra policy, không lấy trực tiếp từ input client."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Dùng HTTPS, cấu hình cookie HttpOnly/Secure/SameSite phù hợp và anti-forgery cho thao tác thay đổi trạng thái dựa trên cookie. DI cung cấp dịch vụ user/sign-in; EF stores có thể lưu dữ liệu Identity. Không log cookie, token hay password; response không trả chi tiết xác thực nhạy cảm."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thêm FrameworkReference vào .csproj theo hướng dẫn bên dưới\n# Thay Program.cs rồi chạy\ndotnet run",
+        "code": "using Microsoft.AspNetCore.Authorization;\nusing Microsoft.Extensions.DependencyInjection;\nusing System.Security.Claims;\nvar services = new ServiceCollection();\nservices.AddLogging();\nservices.AddAuthorization(options => options.AddPolicy(\"Manage\", p => p.RequireRole(\"Admin\")));\nusing var provider = services.BuildServiceProvider();\nvar authorization = provider.GetRequiredService<IAuthorizationService>();\nstring role = \"Admin\";\nvar user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, role) }, \"Fixture\"));\nConsole.WriteLine((await authorization.AuthorizeAsync(user, null, \"Manage\")).Succeeded);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "True",
+        "steps": [
+          "DI tạo IAuthorizationService cùng policy Manage.",
+          "Fixture tạo user có role Admin.",
+          "AuthorizeAsync đánh giá RequireRole và trả Succeeded = true."
+        ],
+        "request": null,
+        "note": "Thêm <ItemGroup><FrameworkReference Include=\"Microsoft.AspNetCore.App\" /></ItemGroup> bên trong <Project> của .csproj. Đây là console dùng các thư viện framework để cô lập cơ chế, chưa phải website đăng nhập hay server hoàn chỉnh."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "WebApp/\n├── WebApp.csproj\n├── Program.cs            # host, services, pipeline, routes\n├── appsettings.json      # cấu hình theo môi trường\n├── Controllers/          # action nhận request\n├── Models/               # input model / view model\n├── Views/                # Razor .cshtml (nếu dùng MVC)\n│   └── Shared/_Layout.cshtml\n├── wwwroot/              # CSS, JS và tài nguyên công khai\n└── Properties/launchSettings.json # chạy local",
+        "note": "Đây là quy ước MVC. API thuần có thể không có Views; Minimal API có thể bắt đầu từ Program.cs. Khi chia class ra file, thêm namespace/using nhất quán. Không đặt cấu hình nhạy cảm dưới wwwroot."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Kiểm tra scheme, thứ tự middleware, cookie có được gửi không và claims/roles thực tế. Phân biệt challenge với forbid: chưa xác thực khác với đã xác thực nhưng thiếu quyền; hành vi redirect hay 401/403 còn phụ thuộc handler/loại endpoint. Theo dõi log Authentication/Authorization mà không ghi secret."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "cookie",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0"
+        },
+        {
+          "title": "introduction",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authorization/introduction?view=aspnetcore-10.0"
+        },
+        {
+          "title": "identity",
+          "url": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/asp.net-core",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

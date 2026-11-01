@@ -1,133 +1,99 @@
-# DotNet Deep Learn — client-side
+# DotNet Deep Learn — thư viện lý thuyết
 
-Website học và ôn tập C#/.NET bằng tiếng Việt, **xử lý hoàn toàn trong trình duyệt**. Không cần backend, .NET runtime, API hoặc database để chạy ứng dụng.
+Ứng dụng đọc lý thuyết C#/.NET bằng tiếng Việt, xây lại theo **41 phần trong `tech_thầy_đã_dạy.docx`**. Có **47 bài**, chia 6 chủ đề. C#, IDE, unit test, factory, decorator và SQL được tách riêng để phân biệt đúng bản chất.
+
+Đã bỏ trắc nghiệm, dự đoán đáp án, bài tập, chấm điểm, nộp bài, tiến độ và màn hình sao lưu. Ví dụ có code, kết quả và giải thích sẵn; website không thực thi C# của người đọc.
+
+## Mỗi bài có 11 mục
+
+1. Đây là công nghệ gì: ngôn ngữ, nền tảng, framework, database, thư viện, công cụ hay kỹ thuật.
+2. Vấn đề giải quyết và cách làm trước đó.
+3. Lợi ích, bối cảnh sử dụng và đánh đổi.
+4. Khi nào không nên dùng, giới hạn và nhầm lẫn.
+5. Cơ chế hoạt động bên dưới.
+6. Khái niệm cốt lõi kèm định nghĩa và ví dụ.
+7. Tương tác với thành phần khác và bảo mật.
+8. Hello World: khởi tạo, file, code, kết quả và giải thích.
+9. Bố cục thư mục, file cấu hình; phân biệt quy ước và yêu cầu bắt buộc.
+10. Debug và log lỗi theo từng kiến thức.
+11. Tài liệu chính thức và cộng đồng.
+
+Có tìm kiếm toàn bộ nội dung không dấu, lọc chủ đề, trang đối chiếu bài giảng, mục lục từng bài, deep link đến mục, tăng cỡ chữ, theme sáng/tối và bố cục điện thoại. `Ctrl+K` đưa focus vào tìm kiếm chung; nhập từ khóa rồi Enter. Có CSS cho việc in bài bằng trình duyệt.
 
 ## Chạy local
 
-Yêu cầu Node.js **24 LTS**, npm (đã kiểm chứng bằng Node 24.19.0 / npm 11.9.0):
+Cần Node.js **24.x** và npm. Website không cần .NET, backend, database hay tài khoản.
 
-```bash
-./scripts/setup.sh
-./scripts/dev.sh
-```
-
-Mở `http://127.0.0.1:5080/#/`. Ctrl+C để dừng. Đổi cổng bằng `PORT=5173 ./scripts/dev.sh`.
-
-Hoặc dùng npm trực tiếp:
-
-```bash
+```sh
 cd client
 npm ci
 npm run dev -- --port 5080
 ```
 
-Vite chỉ phục vụ các file website trong lúc phát triển. Tất cả việc tìm bài, chấm quiz, cập nhật ôn tập, lưu tiến độ và sao lưu đều chạy ở client; không có endpoint xử lý nghiệp vụ.
+Mở `http://localhost:5080/`. Môi trường Bash có thể dùng `./scripts/setup.sh` rồi `./scripts/dev.sh`.
 
-## Build và static hosting
+Xem bản build tĩnh:
 
-```bash
+```sh
 cd client
 npm run build
 npm run preview -- --port 5080
 ```
 
-Đưa **toàn bộ nội dung `client/dist/`** lên static hosting như GitHub Pages, Cloudflare Pages, Netlify hoặc một HTTP file server. Không deploy `legacy/` hay tệp sao lưu cá nhân. Không cần .NET, cấu hình API, secret hoặc database trên hosting.
+Vite dùng native config loader với Node 24. UI dùng React/TypeScript, Lucide và Prism; font tiếng Việt được bundle local.
 
-Ứng dụng dùng **HashRouter** (`/#/lessons/...`) và Vite `base: './'`, nên hỗ trợ refresh đường dẫn và triển khai trong thư mục con mà không cần rewrite SPA. Ví dụ: `https://example.com/DotNet-Deep-Learn/#/lessons/linq-deferred/quiz`. Cần phục vụ qua HTTP(S), không mở `index.html` trực tiếp bằng `file://`.
+## Kiểm tra
 
-## Vercel
-
-Import repository `rakkiu/DotNet-Deep-Learn`, chọn nhánh `main` và **Root Directory = `client`**. Chọn Node.js **24.x**. `client/vercel.json` đã lưu framework Vite, install command `npm ci --include=dev`, build command `npm run build` và output `dist`; không cần biến môi trường, backend hay rewrite cho HashRouter.
-
-Nếu dùng Vercel CLI đã đăng nhập, chạy từ thư mục `client`:
-
-```bash
-vercel link
-vercel deploy --prod
+```sh
+cd client
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
 
-Khi được yêu cầu link, chọn đúng tài khoản/team và project mong muốn. `.vercel/` được gitignore; không đưa tệp xác thực hoặc bản sao lưu cá nhân vào deployment. Trạng thái build local thành công không đồng nghĩa đã có deployment Vercel; cần xác nhận deployment Ready và kiểm tra URL thực tế sau khi deploy. Chuyển từ localhost sang domain Vercel tạo origin khác, nên cần export/import JSON nếu muốn mang tiến độ cũ sang.
+Có thể đặt `PLAYWRIGHT_CHROMIUM_EXECUTABLE` thành đường dẫn Chrome/Chromium sẵn có thay bước tải browser. PowerShell:
 
-## Nội dung và các luồng học
-
-Ứng dụng có **43 bài học**: 41 mục biên soạn từ tài liệu người dùng cung cấp, thêm 2 bài đào sâu LINQ/SQL. Lộ trình đi từ biến, mảng và method đến OOP, LINQ, thiết kế, MVC, EF Core, DI/cache, thread/async, TCP/HTTP và HttpClient.
-
-Giao diện chính chỉ có **Bài học** và **Ôn lại**. Mỗi bài có chế độ **Học từ đầu / Ôn nhanh**, định nghĩa kèm ví dụ cụ thể, hướng dẫn môi trường chạy, cơ chế, giới hạn, **2 ví dụ dự đoán, 5 câu hỏi và 3 bài tập**. Tổng cộng 86 ví dụ, 215 câu hỏi và 129 bài tập; tìm kiếm không dấu và lọc theo chủ đề/bài đã lưu. Ghi chú, yêu thích, lịch sử quiz, ôn câu sai và bài làm được lưu tại trình duyệt.
-
-Nguồn chính là DOCX đã được đọc, mở rộng và hiệu chỉnh bằng tài liệu Microsoft. Các video được liên kết theo thứ tự người dùng gửi, chưa được xem trực tiếp trong môi trường này. Xem [ghi chú biên soạn và hiệu chỉnh](docs/curriculum.md).
-
-- Phải gửi dự đoán/câu trả lời trước khi UI mở kết quả và giải thích.
-- Mỗi lựa chọn quiz có lời giải riêng; câu sai vào danh sách ôn. Làm đúng gỡ câu cần ôn nhưng không xóa lần sai trước đó.
-- Code là **kết quả kỳ vọng**, không có thực thi code người học hoặc AI chấm bài.
-- Bài tập được **tự đánh giá**: nhập lời giải, lưu, mở gợi ý từng cấp và đối chiếu đáp án/checklist. Mở đáp án không xác nhận code đúng.
-- Hoàn thành lộ trình = đã đánh dấu đọc + đúng gần nhất toàn bộ quiz + tự đánh giá toàn bộ bài tập; không gắn nhãn thành thạo.
-
-.NET Framework là dòng dành cho Windows, với hỗ trợ 4.8.1 gắn theo Windows tương ứng; .NET Core là tên dòng đa nền tảng 1.x–3.1; từ .NET 5, dòng hiện đại gọi là .NET. Các bài C# ở đây đã được kiểm chứng với **.NET 10**. Tên ASP.NET Core và EF Core vẫn giữ chữ Core; ứng dụng client hiện tại không sử dụng chúng để chạy.
-
-## Dữ liệu cá nhân và sao lưu
-
-Dữ liệu nằm trong **localStorage** tại khóa `dotnet-deep-learn:state:v1`: tiến độ, phần học, ghi chú, yêu thích, mọi lần làm quiz và bài tập/checklist. Lớp `client/src/storage.ts` chịu trách nhiệm đọc/ghi, kiểm tra định dạng và báo lỗi; chỉ cập nhật UI thành công sau khi ghi được. Theme dùng khóa riêng `ddl-theme`.
-
-Dữ liệu chỉ thuộc **profile trình duyệt + origin (giao thức, tên miền, cổng)** hiện tại. Đổi đường dẫn/hash không đổi dữ liệu, nhưng đổi trình duyệt, tên miền/cổng, xóa dữ liệu website hoặc dùng chế độ riêng tư có thể tạo hồ sơ khác hoặc mất bản lưu. Không có đăng nhập hay đồng bộ máy chủ.
-
-Vào **Dữ liệu & sao lưu** để:
-
-- Xuất toàn bộ dữ liệu học ra JSON.
-- Nhập tệp (tối đa 5 MB), xem số bản ghi trước, rồi **xác nhận thay thế** dữ liệu hiện tại. Nên xuất bản hiện tại trước khi nhập.
-- Tệp sai định dạng, ID không hợp lệ, đáp án/kết quả mâu thuẫn hoặc checklist không hợp lệ bị từ chối trước khi ghi. Nội dung giải thích quiz được tái dựng từ bài học.
-
-Hệ thống không tự xóa dữ liệu hỏng hoặc phiên bản không hỗ trợ. Màn hình khôi phục cho phép tải nguyên bản dữ liệu còn lưu và nhập một bản sao hợp lệ. Khi localStorage bị chặn/đầy, UI báo lỗi và giữ nội dung đang nhập; các bản đã lưu trước đó không bị xóa. Hai tab đọc bản lưu mới nhất trước khi cập nhật và nhận sự kiện thay đổi; khi chỉnh cùng một trường, lần lưu sau cùng thắng, không có xử lý giao dịch nhiều người dùng.
-
-Để reset thủ công: xuất bản sao trước, rồi xóa dữ liệu website trong cài đặt trình duyệt. Seed nội dung không còn cần thiết: nội dung tĩnh luôn được bundle, không ghi đè tiến độ.
-
-**Lưu ý:** đáp án phải có trong bundle để chấm client-side. UI vẫn không mở lời giải trước khi gửi, nhưng người dùng có thể kiểm tra mã nguồn. Đây là sản phẩm học tập, không phải nền tảng thi có bảo mật đáp án. Không lưu thông tin nhạy cảm trong ghi chú trên máy dùng chung.
-
-## Chuyển dữ liệu từ phiên bản SQLite trước đây
-
-Backend, source và SQLite trước đây được **bảo toàn trong `legacy/`**, không thuộc build/chạy hiện tại. Database không bị xóa. Một bản export của hồ sơ cũ trên môi trường này đã được tạo ở `legacy-data/sqlite-profile-backup.json` (gitignore). Chưa tự động nhập vào trình duyệt nào.
-
-Để chuyển một database khác, chỉ cần Python 3 với thư viện chuẩn:
-
-```bash
-mkdir -p legacy-data
-python3 scripts/export_sqlite.py legacy/server/Data/learning.db --output legacy-data/my-profile.json
+```powershell
+$env:PLAYWRIGHT_CHROMIUM_EXECUTABLE = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+npm run test:e2e
 ```
 
-Công cụ đọc SQLite ở chế độ read-only, xuất định dạng backup v1, không sửa database và không ghi đè tệp output đã có. Sau đó nhập JSON trong trang **Dữ liệu & sao lưu**. Nếu chuyển thiết bị/hosting, dùng cùng luồng export/import; không cần chạy lại backend.
+Kiểm tra phạm vi 41 phần/47 bài/11 mục, không có payload chấm bài, tìm kiếm, mọi deep link, đường dẫn cũ, mục lục, cỡ chữ/theme, lỗi storage, bố cục mobile và accessibility sáng/tối.
 
-## Cấu trúc và thêm bài
+Có checker cho các ví dụ C# (cần .NET 10 SDK và NuGet, chỉ dành cho người phát triển):
 
-- `client/src/data/catalog.json`: nguồn nội dung đang dùng, ID ổn định cho topic/lesson/section/question/example/exercise.
-- `content.ts`: catalog hiển thị, chấm quiz và dự đoán kết quả thuần client.
-- `storage.ts`: định dạng lưu phiên bản 1, validation, đọc/ghi và backup.
-- `store.tsx`: cập nhật tiến độ/lịch sử và phản hồi lưu.
-- `Learning.tsx`: kiến thức, ví dụ, quiz, bài tập và ghi chú.
-- `DataPage.tsx`: xuất/nhập và khôi phục dữ liệu.
-
-Thêm bài bằng cách sửa JSON, không cần thêm component. Chọn topic ID có sẵn, lesson `order`, version, prerequisites, sections có `core`/`deep`, ví dụ có `output`/`steps`/`comparison`, quiz có `correctOptionId` và giải thích từng option, bài tập và sources. `sectionId` của quiz phải khớp mục bài. Giữ ID khi sửa diễn đạt; nếu đổi nghĩa câu hỏi, dùng ID mới để không làm lịch sử cũ mâu thuẫn. Chưa có migration tự động cho trường hợp xóa/đổi ID trong dữ liệu đã lưu; xuất sao lưu trước khi thay đổi cấu trúc nội dung.
-
-Nguồn Microsoft chính thức nằm trong mỗi bài. Các ví dụ C#/SQL và lời giải tham khảo đã được kiểm chứng thực thi. Giữ thuật ngữ/ngữ cảnh khi mở rộng nội dung. `environment` mô tả cách chạy; ví dụ web có `request` và có thể có `files`; lời giải mới có `expectedOutput` và `verificationKind` để công cụ biên soạn kiểm chứng.
-
-## Kiểm thử
-
-```bash
-./scripts/check.sh
+```sh
+node scripts/verify-theory-examples.mjs
 ```
 
-Hoặc từ `client`:
+Checker tạo project dưới `.tools/`, build ví dụ C#, chạy các ví dụ console độc lập và ghi kết quả thực vào `docs/example-verification.json`. Ví dụ web chỉ được build; SQL/terminal có trạng thái riêng. Luồng migration cần áp dụng vào database local theo hướng dẫn để kiểm chứng đầy đủ. Không coi kiểm tra compiler là kiểm chứng mọi hành vi production.
 
-```bash
-npm run build       # TypeScript + production bundle
-npm test            # Vitest: chấm quiz, ôn tập, tiến độ, storage, validation/backup
-npm run test:e2e     # Playwright desktop/mobile với static preview, không backend
+## Source và biên soạn
+
+```text
+client/src/App.tsx           # thư viện, reader, nguồn, điều hướng
+client/src/theory.ts         # schema/types và tìm kiếm
+client/src/data/theory.json  # mục lục và mapping 41 phần
+client/src/data/articles/    # mỗi bài lý thuyết là một JSON riêng
+client/src/styles.css       # responsive, dark mode, print
+client/src/theory.test.ts    # phạm vi và tìm kiếm
+client/e2e/theory.spec.ts    # kiểm tra trình duyệt
+docs/theory-coverage.md      # đối chiếu tài liệu thầy
 ```
 
-E2E cần Chromium. Nếu đã có: `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e`. Nếu chưa: `npx playwright install chromium` (cần network tới domain tải browser). Cloud hiện tại dùng Chromium hệ thống; mọi request `/api/` trong các test luồng học bị chặn và test yêu cầu không phát sinh request API.
+Khi thêm/sửa bài, giữ đủ 11 section IDs và ghi rõ `sourceParts`, `category`, loại công nghệ, nguồn. Không chuyển yêu cầu thực hành trong bản ghi thành chức năng giao bài trên website.
 
-`verification/verify_examples.py` là công cụ **tùy chọn** cho người biên soạn nội dung, không nằm trong setup/check bắt buộc. Nó cần Python, .NET SDK 10, truy cập NuGet để restore EF SQLite và loopback socket cho ví dụ web. Chạy `python3 verification/verify_examples.py` từ repo root; có thể đặt `DOTNET_CMD=/đường/dẫn/dotnet`. Nó chạy các ví dụ/lời giải đã xuất bản, kiểm tra output và status HTTP, lưu báo cáo JSON; không chạy code học viên.
+Phạm vi dựa trên bản ghi người dùng cung cấp; không tuyên bố đã xem trực tiếp video. Phần giải thích được mở rộng, có liên kết Microsoft, SQLite, xUnit và IETF. Trang **Theo bài giảng** đối chiếu từng phần. Không lưu file DOCX hay bản ghi đầy đủ trong repo.
 
-Kết quả kiểm chứng hiện tại và giới hạn: [docs/validation.md](docs/validation.md).
+Bản ghi có bối cảnh .NET 8; ví dụ mới dùng .NET 10. Những khác biệt như `System.Threading.Lock`, .NET Framework/Core/Standard, Task/Thread và JIT/AOT được giải thích rõ. Mốc package phục vụ tái hiện; khi làm dự án thật cần cập nhật bản vá được hỗ trợ và giữ provider/tool cùng major tương thích. Kết quả kiểm tra nằm trong `docs/validation.md`.
 
-## Stack và giới hạn
+## Dữ liệu cũ và đường dẫn
 
-React 19.2.0, TypeScript 5.9.3, Vite 7.3.7, React Router 7.18.5; font Be Vietnam Pro bundle local. Không có CMS, thanh toán, AI, chạy code tùy ý, đăng nhập hay đồng bộ nhiều thiết bị. Có thể học và lưu sau khi tài nguyên tĩnh đã tải ngay cả khi mất mạng; **chưa có service worker/PWA**, nên mở/reload khi hoàn toàn offline chưa được bảo đảm. Đã kiểm chứng Chromium desktop/mobile; chưa kiểm chứng Safari/Firefox hoặc thiết bị thật. SQL ví dụ chạy bằng SQLite, chưa chạy lại trên SQL Server.
+Đọc bài không phụ thuộc localStorage. Chỉ theme dùng khóa `ddl-reading-theme`. Không dùng lại hay tự xóa khóa `dotnet-deep-learn:state:v1` của app cũ, kể cả khi nó hỏng. Các URL `/lessons/:id/:section` chuyển tới bài lý thuyết khi ID còn tồn tại; review/progress/data/bookmarks chuyển về thư viện.
+
+## Static hosting / Vercel
+
+Đưa **toàn bộ `client/dist/`** lên static hosting sau build. HashRouter và `base: './'` hỗ trợ thư mục con, không cần SPA rewrite. Phục vụ qua HTTP(S), không mở `index.html` bằng `file://`.
+
+Vercel: Root Directory **`client`**, Node **24.x**. `client/vercel.json` đặt install `npm ci --include=dev`, build `npm run build`, output `dist`. Không cần biến môi trường/backend/database. Build/preview local và PR không đồng nghĩa production đã triển khai.

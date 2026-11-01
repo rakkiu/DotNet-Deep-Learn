@@ -1,0 +1,143 @@
+{
+  "id": "thread-lock",
+  "title": "lock, Monitor và collection đồng thời",
+  "description": "Critical section là vùng thao tác lên trạng thái dùng chung cần loại trừ truy cập xung đột. lock bảo đảm từng thời điểm chỉ một thread giữ cùng đối tượng khóa trong phạm vi đó. Monitor là API nền cho …",
+  "category": "concurrency",
+  "kind": "Đồng bộ truy cập trạng thái",
+  "sourceParts": [
+    33
+  ],
+  "prerequisites": [
+    "Biết thread và trạng thái dùng chung ở bài 30–32"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Critical section là vùng thao tác lên trạng thái dùng chung cần loại trừ truy cập xung đột. lock bảo đảm từng thời điểm chỉ một thread giữ cùng đối tượng khóa trong phạm vi đó. Monitor là API nền cho kiểu lock dùng object truyền thống; System.Threading.Lock có cơ chế riêng ở C# hiện đại."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "count++ gồm đọc, cộng và ghi nên hai thread có thể đọc cùng số cũ rồi ghi đè kết quả. Kết quả sai có thể hiếm và không lặp lại khi debug. Khóa gom các thao tác cần nhất quán thành một vùng độc quyền thay vì hy vọng lịch chạy thuận lợi."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "lock có cú pháp dễ đọc và giải phóng theo scope kể cả khi có exception trong điều kiện tháo stack thông thường. Interlocked đơn giản hơn cho một số cập nhật nguyên tử; concurrent collection hỗ trợ API thao tác thread-safe. Chọn abstraction phù hợp tránh tự viết giao thức khóa phức tạp."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không lock trên this, string literal hoặc Type công khai. Không giữ khóa khi làm network/file I/O dài; không await bên trong lock. Không giữ hai khóa theo thứ tự khác nhau ở hai đường code vì có thể deadlock.",
+        "lock trên object thường dùng Monitor với giải phóng trong finally; C# 13/.NET 9 còn hỗ trợ System.Threading.Lock chuyên biệt. Không await trong thân lock thông thường; dùng cơ chế async phù hợp. Không khóa this hoặc string intern dùng chung ngoài kiểm soát.",
+        "Interlocked.Increment phù hợp bộ đếm đơn. ConcurrentDictionary bảo vệ các thao tác riêng lẻ nhưng một chuỗi ContainsKey rồi Add không tự thành atomic; dùng TryAdd/GetOrAdd với hiểu biết về callback có thể chạy nhiều lần."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "Với object, compiler tạo cấu trúc Monitor.Enter/Exit có finally để giải phóng. Với biểu thức đúng kiểu System.Threading.Lock ở C# 13/.NET 9 trở lên, compiler dùng cơ chế EnterScope chuyên biệt. Mọi truy cập cần bảo vệ phải dùng cùng khóa; một writer không tuân thủ là đủ phá invariant. ConcurrentDictionary bảo đảm theo từng API, không tự gom cả chuỗi ContainsKey rồi Add thành transaction.",
+        "Khóa bảo vệ bất biến, vì vậy cả đọc lẫn ghi liên quan cần cùng quy tắc đồng bộ. Khóa quá rộng giảm concurrency; nhiều khóa với thứ tự khác nhau có thể deadlock.",
+        "Monitor có Enter/Exit và các API Wait/Pulse để phối hợp condition; cần hiểu việc nhả/lấy lại khóa trước khi dùng. Một concurrent collection không biến toàn bộ nghiệp vụ đa bước thành transaction."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Race condition",
+          "meaning": "Kết quả sai do thứ tự xen kẽ không được kiểm soát của các thao tác.",
+          "example": "total++ gồm đọc, tính và ghi; không coi toàn bộ là atomic."
+        },
+        {
+          "term": "Critical section",
+          "meaning": "Đoạn code cần bảo vệ bất biến khi có nhiều caller.",
+          "example": "Mọi lần tăng total trong ví dụ dùng cùng sync."
+        },
+        {
+          "term": "Mutual exclusion",
+          "meaning": "Tại một thời điểm chỉ một caller giữ cùng khóa.",
+          "example": "Hai khóa được new riêng biệt không bảo vệ cùng vùng dữ liệu."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Service singleton có mutable state cần xem xét thread-safety. lock chỉ trong process, không khóa được các instance khác hoặc thay database transaction. Với async cần loại trừ tương hỗ, SemaphoreSlim(1,1) thường phù hợp hơn, nhưng phải thiết kế reentrancy và Release đúng."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "int total = 0;\nobject sync = new();\nint iterations = 100;\nTask Work() => Task.Run(() => {\n    for (int i = 0; i < iterations; i++)\n        lock (sync) { total++; }\n});\nawait Task.WhenAll(Work(), Work());\nConsole.WriteLine(total);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "200",
+        "steps": [
+          "Hai Task mỗi cái chạy 100 lượt.",
+          "Cùng sync bảo vệ từng total++ nên không mất lượt tăng.",
+          "WhenAll chờ cả hai kết thúc trước khi in 200."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Pause mọi thread và xem đường giữ/chờ khóa khi treo. Giữ thứ tự lock thống nhất và đo lock contention. Với race condition, kiểm tra cả reader và writer; logging có thể thay đổi timing nên việc lỗi biến mất khi thêm log không chứng minh đã sửa."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "lock",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock"
+        },
+        {
+          "title": "thread safe",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

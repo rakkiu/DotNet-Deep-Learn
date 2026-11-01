@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview --host 0.0.0.0",
-    "test": "vitest run",
+    "dev": "vite --configLoader native --host 0.0.0.0",
+    "build": "tsc -b && vite build --configLoader native",
+    "preview": "vite preview --configLoader native --host 0.0.0.0",
+    "test": "vitest run --configLoader native",
     "test:e2e": "playwright test"
   },
   "dependencies": {

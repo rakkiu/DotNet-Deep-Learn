@@ -1,0 +1,147 @@
+{
+  "id": "httpclient-json",
+  "title": "HttpClient và System.Text.Json",
+  "description": "HttpClient gửi HTTP request và nhận response từ ứng dụng .NET. System.Text.Json chuyển giữa JSON và object .NET; GetFromJsonAsync kết hợp gửi request và deserialize. Chúng là thư viện, không phải API …",
+  "category": "network",
+  "kind": "Thư viện HTTP client / serializer",
+  "sourceParts": [
+    41
+  ],
+  "prerequisites": [
+    "Biết async/await, HTTP response và class ở các bài trước"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "HttpClient gửi HTTP request và nhận response từ ứng dụng .NET. System.Text.Json chuyển giữa JSON và object .NET; GetFromJsonAsync kết hợp gửi request và deserialize. Chúng là thư viện, không phải API server hay database."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Tự gọi API bằng socket buộc xử lý DNS, connection, TLS, headers, framing và đọc body trước khi parse JSON. HttpClient cung cấp abstraction HTTP và handler quản lý transport. Serializer tránh tự cắt chuỗi JSON, nhưng vẫn cần xác định hợp đồng và kiểm tra dữ liệu."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "API async, typed DTO và IHttpClientFactory giúp cấu hình nhất quán, tái dùng handler/connection và dễ test. So với client tạo/hủy cho từng request, chiến lược vòng đời phù hợp tránh cạn kết nối và xử lý thay đổi DNS tốt hơn. Không có nghĩa mọi API lỗi đều được tự retry an toàn."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không new/dispose client liên tục trong vòng lặp production; dùng long-lived client cấu hình lifetime kết nối hoặc factory. Không retry POST thanh toán tùy tiện vì có thể lặp tác dụng phụ. Không nhận URL tùy ý từ người dùng rồi server truy cập mà không kiểm soát đích đến.",
+        "Client thật cần cancellation, timeout, xử lý non-2xx và JSON không hợp lệ. EnsureSuccessStatusCode chấp nhận 2xx, không chỉ riêng 200; GetFromJsonAsync đã dùng kiểm tra thành công. Response thành công vẫn có thể có body không đúng schema kỳ vọng.",
+        "Không new/dispose HttpClient cho từng request trong vòng lặp production. Dùng client sống lâu với PooledConnectionLifetime thích hợp hoặc IHttpClientFactory; fixture sở hữu client trong một lượt thử độc lập nên dùng using."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "HttpClient chuyển request qua HttpMessageHandler; SocketsHttpHandler thường quản lý pool kết nối. BaseAddress kết hợp relative URI theo quy tắc URI, nên dấu / rất quan trọng. GetAsync trả response; EnsureSuccessStatusCode chấp nhận 2xx và ném với non-success. Deserialize có thể lỗi dù status thành công vì body không khớp JSON/contract.",
+        "HttpClient đóng vai trò client, khác controller nhận request. BaseAddress kết hợp relative URI theo quy tắc URI; dấu / đầu đường dẫn có thể thay đổi cách ghép path.",
+        "GetAsync trả HttpResponseMessage cần quản lý vòng đời; EnsureSuccessStatusCode ném HttpRequestException cho non-2xx. Đọc JSON có thể lỗi dù status thành công; truyền CancellationToken và kiểm tra các field nghiệp vụ sau deserialize."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "HttpClient",
+          "meaning": "API gửi HTTP request và nhận response; handler quyết định transport.",
+          "example": "FixtureHandler không mở mạng nhưng dùng cùng đường xử lý JSON của HttpClient."
+        },
+        {
+          "term": "BaseAddress",
+          "meaning": "URI nền được kết hợp với relative URI.",
+          "example": "https://example.test/ + students/1 thành https://example.test/students/1."
+        },
+        {
+          "term": "Deserialization",
+          "meaning": "Chuyển dữ liệu JSON thành object có kiểu.",
+          "example": "GetFromJsonAsync<Student> đọc name thành Student.Name theo các tùy chọn web mặc định."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "Typed client được đăng ký qua AddHttpClient rồi inject vào service. Token/credential phải đi theo cơ chế phù hợp của API, không hardcode trong source. Truyền CancellationToken, giới hạn timeout/body, Dispose response và xác thực dữ liệu nghiệp vụ sau deserialize."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "using System.Net;\nusing System.Net.Http.Json;\nusing System.Text;\nusing var client = new HttpClient(new FixtureHandler()) { BaseAddress = new Uri(\"https://example.test/\") };\nvar student = await client.GetFromJsonAsync<Student>(\"students/1\");\nConsole.WriteLine(student?.Name ?? \"(rỗng)\");\nrecord Student(string Name);\nclass FixtureHandler : HttpMessageHandler\n{\n    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)\n    {\n        string json = \"{\\\"name\\\":\\\"An\\\"}\";\n        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) {\n            Content = new StringContent(json, Encoding.UTF8, \"application/json\")\n        });\n    }\n}",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "An",
+        "steps": [
+          "Tạo client với handler trả status 200 và JSON cố định.",
+          "GetFromJsonAsync yêu cầu students/1, kiểm tra response và đọc JSON.",
+          "Student.Name nhận An và được in; không có request Internet thật."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Log method, URL đã lược dữ liệu nhạy cảm, status và duration; xem inner exception để phân biệt DNS/TLS/timeout/JSON. Với đường dẫn sai, in URI cuối sau ghép BaseAddress. Dùng HttpMessageHandler giả để kiểm tra behavior không phụ thuộc Internet, và DevTools/curl để đối chiếu API thực."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "httpclient guidelines",
+          "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines"
+        },
+        {
+          "title": "overview",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview"
+        },
+        {
+          "title": "httpclient factory",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/httpclient-factory"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

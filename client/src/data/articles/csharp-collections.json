@@ -1,0 +1,143 @@
+{
+  "id": "csharp-collections",
+  "title": "Collection: List, Dictionary, Queue và Stack",
+  "description": "Collection là nhóm kiểu lưu và tổ chức nhiều phần tử: List<T> theo vị trí, Dictionary<TKey,TValue> theo khóa, Queue<T> theo thứ tự vào trước ra trước và Stack<T> theo thứ tự vào sau ra trước. Generic …",
+  "category": "foundation",
+  "kind": "Thư viện cấu trúc dữ liệu",
+  "sourceParts": [
+    8
+  ],
+  "prerequisites": [
+    "Biết mảng và foreach ở bài 3–4"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "Collection là nhóm kiểu lưu và tổ chức nhiều phần tử: List<T> theo vị trí, Dictionary<TKey,TValue> theo khóa, Queue<T> theo thứ tự vào trước ra trước và Stack<T> theo thứ tự vào sau ra trước. Generic xác định kiểu phần tử mà collection chấp nhận."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Array có kích thước cố định; mỗi lần cần tăng sức chứa phải tạo mảng khác và copy. Tìm một đối tượng theo mã trong danh sách bằng vòng lặp cũng có thể tốn nhiều lượt. Collection cung cấp những cấu trúc phù hợp các kiểu thao tác khác nhau thay vì tự cài toàn bộ."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "List<T> quản lý sức chứa, Dictionary hỗ trợ tra cứu trung bình nhanh theo khóa, HashSet biểu diễn tính duy nhất. So với ArrayList/object, generic collection kiểm tra kiểu sớm và thường tránh boxing value type khi lưu trữ. Chọn đúng cấu trúc thường quan trọng hơn viết cú pháp ngắn."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không dùng List cho hàng đợi lớn mà liên tục RemoveAt(0). Không dùng Dictionary nếu cần ngầm giả định thứ tự sắp xếp khóa. Không dùng collection thông thường cho nhiều thread đồng thời ghi nếu chưa có đồng bộ hóa phù hợp.",
+        "Không phải mọi collection đều có Capacity hoặc cho thêm/xóa. List và Dictionary thông thường không hỗ trợ ghi đồng thời tùy ý giữa nhiều thread. Sửa cấu trúc một List khi đang foreach nó thường làm bộ duyệt báo lỗi.",
+        "List có truy cập index O(1), nhưng Insert/Remove giữa danh sách cần dịch phần tử. Dictionary thường tra cứu trung bình nhanh theo key, đổi lại là chi phí bộ nhớ và phụ thuộc equality/hash. Chọn cấu trúc theo cách truy cập, không theo thói quen."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "List thường dùng một mảng nội bộ và tăng capacity khi cần; Count khác Capacity. Dictionary dùng hash của key để tìm vùng chứa rồi so sánh bằng equality. Key phải có quy tắc equality/hash nhất quán; sửa dữ liệu tham gia hash khi key đang được dùng có thể phá tra cứu. Enumeration có thể bị vô hiệu nếu collection thay đổi trong lúc duyệt.",
+        "List<T> truy cập theo index và tăng giảm số phần tử. Dictionary<TKey,TValue> tra theo khóa, cần xử lý khóa chưa có bằng TryGetValue. HashSet<T> dùng cho tập không trùng; Queue<T> FIFO và Stack<T> LIFO.",
+        "Count là số phần tử hiện tại; Capacity là khái niệm được một số collection như List<T> công khai. Không suy ra mọi collection đều có Capacity. Thay đổi cấu trúc List trong foreach thường làm enumerator lỗi; hãy quyết định duyệt bản sao, dùng for phù hợp hoặc tạo kết quả lọc mới."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "List<T>",
+          "meaning": "Danh sách theo chỉ số, có thể tăng giảm số phần tử. T là kiểu phần tử.",
+          "example": "List<string> chỉ nhận phần tử tương thích string, index bắt đầu từ 0."
+        },
+        {
+          "term": "Count và Capacity",
+          "meaning": "Count là số phần tử đang có; Capacity của List là sức chứa nội bộ trước khi tăng vùng lưu.",
+          "example": "Thêm Chi làm Count tăng, không suy ra mọi lần Add đều cấp phát vùng lưu mới."
+        },
+        {
+          "term": "Cấu trúc theo nhu cầu",
+          "meaning": "Dictionary tra cứu theo key; Queue lấy trước phần tử vào trước, Stack lấy trước phần tử vào sau.",
+          "example": "Tra học viên theo mã nên dùng Dictionary<string, Student> thay vì coi mã là index List."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "LINQ nhận IEnumerable<T> từ collection, nhưng query không tự là một bản sao dữ liệu. Database trả tập kết quả có thể được materialize thành List. ConcurrentDictionary cung cấp thao tác an toàn theo API của nó; nhiều thao tác nối tiếp vẫn cần xem xét tính nguyên tử nghiệp vụ."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "dotnet new console -n TheoryDemo\ncd TheoryDemo\n# Thay Program.cs bằng code bên dưới\ndotnet run",
+        "code": "var names = new List<string> { \"An\", \"Bình\" };\nnames.Add(\"Chi\");\nConsole.WriteLine(names.Count);\nConsole.WriteLine(names[1]);",
+        "file": "Program.cs",
+        "language": "csharp",
+        "files": {},
+        "output": "3\nBình",
+        "steps": [
+          "List bắt đầu [An, Bình].",
+          "Add đưa Chi vào cuối danh sách.",
+          "Count là 3; phần tử ở index 1 là Bình."
+        ],
+        "request": null,
+        "note": "Ví dụ minh họa để đọc và chạy tại máy của bạn. Website chỉ hiển thị code và giải thích; không thực thi C# trong trình duyệt."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "TheoryDemo/\n├── TheoryDemo.csproj      # SDK, TargetFramework, packages\n├── Program.cs             # điểm vào và ví dụ tối thiểu\n├── Models/                # type dữ liệu khi cần tách file\n├── Services/              # hành vi có trách nhiệm riêng\n└── bin/, obj/             # output build, không sửa tay",
+        "note": "Console không có một cấu trúc thư mục bắt buộc. Bắt đầu với Program.cs; chỉ tách type theo trách nhiệm khi cần. Với ví dụ này, code có thể nằm cùng file để thấy đầy đủ đường chạy; file .csproj mới là cấu hình project."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Xem Count, key và kết quả TryGetValue thay vì truy cập khóa chưa chắc có. Với lỗi collection modified, tìm nơi sửa collection trong vòng foreach. Với phần tử trùng, kiểm tra IEqualityComparer và dữ liệu tham gia Equals/GetHashCode."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "collections",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/collections/"
+        },
+        {
+          "title": "thread safe",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}

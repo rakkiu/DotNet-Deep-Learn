@@ -1,0 +1,141 @@
+{
+  "id": "relational-databases",
+  "title": "SQL, SQL Server và SQLite",
+  "description": "SQL là ngôn ngữ mô tả truy vấn và thay đổi dữ liệu quan hệ. SQL Server là hệ quản trị database chạy dạng dịch vụ; SQLite là engine nhúng thường lưu một database trong file. EF Core là ORM nằm trên các…",
+  "category": "data",
+  "kind": "Ngôn ngữ truy vấn / database",
+  "sourceParts": [
+    23
+  ],
+  "prerequisites": [
+    "Biến, method và class cơ bản"
+  ],
+  "sections": [
+    {
+      "id": "identity",
+      "paragraphs": [
+        "SQL là ngôn ngữ mô tả truy vấn và thay đổi dữ liệu quan hệ. SQL Server là hệ quản trị database chạy dạng dịch vụ; SQLite là engine nhúng thường lưu một database trong file. EF Core là ORM nằm trên các engine này, không phải thứ thay thế database. SQLite được dùng cho ví dụ độc lập, còn bài giảng giới thiệu provider SQL Server."
+      ],
+      "title": "Đây là công nghệ gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "problem",
+      "paragraphs": [
+        "Lưu nhiều file text tự do khiến truy vấn, liên kết và cập nhật đồng thời khó nhất quán. Database cung cấp bảng, khóa, constraint, transaction và engine query. SQL biểu đạt tập dữ liệu cần lấy mà không tự viết vòng lặp đọc từng file, nhưng vẫn phải thiết kế schema và index."
+      ],
+      "title": "Nó giải quyết vấn đề gì?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "benefits",
+      "paragraphs": [
+        "SQL Server phù hợp mô hình nhiều client kết nối một dịch vụ với quyền/operation tập trung; SQLite nhẹ, nhúng, dễ tạo ví dụ local. So với file JSON, database quan hệ hỗ trợ truy vấn và ràng buộc tốt hơn cho dữ liệu có cấu trúc. Không có engine nào nhanh nhất cho mọi tải và mọi môi trường."
+      ],
+      "title": "Tại sao nên dùng nó?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "limits",
+      "paragraphs": [
+        "Không chọn SQLite cho tải nhiều writer từ nhiều máy như thể nó là server database đầy đủ. Không vận hành SQL Server chỉ để lưu một tệp cấu hình nhỏ. Không nối input vào SQL string và không cho tài khoản app quyền quản trị schema nếu chỉ cần CRUD."
+      ],
+      "title": "Khi nào không nên dùng?",
+      "group": "Nền tảng"
+    },
+    {
+      "id": "mechanism",
+      "paragraphs": [
+        "SQL engine parse và tối ưu query thành execution plan; index cung cấp đường tìm dữ liệu thay việc quét toàn bộ trong những trường hợp phù hợp. Primary key định danh dòng, foreign key ràng buộc tham chiếu. Transaction tạo phạm vi thay đổi có tính nhất quán theo isolation/engine, không đồng nghĩa mọi thao tác tự không bao giờ xung đột."
+      ],
+      "title": "Cơ chế hoạt động cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "concepts",
+      "definitions": [
+        {
+          "term": "Schema / table",
+          "meaning": "Cấu trúc và ràng buộc của dữ liệu lưu trữ.",
+          "example": "Students có cột Id, Name, Score."
+        },
+        {
+          "term": "Index / query plan",
+          "meaning": "Cấu trúc truy cập và chiến lược engine chọn để thực hiện query.",
+          "example": "Không phải có index là mọi truy vấn đều dùng được nó."
+        },
+        {
+          "term": "Transaction",
+          "meaning": "Nhóm thao tác với quy tắc commit/rollback và isolation.",
+          "example": "Cập nhật đơn và chi tiết đơn cần ranh giới nhất quán rõ."
+        }
+      ],
+      "title": "Các khái niệm cốt lõi",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "integration",
+      "paragraphs": [
+        "ADO.NET provider gửi command có parameter; EF Core dịch LINQ rồi gọi provider. Connection string chọn engine/server/database và xác thực; backend giữ thông tin này. Migration đổi schema, backup bảo vệ dữ liệu, còn cache là bản sao tăng tốc có chính sách riêng."
+      ],
+      "title": "Tương tác với thành phần khác",
+      "group": "Bản chất & kiến trúc"
+    },
+    {
+      "id": "hello",
+      "hello": {
+        "setup": "sqlite3 school.db\n-- Nhập các câu SQL bên dưới trong sqlite3 shell\n-- .quit để đóng shell",
+        "code": "CREATE TABLE Students (\n    Id INTEGER PRIMARY KEY,\n    Name TEXT NOT NULL,\n    Score INTEGER NOT NULL\n);\nINSERT INTO Students (Id, Name, Score) VALUES (1, 'An', 8);\nSELECT Name, Score FROM Students WHERE Score >= 8;",
+        "file": "schema.sql",
+        "language": "sql",
+        "files": {},
+        "output": "An|8 (định dạng mặc định của sqlite3 shell)",
+        "steps": [
+          "Ví dụ dùng SQLite để dễ chạy local; cú pháp kiểu dữ liệu ở SQL Server có khác biệt.",
+          "PRIMARY KEY và NOT NULL là ràng buộc database; WHERE lọc dòng và SELECT chọn cột."
+        ],
+        "note": "Mã minh họa để đọc cơ chế. Các lệnh khởi tạo chạy ở terminal; code đặt trong file được ghi bên dưới."
+      },
+      "title": "Hello World & khởi tạo",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "structure",
+      "structure": {
+        "code": "data-demo/\n├── schema.sql            # câu lệnh tạo bảng mẫu\n├── queries.sql           # truy vấn có thể review\n└── school.db             # dữ liệu SQLite local",
+        "note": "Đây là bố cục minh họa, không có một chuẩn thư mục áp dụng mọi database. Không commit file database chứa dữ liệu cá nhân; với SQL Server, dữ liệu do dịch vụ DB quản lý chứ không nằm trong wwwroot."
+      },
+      "title": "Cấu trúc thư mục & cấu hình",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "debug",
+      "paragraphs": [
+        "Xem SQL thực và execution plan với công cụ của engine; kiểm tra connection đang trỏ đúng database. Query sai dữ liệu cần xem JOIN/WHERE/null; query chậm cần xem số dòng, index và lock. Dùng parameter và log đã lược giá trị nhạy cảm để tái hiện."
+      ],
+      "title": "Debug & log lỗi",
+      "group": "Bắt đầu sử dụng"
+    },
+    {
+      "id": "resources",
+      "links": [
+        {
+          "title": "learn.microsoft.com — what is sql server",
+          "url": "https://learn.microsoft.com/en-us/sql/sql-server/what-is-sql-server"
+        },
+        {
+          "title": "www.sqlite.org — whentouse.html",
+          "url": "https://www.sqlite.org/whentouse.html"
+        },
+        {
+          "title": "www.sqlite.org — lang.html",
+          "url": "https://www.sqlite.org/lang.html"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/sql",
+      "title": "Tài liệu & cộng đồng",
+      "group": "Bắt đầu sử dụng"
+    }
+  ],
+  "minutes": 6
+}
