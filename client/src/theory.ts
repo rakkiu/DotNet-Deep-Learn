@@ -187,6 +187,95 @@ export function matchSnippet(l: Lesson, q: string) {
     (p.length > start + 210 ? "…" : "")
   );
 }
+
+export const oopPillars = [
+  {
+    id: "oop-encapsulation-deep",
+    title: "Đóng gói",
+    english: "Encapsulation",
+    question: "Ai được thay đổi state, và quy tắc nào phải luôn đúng?",
+    summary:
+      "Bảo vệ cách dữ liệu được tạo và thay đổi qua những hành vi có ý nghĩa.",
+    junior: [
+      "Private, property và constructor khác trách nhiệm gì?",
+      "Vì sao public setter có thể phá invariant?",
+      "Theo dấu thao tác bị từ chối và state sau lỗi.",
+    ],
+    middle: [
+      "Ownership, read-only view và snapshot khác nhau ra sao?",
+      "Giữ nhất quán khi một thao tác thất bại.",
+      "Nhận ra giới hạn với concurrency và persistence.",
+    ],
+    orderCase: "Order chỉ cho thêm dòng khi Draft, từ chối xác nhận đơn rỗng.",
+    misconception: "Có private field là đã giữ được mọi quy tắc.",
+  },
+  {
+    id: "oop-abstraction-deep",
+    title: "Trừu tượng",
+    english: "Abstraction",
+    question: "Caller cần biết điều gì, và được tin vào cam kết nào?",
+    summary:
+      "Chọn mô hình và hợp đồng phù hợp, giảm những chi tiết caller phải biết.",
+    junior: [
+      "Trừu tượng khác đóng gói ở câu hỏi nào?",
+      "Interface, abstract class và hàm phù hợp khi nào?",
+      "Theo dấu consumer được cung cấp implementation.",
+    ],
+    middle: [
+      "Thiết kế contract theo nhu cầu, tránh lộ vendor type.",
+      "Mô tả input, output, lỗi và tác dụng phụ.",
+      "Chia capability có lý do; phân biệt fake và tích hợp thật.",
+    ],
+    orderCase:
+      "Checkout dùng hợp đồng thanh toán, không tự hiểu mã lỗi riêng của SDK.",
+    misconception: "Thêm interface cho mọi class là tự giảm coupling.",
+  },
+  {
+    id: "oop-inheritance-deep",
+    title: "Kế thừa",
+    english: "Inheritance",
+    question: "Lớp con có giữ những cam kết của lớp cha không?",
+    summary:
+      "Đi từ quan hệ is-a tới khả năng thay thế về hành vi, thay vì chỉ tái sử dụng code.",
+    junior: [
+      "Đọc constructor chain và quyền truy cập base/derived.",
+      "Virtual, abstract và sealed mở/chặn điều gì?",
+      "Vì sao không gọi method overridable trong constructor?",
+    ],
+    middle: [
+      "Kiểm tra LSP bằng precondition, postcondition và invariant.",
+      "Giải thích xung đột API mutable Rectangle/Square.",
+      "Chọn composition khi có nhiều trục thay đổi độc lập.",
+    ],
+    orderCase:
+      "Loại đơn dẫn xuất phải giữ mọi thao tác mà contract đơn gốc hứa hỗ trợ.",
+    misconception: "Đúng is-a về tên gọi thì mọi hành vi đều thay thế được.",
+  },
+  {
+    id: "oop-polymorphism-deep",
+    title: "Đa hình",
+    english: "Polymorphism",
+    question: "Cùng hợp đồng, implementation nào được gọi và vì sao?",
+    summary:
+      "Dùng nhiều cách thực hiện qua một contract; tách lựa chọn overload khỏi runtime dispatch.",
+    junior: [
+      "Phân biệt kiểu tĩnh với kiểu runtime.",
+      "Theo dấu overload, override và new/hiding.",
+      "Gọi implementation qua interface mà không cast theo tên class.",
+    ],
+    middle: [
+      "Giữ consumer ổn định và kiểm tra contract chung.",
+      "Hiểu boxing/copy khi struct đi qua interface.",
+      "Cân nhắc strategy, delegate, pattern matching và chi phí thực tế.",
+    ],
+    orderCase:
+      "Checkout gọi một policy giá; từng implementation giữ cùng quy tắc đầu vào/kết quả.",
+    misconception: "Runtime luôn chọn overload cụ thể nhất của mọi đối số.",
+  },
+];
+export const isOopLesson = (lesson: Pick<Lesson, "id">) =>
+  oopPillars.some((p) => p.id === lesson.id);
+
 export const pathModules = [
   {
     id: "start",
@@ -220,6 +309,10 @@ export const pathModules = [
       "oop-polymorphism",
       "csharp-static",
       "oop-interfaces",
+      "oop-encapsulation-deep",
+      "oop-abstraction-deep",
+      "oop-inheritance-deep",
+      "oop-polymorphism-deep",
       "design-testing-patterns",
       "unit-testing",
       "factory-pattern",
@@ -292,14 +385,21 @@ export const pathModules = [
     ],
   },
 ];
-export type ReadOrder = "lecture" | "topic" | "foundation" | "interview";
+export type ReadOrder =
+  | "lecture"
+  | "topic"
+  | "foundation"
+  | "interview"
+  | "oop";
 export const orderLabels: Record<ReadOrder, string> = {
   lecture: "Thứ tự phần bài giảng",
   topic: "Theo chủ đề",
   foundation: "Lộ trình học nền tảng",
   interview: "Lộ trình ôn phỏng vấn",
+  oop: "Chuyên đề 4 tính chất OOP",
 };
 export function orderedLessons(l: Lesson, order: ReadOrder) {
+  if (order === "oop") return oopPillars.map((p) => byId.get(p.id)!);
   if (order === "lecture") return lessons.filter((x) => x.origin === "lecture");
   if (order === "topic")
     return lessons.filter((x) => x.category === l.category);

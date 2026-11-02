@@ -1,0 +1,442 @@
+{
+  "id": "oop-abstraction-deep",
+  "title": "Trừu tượng chuyên sâu: mô hình, hợp đồng và ranh giới phụ thuộc",
+  "description": "Trừu tượng là chọn điều mà người dùng của một thành phần cần biết, rồi diễn đạt nó bằng hợp đồng có ý nghĩa. Phân biệt với đóng gói; chọn interface, abstract class hoặc một hàm; thiết kế lỗi, capability và dependency theo nhu cầu thật.",
+  "category": "architecture",
+  "kind": "Nguyên lý thiết kế OOP",
+  "sourceParts": [],
+  "origin": "extension",
+  "auditCode": "OOP02",
+  "prerequisites": [
+    "Biết class, method, interface và ý nghĩa invariant."
+  ],
+  "prerequisiteIds": [
+    "oop-encapsulation-deep",
+    "oop-interfaces"
+  ],
+  "relatedIds": [
+    "oop-inheritance-deep",
+    "oop-polymorphism-deep",
+    "dependency-injection",
+    "factory-pattern",
+    "design-testing-patterns"
+  ],
+  "goals": [
+    "Giải thích trừu tượng khác đóng gói và vì sao thêm interface chưa chắc giảm phụ thuộc.",
+    "Chọn interface, abstract class hoặc hàm bằng nhu cầu về hợp đồng, state và phần triển khai dùng chung.",
+    "Mô tả input, output, lỗi và quyền sở hữu trong hợp đồng để các implementation có thể thay thế nhau."
+  ],
+  "reviewedAt": "2026-11-02",
+  "version": {
+    "reviewedAt": "2026-11-02",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất: hiểu đúng tính chất này",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Trừu tượng (abstraction) là xây một mô hình chỉ bộc lộ những gì cần thiết cho một mục đích sử dụng. Người đặt hàng quan tâm “yêu cầu thanh toán này được chấp nhận hay từ chối”, không cần biết tên bảng, HTTP header hoặc SDK của cổng thanh toán. Chi tiết vẫn tồn tại, nhưng không phải caller nào cũng phải biết để làm công việc của mình. Đây là nguyên lý mô hình hóa và thiết kế API, không phải một thư viện.",
+        "Đừng định nghĩa trừu tượng chỉ bằng “ẩn code”. Một hàm tính phí, một kiểu Order hay một interface đều có thể là abstraction. Chất lượng nằm ở việc caller suy luận được gì từ hợp đồng, chứ không ở số từ khóa abstract. Một abstraction quá mơ hồ như Execute(object data) có thể che nhiều chi tiết nhưng bắt caller đoán nhiều hơn.",
+        "Hợp đồng gồm nhiều hơn chữ ký method. Nó có đầu vào được chấp nhận, ý nghĩa đầu ra, lỗi, tác dụng phụ và các cam kết như có sửa dữ liệu hay không. Compiler kiểm tra được nhiều quy tắc về type/member, nhưng không tự chứng minh “trả false thì chưa trừ điểm” hoặc “không gửi email hai lần”."
+      ]
+    },
+    {
+      "id": "problem",
+      "title": "Vấn đề nào khiến ta cần nó?",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Nếu CheckoutService trực tiếp đọc format riêng của một SDK, tự tạo request HTTP và diễn giải mã lỗi vendor, thay vendor buộc sửa cả logic checkout. Test quy tắc đơn hàng cũng bị phụ thuộc vào mạng hoặc tài khoản thật. Vấn đề nằm ở hướng phụ thuộc và mức chi tiết bị kéo vào caller.",
+        "Cách làm đơn giản lúc đầu là gọi implementation trực tiếp; điều này hoàn toàn hợp lý khi nhu cầu nhỏ và ổn định. Khi đã xuất hiện ranh giới thay đổi, ta có thể đặt hợp đồng theo nhu cầu caller rồi viết adapter chuyển đổi sang công cụ bên ngoài. Mục tiêu là cô lập đúng phần biến động, không phải tạo một interface cho mọi class trong dự án."
+      ]
+    },
+    {
+      "id": "benefits",
+      "title": "Lợi ích khi thiết kế đúng",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Caller có từ vựng gần nhiệm vụ: Charge, Send hoặc Read, thay vì tên hàm nội bộ của vendor. Cách thực hiện có thể thay ở nơi lắp ghép dependency mà không đổi rule của caller, nếu hợp đồng hành vi vẫn được giữ. Đây là giảm coupling, tức giảm những điều một thành phần phải biết về thành phần khác.",
+        "Có thể dùng implementation giả trong test để tạo kết quả thành công, từ chối hoặc lỗi một cách chủ động. Test đó xác nhận rule của caller đối với hợp đồng đã định nghĩa. Nó không chứng minh adapter thật gửi HTTP đúng; phần đó cần kiểm thử ranh giới tương ứng."
+      ]
+    },
+    {
+      "id": "limits",
+      "title": "Khi nào không nên dùng hoặc dễ lạm dụng?",
+      "group": "Giới hạn và hiểu nhầm",
+      "paragraphs": [
+        "Interface không làm một thiết kế tự linh hoạt. Nếu IPaymentGateway trả VendorResponse và nhận VendorRequest, caller vẫn phụ thuộc sâu vào vendor qua các type. Nếu mọi thay đổi nhỏ đều kéo theo sửa interface và toàn bộ implementation thì có thể ranh giới đang được đặt sai.",
+        "Không cần bắt một phép tính ổn định chỉ có một cách thực hiện phải đi qua factory, service, adapter và interface chỉ để “đúng OOP”. Một hàm thuần có input/output rõ ràng cũng là abstraction tốt. Chọn cấu trúc nhỏ nhất biểu đạt được hợp đồng và phần thay đổi đã có căn cứ.",
+        "Không dùng abstract class chỉ vì muốn ẩn việc new. Nó còn ràng buộc một đường kế thừa và có thể chia sẻ state; nếu các loại không có cùng vòng đời/invariant thì việc ép chúng vào một lớp cha làm thay đổi khó hơn."
+      ]
+    },
+    {
+      "id": "mechanism",
+      "title": "Cơ chế hoạt động trong C# và .NET",
+      "group": "Bên trong lời gọi",
+      "paragraphs": [
+        "Ở C#, interface khai báo một tập member mà implementation phải đáp ứng theo quy tắc ngôn ngữ. Biến kiểu interface có thể tham chiếu một object concrete tương thích; lời gọi được thực hiện bằng implementation thích hợp. Bạn không khởi tạo được chính interface bằng new. Trong các ví dụ, nơi tạo new chọn implementation rồi truyền vào constructor của consumer.",
+        "Abstract class là một lớp chưa được phép tạo instance trực tiếp. Nó có thể có constructor, field, method thường và abstract member. Method abstract chưa có thân trong khai báo đó; lớp concrete dẫn xuất phải hoàn thiện các member còn thiếu. Một abstract class không bắt buộc phải có abstract member.",
+        "Không nói interface hiện đại “không bao giờ có code”. C# hỗ trợ default interface members và static members theo phiên bản/runtime. Tuy vậy interface không có instance field để dùng như state của abstract base class. Bài dùng instance method/interface cơ bản trong C# 14; các tính năng static abstract cho generic math là một chủ đề riêng, không đồng nhất với dispatch instance ở đây.",
+        "Sự tách phụ thuộc xảy ra trong thiết kế: consumer chỉ biết hợp đồng cần thiết; adapter biết chi tiết công cụ. Chữ ký không nên vô tình kéo type hạ tầng qua ranh giới. DI container có thể giúp lắp ghép, nhưng constructor nhận interface và lời gọi new thủ công đã đủ minh họa nguyên lý."
+      ],
+      "diagrams": [
+        {
+          "caption": "Đặt một hợp đồng giữa nghiệp vụ và chi tiết thay đổi",
+          "steps": [
+            "Consumer nêu nhu cầu bằng hợp đồng",
+            "Nơi lắp ghép chọn concrete implementation",
+            "Adapter chuyển dữ liệu sang công cụ riêng",
+            "Kết quả/lỗi được ánh xạ về hợp đồng",
+            "Consumer tiếp tục theo rule của mình"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "concepts",
+      "title": "Từ vựng cần hiểu trước khi đọc code",
+      "group": "Giải thích từng khái niệm",
+      "paragraphs": [],
+      "definitions": [
+        {
+          "term": "Abstraction và contract",
+          "meaning": "Mô hình cho một nhu cầu; contract nêu những điều caller và implementation cam kết với nhau.",
+          "example": "TryCharge(points) có quy tắc amount dương và Declined không có nghĩa đã thanh toán."
+        },
+        {
+          "term": "Interface",
+          "meaning": "Hợp đồng về các member/capability mà class hoặc struct có thể thực hiện.",
+          "example": "Archive có IReadDocument mà không phải nhận thêm Write nếu chỉ đọc."
+        },
+        {
+          "term": "Abstract class",
+          "meaning": "Lớp không được new trực tiếp, có thể chia sẻ state/triển khai và buộc lớp con hoàn thiện một phần.",
+          "example": "Report giữ tiêu đề và luồng Render chung, lớp con chỉ cung cấp Format."
+        },
+        {
+          "term": "Coupling và adapter",
+          "meaning": "Coupling là mức phụ thuộc; adapter chuyển giao tiếp của một thành phần sang hợp đồng mà caller cần.",
+          "example": "Lớp tích hợp SDK đổi VendorCode sang ChargeResult, không đưa VendorCode ra Checkout."
+        },
+        {
+          "term": "Capability",
+          "meaning": "Một khả năng cụ thể mà caller cần, thay vì một object có tất cả thao tác.",
+          "example": "Màn hình chỉ đọc nhận IReadDocument, không cần IWriteDocument."
+        }
+      ]
+    },
+    {
+      "id": "integration",
+      "title": "Nó kết hợp với ba tính chất còn lại thế nào?",
+      "group": "Bức tranh OOP",
+      "paragraphs": [
+        "Trừu tượng quyết định cái gì được nhìn thấy và được hứa; đóng gói giữ state/implementation phía sau ranh giới đó. Một Wallet có Withdraw là một abstraction ngay cả khi không có interface; private state và guard giúp hiện thực hợp đồng đó.",
+        "Kế thừa abstract base có thể chia sẻ luồng xử lý; đa hình cho nhiều implementation của một interface được gọi qua cùng hợp đồng. Bốn tính chất phối hợp, nhưng không cần một feature phải dùng đủ cả bốn. Dùng composition để truyền IPaymentGateway không bắt Checkout phải kế thừa gateway."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Junior: hiểu cơ chế và viết đúng",
+      "group": "Từ khái niệm tới code",
+      "paragraphs": [
+        "Hãy giải thích abstraction từ góc nhìn caller: để gửi thông báo, caller cần người nhận và nội dung, chứ không cần biết địa chỉ server giả hoặc câu lệnh in bên trong. Sau đó đọc interface để xác định member bắt buộc, đọc class concrete để thấy cách thực hiện, rồi tìm nơi consumer được cung cấp implementation.",
+        "Interface thường nói “có thể làm việc gì”; abstract class có thể nói thêm “cùng nền tảng triển khai và state nào”. Một class có thể implement nhiều interface nhưng chỉ có một base class trực tiếp. Không lấy số lượng method làm tiêu chí duy nhất: quan hệ hợp đồng và state quan trọng hơn.",
+        "Đừng lẫn abstract method với virtual method. Abstract member đòi một implementation phù hợp trước khi type trở thành concrete; virtual member đã có implementation có thể được override. Method thường trong abstract class vẫn gọi được thông qua một instance concrete.",
+        "Khi đọc lỗi CS0144 ở ví dụ riêng, hiểu compiler cấm new lớp abstract chứ không cấm khai báo biến mang kiểu abstract. Biến Report report = new TextReport() hợp lệ nếu TextReport là concrete và có quan hệ kế thừa phù hợp.",
+        "Một số mẫu dùng class WelcomeService(INotifier notifier): đây là cú pháp primary constructor có từ C# 12. Tham số nằm trong phạm vi khai báo class để code bên trong dùng, không tự trở thành public property như positional record. Với các dependency trong mẫu, bạn cũng có thể viết constructor thường và lưu dependency vào field riêng; ý tưởng truyền implementation từ bên ngoài không thay đổi. Đây là cú pháp cụ thể của C#, không phải một tính chất OOP mới."
+      ],
+      "tables": [
+        {
+          "caption": "Ba lựa chọn không nên dùng lẫn theo thói quen",
+          "headers": [
+            "Lựa chọn",
+            "Phù hợp khi",
+            "Điều cần cân nhắc"
+          ],
+          "rows": [
+            [
+              "Hàm / delegate",
+              "Một thao tác có hợp đồng nhỏ, không cần một nhóm state/hành vi",
+              "Đặt tên và diễn đạt lỗi rõ; không bắt có class"
+            ],
+            [
+              "Interface",
+              "Caller cần capability/hợp đồng, nhiều loại có thể thực hiện",
+              "Không đưa chi tiết vendor qua type đầu vào/đầu ra"
+            ],
+            [
+              "Abstract class",
+              "Một họ type thực sự chung state/luồng và extension point",
+              "Ràng buộc kế thừa; phải thiết kế protected/virtual cẩn thận"
+            ]
+          ]
+        },
+        {
+          "caption": "Trừu tượng và đóng gói trả lời hai câu hỏi",
+          "headers": [
+            "Góc nhìn",
+            "Trừu tượng",
+            "Đóng gói"
+          ],
+          "rows": [
+            [
+              "Câu hỏi chính",
+              "Caller cần biết điều gì?",
+              "Ai có quyền thay đổi và quy tắc được giữ ra sao?"
+            ],
+            [
+              "Ví dụ",
+              "Withdraw(amount) thay cách tự trừ field",
+              "Balance private và guard trước khi cập nhật"
+            ],
+            [
+              "Thất bại điển hình",
+              "Hợp đồng mơ hồ/lộ vendor type",
+              "State bị sửa từ đường ngoài hoặc qua collection bị lộ"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Middle: thiết kế hợp đồng và xử lý đánh đổi",
+      "group": "Đào sâu thiết kế",
+      "paragraphs": [
+        "Thiết kế hợp đồng từ use case của consumer giúp tránh interface phản chiếu nguyên SDK hoặc bảng dữ liệu. Ví dụ checkout cần kết quả charge; không nhất thiết cần mọi phương thức admin của cổng thanh toán. Đây là hướng suy nghĩ của dependency inversion: rule cấp cao phụ thuộc một mô hình ổn định phù hợp, còn chi tiết được tích hợp qua ranh giới đó.",
+        "Một interface cùng chữ ký vẫn có thể có implementation không thay thế được: bên này trả Declined mà không thay state, bên kia đã trừ rồi mới trả Declined. Vì vậy cần mô tả cả semantics, như đơn vị, điều kiện hợp lệ, lỗi có thể xảy ra và caller phải làm gì sau lỗi. Nếu là thao tác có tác dụng phụ/retry, còn cần định nghĩa idempotency chứ không tự thêm retry trong consumer.",
+        "Chia capability giúp tránh “method tồn tại nhưng luôn throw NotSupportedException”. Reader chỉ cần IReadDocument thì không phải biết storage ghi được hay không. Tuy nhiên tách quá nhỏ cũng có thể làm một nghiệp vụ liên quan bị rải thành nhiều dependency khó phối hợp. Đánh giá bằng nhu cầu caller và tính kết dính của thao tác.",
+        "Abstract base có ích cho một luồng xử lý thực sự ổn định: validate rồi render. Nhưng càng nhiều virtual hook và protected state thì càng nhiều tổ hợp lớp con có thể tạo ra. Nếu thuật toán thay đổi theo nhiều trục độc lập, composition của các policy thường dễ thay từng phần hơn một cây lớp con tăng theo mọi tổ hợp.",
+        "Test fake xác nhận consumer phản ứng đúng với contract; contract test chung xác nhận các implementation giữ những cam kết chung; integration test xác nhận adapter với thư viện/provider thật. Ba bằng chứng khác nhau. Không để test fake thành lý do tin rằng mọi kết nối ngoài đã được kiểm chứng."
+      ],
+      "tables": []
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ C#: từ đúng cơ bản tới bẫy thiết kế",
+      "group": "Đọc, chạy và theo dấu",
+      "paragraphs": [
+        "Các mẫu là minh họa lý thuyết có kết quả và giải thích sẵn. Mỗi mẫu có đầy đủ file project; các project cố ý lỗi được tách riêng. Không ghép các Program.cs vào cùng một project."
+      ],
+      "examples": [
+        {
+          "id": "notifier-contract",
+          "title": "Junior · Cùng nhu cầu gửi, hai cách thực hiện",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "var welcome = new WelcomeService(new ConsoleMail());\nwelcome.Welcome(\"An\");\nvar another = new WelcomeService(new ConsoleSms());\nanother.Welcome(\"Binh\");\ninterface INotifier { void Send(string recipient, string message); }\nsealed class WelcomeService(INotifier notifier)\n{\n    public void Welcome(string name) => notifier.Send(name, \"Welcome\");\n}\nsealed class ConsoleMail : INotifier\n{\n    public void Send(string recipient, string message) => Console.WriteLine($\"mail:{recipient}:{message}\");\n}\nsealed class ConsoleSms : INotifier\n{\n    public void Send(string recipient, string message) => Console.WriteLine($\"sms:{recipient}:{message}\");\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "mail:An:Welcome\nsms:Binh:Welcome",
+          "explanation": "WelcomeService chỉ dùng Send, không kiểm tra kiểu concrete hay tự cấu hình mail/SMS. Cả hai implementation chỉ in console để tránh gọi dịch vụ ngoài. Đây chưa là adapter mail production, chưa có retry, bảo mật hoặc delivery guarantee.",
+          "verification": "ran"
+        },
+        {
+          "id": "checkout-contract",
+          "title": "Middle · Kết quả nghiệp vụ không bị lẫn với chi tiết gateway",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "foreach (var result in new[] { ChargeResult.Accepted, ChargeResult.Declined })\n{\n    var checkout = new Checkout(new FakeGateway(result));\n    bool paid = checkout.Pay(120);\n    Console.WriteLine($\"{result}:paid={paid}\");\n}\nenum ChargeResult { Accepted, Declined }\ninterface IPaymentGateway { ChargeResult Charge(int points); }\nsealed class FakeGateway(ChargeResult result) : IPaymentGateway\n{\n    public ChargeResult Charge(int points)\n    {\n        if (points <= 0) throw new ArgumentOutOfRangeException(nameof(points));\n        return result;\n    }\n}\nsealed class Checkout(IPaymentGateway gateway)\n{\n    public bool Pay(int points)\n    {\n        if (points <= 0) throw new ArgumentOutOfRangeException(nameof(points));\n        return gateway.Charge(points) == ChargeResult.Accepted;\n    }\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "Accepted:paid=True\nDeclined:paid=False",
+          "explanation": "Hợp đồng demo sử dụng điểm nguyên, input dương và hai kết quả xác định; không có tiền thật hay HTTP. Fake cho phép kiểm tra nhánh bị từ chối. Hệ thống thật phải bổ sung semantics lỗi, timeout, idempotency và đơn vị trước khi coi interface này là đủ.",
+          "verification": "ran"
+        },
+        {
+          "id": "abstract-template",
+          "title": "Middle · Abstract class chia sẻ luồng, interface chia sẻ capability",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "IReport[] reports = { new PlainReport(\"people\"), new UpperReport(\"people\") };\nforeach (var report in reports) Console.WriteLine(report.Render(new[] { \"An\", \"Binh\" }));\ninterface IReport { string Render(string[] rows); }\nabstract class Report(string title) : IReport\n{\n    public string Render(string[] rows)\n    {\n        ArgumentNullException.ThrowIfNull(rows);\n        return title + \":\" + string.Join(\";\", rows.Select(Format));\n    }\n    protected abstract string Format(string row);\n}\nsealed class PlainReport(string title) : Report(title)\n{\n    protected override string Format(string row) => row;\n}\nsealed class UpperReport(string title) : Report(title)\n{\n    protected override string Format(string row) => row.ToUpperInvariant();\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "people:An;Binh\npeople:AN;BINH",
+          "explanation": "IReport mô tả capability Render. Report giữ title và luồng kiểm tra/ghép chuỗi; Format là phần thay đổi. Render không virtual nên subclass không thay toàn bộ luồng bằng override. Đây là một extension point có mục đích, không phải quy tắc mọi interface đều cần abstract base.",
+          "verification": "ran"
+        },
+        {
+          "id": "instantiate-abstract",
+          "title": "Lỗi riêng · Không khởi tạo trực tiếp lớp abstract",
+          "kind": "compile-error",
+          "label": "Cố ý lỗi biên dịch · project riêng",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet build Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "var report = new Report();\nabstract class Report { public abstract string Render(); }"
+          },
+          "expected": "CS0144",
+          "explanation": "Muốn tạo instance phải có class concrete triển khai Render hoặc chọn một kiểu concrete đã có. Có thể khai báo biến Report trỏ tới instance lớp con; không cần xóa abstract chỉ để làm lỗi compiler biến mất.",
+          "verification": "expected-diagnostic",
+          "diagnostic": "CS0144"
+        }
+      ]
+    },
+    {
+      "id": "case-study",
+      "title": "Đối chiếu thiết kế trước và sau",
+      "group": "Tình huống để suy luận",
+      "paragraphs": [
+        "Trước: Checkout gọi VendorSdk.Charge và tự hiểu VendorErrorCode ở nhiều chỗ. Sau: Checkout dùng IPaymentGateway và ChargeResult phù hợp nhu cầu; adapter là nơi dịch giữa hai hợp đồng. Nếu đổi vendor mà phải sửa mọi rule checkout, cần kiểm tra abstraction có đang làm lộ type hoặc semantics của vendor không.",
+        "Với đọc/ghi tài liệu, đừng ép kho lưu chỉ đọc implement Write rồi throw. Tách IReadDocument cho caller chỉ đọc; caller cần ghi mới nhận IWriteDocument. Việc tách được biện minh bằng capability khác nhau, không phải mục tiêu có càng nhiều interface càng tốt."
+      ],
+      "tables": [
+        {
+          "caption": "Đọc một hợp đồng trước khi implement",
+          "headers": [
+            "Câu hỏi",
+            "Điều phải được nói rõ"
+          ],
+          "rows": [
+            [
+              "Input hợp lệ là gì?",
+              "Đơn vị, null, khoảng giá trị và điều kiện trạng thái"
+            ],
+            [
+              "Kết quả có nghĩa gì?",
+              "Accepted khác đã hoàn tất nghiệp vụ toàn hệ thống ra sao"
+            ],
+            [
+              "Thất bại ra sao?",
+              "Kết quả nghiệp vụ, exception hạ tầng, hủy và tác dụng phụ"
+            ],
+            [
+              "Có thay thế được không?",
+              "Mọi implementation phải giữ cùng cam kết caller dựa vào"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "structure",
+      "title": "Đặt file ở đâu và bắt đầu thế nào?",
+      "group": "Bắt đầu từ thư mục trống",
+      "paragraphs": [
+        "Mỗi khối ví dụ hiển thị Demo.csproj, Program.cs và ConsoleEncoding.cs khi cần cố định output. Đặt chúng vào cùng một thư mục trống, cài SDK nêu ở đầu bài, rồi chạy đúng lệnh terminal. Nút tải bộ project ở trang OOP bao gồm các thư mục ví dụ độc lập; project cố ý lỗi có nhãn riêng và không được đưa vào solution cần build thành công.",
+        "Trong dự án nhiều file, tên thư mục Domain, Contracts, Infrastructure chỉ là gợi ý theo trách nhiệm. Không tạo thêm layer vì tên gọi; trước hết phải nhìn thấy state, hành vi, dependency và đường gọi của ví dụ đang học."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "debug",
+      "title": "Debug: quan sát điều gì để hiểu vì sao?",
+      "group": "Theo dấu thay vì đoán",
+      "paragraphs": [
+        "Tìm điểm tạo instance trước: consumer đang được truyền ConsoleMail, ConsoleSms hay adapter nào? Dùng Watch xem type runtime của interface reference rồi Step Into lời gọi. Không kết luận code không chạy chỉ vì breakpoint đang đặt ở một implementation khác.",
+        "Nếu thay implementation làm caller hỏng, so contract trước khi đổ cho DI. Kiểm tra units, null, lỗi, tác dụng phụ và ownership. Một interface compile thành công chỉ chứng minh đáp ứng phần cấu trúc được compiler kiểm tra."
+      ]
+    },
+    {
+      "id": "questions",
+      "title": "Hỏi đáp junior và middle có giải thích",
+      "group": "Tự đối chiếu cách hiểu",
+      "paragraphs": [
+        "Có 3 câu junior và 2 câu middle. Thử giải thích cơ chế trước, sau đó mở đáp án để so lý do và giới hạn. Đây là phần đọc mở rộng, không có điểm số hoặc nộp bài."
+      ],
+      "questions": [
+        {
+          "level": "junior",
+          "prompt": "Có dùng abstract class thì mới có trừu tượng không?",
+          "answer": "Không. Một hàm hoặc một class có API rõ cũng có thể là abstraction.",
+          "explanation": "Trừu tượng là chọn mô hình và hợp đồng cho nhu cầu; từ khóa abstract chỉ là một công cụ ngôn ngữ.",
+          "misconception": "Abstraction đồng nghĩa mọi class phải được đánh dấu abstract.",
+          "followUp": "Wallet.Withdraw che cách lưu Balance theo nghĩa nào?",
+          "id": "q1"
+        },
+        {
+          "level": "junior",
+          "prompt": "Interface và abstract class khác nhau ở state dùng chung ra sao?",
+          "answer": "Abstract class có thể giữ instance field và triển khai chung; interface không đóng vai trò kho instance field đó.",
+          "explanation": "Interface mô tả capability/member và có thể có default implementation; không nên rút gọn thành “không bao giờ có code”.",
+          "misconception": "Interface hiện đại luôn chỉ chứa chữ ký trống.",
+          "followUp": "Khi các class không có cùng nền tảng state, bạn nên cân nhắc lựa chọn nào?",
+          "id": "q2"
+        },
+        {
+          "level": "junior",
+          "prompt": "Biến mang kiểu abstract class có được trỏ tới object lớp con không?",
+          "answer": "Có, nếu object là instance concrete có quan hệ tương thích.",
+          "explanation": "Cấm new trực tiếp lớp abstract khác với cấm sử dụng nó làm kiểu tham số hoặc biến.",
+          "misconception": "Không new được nghĩa là không thể dùng type đó ở bất kỳ chỗ nào.",
+          "followUp": "Report report = new UpperReport(...) sẽ gọi phần Format nào?",
+          "id": "q3"
+        },
+        {
+          "level": "middle",
+          "prompt": "IPaymentGateway vẫn trả VendorResponse thì đã cô lập vendor tốt chưa?",
+          "answer": "Chưa chắc; type cụ thể của vendor vẫn có thể kéo dependency và semantics vào consumer.",
+          "explanation": "Ranh giới nên được đặt theo nhu cầu consumer và contract thực tế, không chỉ đổi class thành interface có chữ I.",
+          "misconception": "Thêm một interface luôn đảo ngược dependency thành công.",
+          "followUp": "Bạn sẽ đặt bước dịch mã lỗi vendor sang kết quả nghiệp vụ ở đâu?",
+          "id": "q4"
+        },
+        {
+          "level": "middle",
+          "prompt": "Fake gateway test pass có chứng minh tích hợp gateway thật hoạt động không?",
+          "answer": "Không. Nó chứng minh cách consumer phản ứng với hợp đồng giả lập đã cung cấp.",
+          "explanation": "Adapter thật cần kiểm tra riêng về request, response, lỗi và ranh giới dịch vụ; contract test bổ sung các cam kết chung.",
+          "misconception": "Một unit test mock thành công thay thế được mọi integration test.",
+          "followUp": "Nếu timeout xảy ra sau khi phía ngoài đã nhận charge, contract cần nói thêm điều gì?",
+          "id": "q5"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu C# chính thức và cộng đồng",
+      "group": "Đọc tiếp có nguồn",
+      "paragraphs": [
+        "Nội dung dùng các cơ chế có trong C# 14/.NET 10. Tài liệu Microsoft Learn có thể cập nhật thêm cú pháp phiên bản mới; các file project của bài cố định LangVersion để tránh vô tình dùng tính năng preview."
+      ],
+      "links": [
+        {
+          "title": "Interface: hợp đồng, default implementation và giới hạn",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface"
+        },
+        {
+          "title": "Abstract class và abstract member trong C#",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/abstract"
+        },
+        {
+          "title": "Các nguyên lý thiết kế ứng dụng: phụ thuộc và ranh giới",
+          "url": "https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+        },
+        {
+          "title": ".NET dependency injection",
+          "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection"
+        },
+        {
+          "title": "Primary constructor: tham số của class và khác với property",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/primary-constructors"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23+oop"
+    }
+  ]
+}

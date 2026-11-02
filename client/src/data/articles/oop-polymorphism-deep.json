@@ -1,0 +1,433 @@
+{
+  "id": "oop-polymorphism-deep",
+  "title": "Đa hình chuyên sâu: dispatch, hợp đồng và mở rộng hành vi",
+  "description": "Đa hình cho phép code dùng một hợp đồng để làm việc với nhiều cách thực hiện. Theo dấu kiểu tĩnh và kiểu runtime, phân biệt overload–override–new, kiểm tra tính thay thế của strategy và hiểu bẫy boxing khi struct đi qua interface.",
+  "category": "architecture",
+  "kind": "Nguyên lý thiết kế OOP",
+  "sourceParts": [],
+  "origin": "extension",
+  "auditCode": "OOP04",
+  "prerequisites": [
+    "Biết interface, class kế thừa, virtual/override và copy value/reference."
+  ],
+  "prerequisiteIds": [
+    "oop-inheritance-deep",
+    "oop-interfaces",
+    "csharp-types"
+  ],
+  "relatedIds": [
+    "oop-encapsulation-deep",
+    "oop-abstraction-deep",
+    "oop-polymorphism",
+    "csharp-generics",
+    "decorator-pattern",
+    "dependency-injection"
+  ],
+  "goals": [
+    "Giải thích từng bước compiler chọn chữ ký và runtime chọn override trong một lời gọi.",
+    "Thêm implementation mà giữ consumer dùng hợp đồng chung, đồng thời kiểm tra các cam kết hành vi.",
+    "Phân biệt interface dispatch với boxing/copy của struct; nêu giới hạn hiệu năng và khi pattern matching đơn giản hơn."
+  ],
+  "reviewedAt": "2026-11-02",
+  "version": {
+    "reviewedAt": "2026-11-02",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất: hiểu đúng tính chất này",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Đa hình (polymorphism) cho phép một đoạn code thao tác theo cùng một hợp đồng với nhiều implementation khác nhau. Consumer gọi policy.Price(points), còn policy có thể là giá thường, giá VIP hoặc khuyến mãi. Consumer không cần tự dò tên class để biết công thức nào đang chạy nếu hợp đồng đã đủ rõ. Đây là cơ chế/ý tưởng OOP mà C# hỗ trợ bằng interface và virtual member, không phải chỉ là việc đặt nhiều method trùng tên.",
+        "Điểm cần hiểu là tính thống nhất ở phía caller và sự khác biệt có kiểm soát ở phía implementation. Nếu caller vẫn phải switch theo từng concrete type trước mọi lời gọi thì ranh giới đa hình có thể chưa phục vụ tốt nhu cầu. Tuy nhiên, có switch không tự là sai; một tập loại đóng, nhỏ và ổn định có thể được biểu đạt rõ bằng pattern matching.",
+        "Trong cách phân loại rộng, overload thường được gọi là đa hình tĩnh và generic là đa hình tham số. Bài tập trung vào đa hình thay thế qua interface/virtual của OOP, đồng thời tách rõ cơ chế của overload để người học không giải thích nhầm runtime “tự chọn mọi thứ”."
+      ]
+    },
+    {
+      "id": "problem",
+      "title": "Vấn đề nào khiến ta cần nó?",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Khi consumer tự chứa mọi nhánh xử lý của từng loại, thêm một cách tính/gửi/render có thể buộc sửa lặp nhiều consumer. Các nhánh dễ lệch nhau về validation, lỗi hoặc kết quả. Một hợp đồng chung cho phép đặt phần khác biệt vào implementation thích hợp và giữ consumer tập trung vào quy trình của nó.",
+        "Cách làm cũ bằng if/switch không hẳn là thiết kế xấu. Vấn đề xuất hiện khi mỗi loại mới gây sửa nhiều nơi, logic lặp hoặc phụ thuộc chéo khó kiểm soát. Đa hình là một lựa chọn để quản lý trục biến đổi đó, không phải cách loại bỏ mọi điều kiện khỏi chương trình."
+      ]
+    },
+    {
+      "id": "benefits",
+      "title": "Lợi ích khi thiết kế đúng",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Consumer có thể nhận implementation qua tham số/constructor hoặc một collection hợp đồng chung. Thêm strategy thường chỉ cần thêm implementation và cập nhật nơi đăng ký/lắp ghép; không cần đổi vòng xử lý consumer nếu contract giữ nguyên. Việc chọn implementation vẫn phải nằm ở đâu đó, không tự biến mất.",
+        "Cùng một bộ contract checks có thể chạy cho nhiều implementation để phát hiện chỗ phá giả định chung. Đây là cầu nối giữa đa hình, trừu tượng và LSP: một method cùng tên nhưng trả kết quả trái cam kết không phải là thành công thiết kế chỉ vì dispatch đúng lớp."
+      ]
+    },
+    {
+      "id": "limits",
+      "title": "Khi nào không nên dùng hoặc dễ lạm dụng?",
+      "group": "Giới hạn và hiểu nhầm",
+      "paragraphs": [
+        "Không tạo một class/interface riêng cho mỗi nhánh nhỏ ổn định nếu nó làm đường gọi khó hiểu hơn. Với một phép tính ngắn, delegate hoặc switch rõ ràng có thể phù hợp. Nếu cần thêm nhiều operation mới trên một tập loại vốn cố định, trade-off giữa object polymorphism và pattern matching cũng có thể thay đổi.",
+        "Không dùng dynamic để thay cho thiết kế hợp đồng typed chỉ vì muốn runtime dò method. dynamic có cơ chế binding riêng và có thể làm lỗi chỉ xuất hiện khi chạy. new để giấu member cũng không thay được override khi consumer đang cần virtual dispatch qua base.",
+        "Không kết luận mọi lời gọi interface đều chậm, đều boxing hoặc đều nhanh hơn switch. Class/struct, hình dạng call site, JIT và tối ưu devirtualization ảnh hưởng đường chạy. Cần đo workload thật khi hiệu năng quan trọng; bài không đưa hệ số benchmark suy đoán."
+      ]
+    },
+    {
+      "id": "mechanism",
+      "title": "Cơ chế hoạt động trong C# và .NET",
+      "group": "Bên trong lời gọi",
+      "paragraphs": [
+        "Có hai bước cần tách. Trước hết compiler dùng kiểu tĩnh, tên member, đối số và quy tắc overload resolution để chọn một member/chữ ký phù hợp. Sau đó, nếu lời gọi đó là virtual hoặc interface instance dispatch thích hợp, implementation được chọn theo object runtime và các quy tắc override/interface. Runtime không quay lại chọn một overload khác chỉ vì object đối số có type cụ thể hơn.",
+        "Với Base value = new Derived(), biến có kiểu tĩnh Base còn object có kiểu runtime Derived. value.Draw() có thể gọi Derived.Draw nếu Draw là virtual và được override. Nhưng value.Name() khi Name là method thường bị derived giấu bằng new vẫn chọn member theo kiểu tĩnh của lời gọi thông thường; cast sang Derived làm đổi tập member nhìn thấy, không thay object thành object khác.",
+        "Có thể hình dung một virtual slot gắn với hợp đồng member và các implementation override. Đây là mô hình để hiểu ngữ nghĩa, không cam kết runtime luôn thực hiện một tra bảng cụ thể cho mọi lời gọi. JIT có thể devirtualize hoặc inline khi chứng minh được target; tối ưu phải giữ ngữ nghĩa quan sát được.",
+        "Class được tham chiếu qua interface không tự bị sao chép object. Nhưng chuyển một struct thông thường sang biến interface của nó sẽ boxing giá trị; box giữ một bản sao. Unbox ra biến struct tạo giá trị copy theo cú pháp đang dùng. Ví dụ thứ ba tách rõ chuyện chọn method khỏi chuyện state nằm trong bản copy nào."
+      ],
+      "diagrams": [
+        {
+          "caption": "Đọc một lời gọi đa hình theo hai bước",
+          "steps": [
+            "Xác định kiểu tĩnh của receiver và đối số",
+            "Compiler chọn member / overload hợp lệ",
+            "Xác định đó là lời gọi thường, virtual hay interface",
+            "Nếu cần dispatch: dùng implementation theo object runtime",
+            "Đối chiếu kết quả và state với hợp đồng"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "concepts",
+      "title": "Từ vựng cần hiểu trước khi đọc code",
+      "group": "Giải thích từng khái niệm",
+      "paragraphs": [],
+      "definitions": [
+        {
+          "term": "Kiểu tĩnh và kiểu runtime",
+          "meaning": "Kiểu tĩnh là type compiler dùng tại vị trí source; kiểu runtime là type thực của object lúc chạy.",
+          "example": "Base x = new Derived(): x là Base ở source, object là Derived."
+        },
+        {
+          "term": "Overload",
+          "meaning": "Nhiều member cùng tên có danh sách tham số khác nhau, được chọn theo quy tắc binding.",
+          "example": "Show(object) và Show(string) khác chữ ký; biến object chứa string vẫn ảnh hưởng lựa chọn tại compile time."
+        },
+        {
+          "term": "Override",
+          "meaning": "Lớp con cung cấp implementation cho virtual/abstract member được kế thừa, giữ quan hệ dispatch của member đó.",
+          "example": "Base.Draw virtual và Derived.Draw override: lời gọi qua Base có thể chạy code Derived."
+        },
+        {
+          "term": "Method hiding bằng new",
+          "meaning": "Khai báo member mới giấu member cùng tên; không tự ghi đè virtual slot cũ.",
+          "example": "Base.Name và Derived.Name được chọn khác nhau qua kiểu tham chiếu tĩnh trong mẫu."
+        },
+        {
+          "term": "Boxing và copy struct",
+          "meaning": "Chuyển struct sang object/interface có thể tạo box chứa một bản sao của value.",
+          "example": "Counter gốc vẫn 0 khi Counter boxed qua ICounter đã tăng thành 1."
+        },
+        {
+          "term": "Contract test",
+          "meaning": "Cùng một tập kiểm tra các cam kết chung, được áp dụng cho các implementation.",
+          "example": "Mọi policy trong mẫu phải chấp nhận 0 và trả giá trong khoảng 0..input."
+        }
+      ]
+    },
+    {
+      "id": "integration",
+      "title": "Nó kết hợp với ba tính chất còn lại thế nào?",
+      "group": "Bức tranh OOP",
+      "paragraphs": [
+        "Trừu tượng đưa ra contract; đa hình cho phép consumer gọi các implementation qua contract đó. Kế thừa class là một cách cung cấp subtype/virtual override; interface cho phép các class không cùng một base nghiệp vụ vẫn đáp ứng nhu cầu chung. Đóng gói giúp mỗi implementation giữ state riêng một cách hợp lệ.",
+        "DI hoặc factory có thể chọn implementation và quản lý lifetime, nhưng không tạo ra phép màu khiến contract sai trở thành đúng. Consumer nhận một IPricePolicy bằng new thủ công vẫn dùng đa hình. Decorator cũng có thể implement cùng interface để bọc thêm hành vi, với điều kiện vẫn giữ hợp đồng cần thiết."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Junior: hiểu cơ chế và viết đúng",
+      "group": "Từ khái niệm tới code",
+      "paragraphs": [
+        "Khi gặp một lời gọi, ghi ra ba điều: biến được khai báo type gì, object được new từ type gì, và member đang là thường hay virtual/interface. Làm bước này trước khi đoán output giúp tránh giải thích mọi thứ bằng “vì object là Derived”.",
+        "Override cần một member base có thể override và chữ ký/điều kiện override phù hợp. Method non-virtual không thể trở thành override chỉ bằng thêm từ khóa ở lớp con. Compiler báo lỗi CS0506 trong mẫu riêng để ngăn việc đó.",
+        "Overload không phải override. Trong mẫu Mark, receiver Base chỉ nhìn thấy Mark(object), rồi override tương ứng chạy ở Derived. Receiver Derived có thêm Mark(string), nên compiler có thể chọn chữ ký khác ngay từ đầu. Hai câu chuyện khác nhau xảy ra trong cùng tên method.",
+        "Không cần cast qua lại để dùng mọi concrete method. Nếu consumer liên tục cast, hỏi liệu hợp đồng đang thiếu capability cần thiết, consumer đang làm quá nhiều trách nhiệm, hay mô hình này vốn phù hợp với pattern matching hơn."
+      ],
+      "tables": [
+        {
+          "caption": "Overload, override và new: đọc bằng câu hỏi cụ thể",
+          "headers": [
+            "Cơ chế",
+            "Dấu hiệu",
+            "Điều quyết định trong ví dụ"
+          ],
+          "rows": [
+            [
+              "Overload",
+              "Cùng tên, khác danh sách tham số",
+              "Kiểu tĩnh và quy tắc chọn overload ở compile time"
+            ],
+            [
+              "Override",
+              "Base virtual/abstract; derived override",
+              "Sau khi đã chọn member: object runtime quyết định override"
+            ],
+            [
+              "new / hiding",
+              "Member mới giấu member base",
+              "Kiểu tĩnh của receiver trong lời gọi thông thường"
+            ],
+            [
+              "Interface implementation",
+              "Concrete type thực hiện hợp đồng",
+              "Lời gọi qua interface tới implementation tương ứng"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Middle: thiết kế hợp đồng và xử lý đánh đổi",
+      "group": "Đào sâu thiết kế",
+      "paragraphs": [
+        "Mức middle phải gắn dispatch với khả năng thay thế. Nếu IPricePolicy hứa nhận điểm không âm và trả kết quả 0..input, một policy trả số âm hoặc tự đòi input tối thiểu 100 đang phá cam kết đó. Không “sửa test” bằng cách né input cho từng concrete type rồi nói tất cả implementation tương đương.",
+        "Open/closed không có nghĩa “thêm feature không được sửa một dòng ở bất kỳ đâu”. Consumer có thể ổn định trong khi composition root/registry thêm implementation mới. Nếu nhiều consumer vẫn phải phân nhánh theo concrete type, hãy tìm trục biến đổi thực tế và contract thiếu, thay vì tiếp tục thêm subclass theo tên nghiệp vụ.",
+        "Hợp đồng đa hình bao gồm semantics lỗi, side effect, cancellation và lifetime khi có liên quan. Ví dụ một sender trả thành công trước khi thực sự hoàn tất khác với sender đồng bộ chờ hoàn tất; chữ ký giống nhau chưa đủ. Decorator retry còn cần biết thao tác có thể lặp an toàn hay không.",
+        "Boxing là bài toán về value representation, không phải lời gọi interface nào cũng boxing. Với struct mutable, truyền qua interface có thể làm thay đổi xảy ra trong box chứ không trong biến gốc. Generic constraint với tham số ref có thể làm method làm việc trực tiếp trên biến struct trong mẫu; đừng suy từ một mẫu này thành cam kết không allocation cho mọi generic operation.",
+        "Có thể có devirtualization/inlining khi JIT biết target, nhưng đó là chi tiết tối ưu theo runtime và call site. API thiết kế theo contract trước; nếu là hot path, đo allocation, throughput và latency trên môi trường đích, giữ cùng semantics và dữ liệu khi so lựa chọn. Không dùng tên “đa hình tĩnh” làm bằng chứng một phương án chắc chắn nhanh hơn."
+      ],
+      "tables": [
+        {
+          "caption": "Chọn cách biểu đạt phần thay đổi",
+          "headers": [
+            "Nhu cầu",
+            "Một lựa chọn phù hợp",
+            "Câu hỏi review"
+          ],
+          "rows": [
+            [
+              "Một hành vi nhỏ được truyền vào",
+              "Hàm / delegate",
+              "Có cần cả nhóm state và nhiều thao tác không?"
+            ],
+            [
+              "Nhiều implementation cùng một vai trò",
+              "Interface / strategy",
+              "Contract có đủ rõ để thay thế mà consumer không cast?"
+            ],
+            [
+              "Một họ chung state/thuật toán có extension point",
+              "Abstract base + override",
+              "Protected/virtual đã được thiết kế ổn định chưa?"
+            ],
+            [
+              "Tập loại đóng, xử lý theo từng trường hợp",
+              "Pattern matching / switch",
+              "Thêm loại hay thêm operation là trục thay đổi chủ yếu?"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ C#: từ đúng cơ bản tới bẫy thiết kế",
+      "group": "Đọc, chạy và theo dấu",
+      "paragraphs": [
+        "Các mẫu là minh họa lý thuyết có kết quả và giải thích sẵn. Mỗi mẫu có đầy đủ file project; các project cố ý lỗi được tách riêng. Không ghép các Program.cs vào cùng một project."
+      ],
+      "examples": [
+        {
+          "id": "dispatch-matrix",
+          "title": "Junior → middle · Tách overload, override và hiding trong cùng chương trình",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "Base value = new Derived();\nDerived concrete = (Derived)value;\nvalue.Draw();\nConsole.WriteLine(value.Name());\nConsole.WriteLine(concrete.Name());\nvalue.Mark(\"hello\");\nconcrete.Mark(\"hello\");\nobject text = \"hello\";\nPrinter.Show(text);\nPrinter.Show(\"hello\");\nclass Base\n{\n    public virtual void Draw() => Console.WriteLine(\"base.draw\");\n    public string Name() => \"base.name\";\n    public virtual void Mark(object value) => Console.WriteLine(\"base.object\");\n}\nsealed class Derived : Base\n{\n    public override void Draw() => Console.WriteLine(\"derived.draw\");\n    public new string Name() => \"derived.name\";\n    public override void Mark(object value) => Console.WriteLine(\"derived.object\");\n    public void Mark(string value) => Console.WriteLine(\"derived.string\");\n}\nstatic class Printer\n{\n    public static void Show(object value) => Console.WriteLine(\"overload.object\");\n    public static void Show(string value) => Console.WriteLine(\"overload.string\");\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "derived.draw\nbase.name\nderived.name\nderived.object\nderived.string\noverload.object\noverload.string",
+          "explanation": "Draw là virtual nên qua Base vẫn chạy override Derived. Name bị giấu bằng new nên lời gọi thường phụ thuộc kiểu receiver. value.Mark đã chọn chữ ký object ở compile time; runtime chọn override của chữ ký đó. Printer.Show(text) dùng overload object dù text đang chứa string. Cast concrete không tạo object mới.",
+          "verification": "ran"
+        },
+        {
+          "id": "strategy-contract",
+          "title": "Middle · Consumer ổn định và contract checks cho ba strategy",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "IPricePolicy[] policies = { new RegularPrice(), new VipPrice(), new CampaignPrice() };\nforeach (var policy in policies) Console.WriteLine($\"{policy.GetType().Name}:{policy.Price(100)}\");\nint checks = 0;\nforeach (var policy in policies)\n{\n    foreach (int points in new[] { 0, 1, 100, int.MaxValue })\n    {\n        int price = policy.Price(points);\n        if (price < 0 || price > points) throw new Exception(\"Contract broken\");\n        checks++;\n    }\n    try { policy.Price(-1); throw new Exception(\"Negative input accepted\"); }\n    catch (ArgumentOutOfRangeException) { checks++; }\n}\nConsole.WriteLine($\"contract checks:{checks}\");\ninterface IPricePolicy { int Price(int points); }\nsealed class RegularPrice : IPricePolicy\n{\n    public int Price(int points) { ArgumentOutOfRangeException.ThrowIfNegative(points); return points; }\n}\nsealed class VipPrice : IPricePolicy\n{\n    public int Price(int points) { ArgumentOutOfRangeException.ThrowIfNegative(points); return points - points / 10; }\n}\nsealed class CampaignPrice : IPricePolicy\n{\n    public int Price(int points) { ArgumentOutOfRangeException.ThrowIfNegative(points); return points - points / 5; }\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "RegularPrice:100\nVipPrice:90\nCampaignPrice:80\ncontract checks:15",
+          "explanation": "Ba implementation cùng nhận điểm nguyên không âm, không sửa state bên ngoài và trả giá trong 0..input; phần giảm được chia nguyên theo chính sách mẫu. Bốn input biên và một ca âm tạo 15 checks. Consumer không phân nhánh theo concrete type; nơi tạo array vẫn phải biết những policy cần đăng ký. Đây là contract của mẫu, không là bộ quy tắc định giá tiền tệ production.",
+          "verification": "ran"
+        },
+        {
+          "id": "interface-boxing",
+          "title": "Middle · Dispatch đúng nhưng state thay đổi ở bản copy nào?",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "Counter original = new();\nICounter boxed = original;\nboxed.Increment();\nCounter copy = (Counter)boxed;\ncopy.Increment();\nConsole.WriteLine($\"original:{original.Value};boxed:{boxed.Value};copy:{copy.Value}\");\nIncrement(ref original);\nConsole.WriteLine($\"after ref:{original.Value};boxed:{boxed.Value}\");\nstatic void Increment<T>(ref T counter) where T : struct, ICounter => counter.Increment();\ninterface ICounter { int Value { get; } void Increment(); }\nstruct Counter : ICounter\n{\n    public int Value { get; private set; }\n    public void Increment() => Value++;\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "original:0;boxed:1;copy:2\nafter ref:1;boxed:1",
+          "explanation": "Gán original sang biến interface boxes một bản sao. Increment qua interface sửa box; unbox vào copy cho một giá trị struct khác. Hàm generic nhận ref original sửa chính biến gốc ở bước cuối. Đây không là ví dụ interface “không chạy đúng”; cần xác định đúng nơi giữ state và semantics copy.",
+          "verification": "ran"
+        },
+        {
+          "id": "override-nonvirtual",
+          "title": "Lỗi riêng · Không override một method thường",
+          "kind": "compile-error",
+          "label": "Cố ý lỗi biên dịch · project riêng",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet build Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "Console.WriteLine(\"Build phải thất bại\");\nclass Base { public void Draw() { } }\nclass Derived : Base { public override void Draw() { } }"
+          },
+          "expected": "CS0506",
+          "explanation": "Member base không virtual/abstract và không có override hợp lệ cho trường hợp này. Cần xem lại contract có chủ đích mở rộng hay không; không tự đổi sang new rồi kỳ vọng lời gọi qua Base chạy như override.",
+          "verification": "expected-diagnostic",
+          "diagnostic": "CS0506"
+        }
+      ]
+    },
+    {
+      "id": "case-study",
+      "title": "Đối chiếu thiết kế trước và sau",
+      "group": "Tình huống để suy luận",
+      "paragraphs": [
+        "Trước: nhiều consumer kiểm tra policy is VipPrice hoặc policy is CampaignPrice rồi tự áp công thức. Sau: mỗi policy thực hiện Price, consumer dùng chung IPricePolicy và kiểm tra contract chung. Thêm policy mới thay danh sách lắp ghép, còn consumer không phải biết tên type.",
+        "Nhưng nếu chỉ có hai trường hợp đóng và toàn bộ logic nằm trong một hàm ngắn dễ đọc, switch có thể là thiết kế phù hợp. Tiêu chí review là thay đổi nào thường xảy ra, contract có ổn định không và người đọc theo dấu được hành vi không; không đánh giá OOP bằng số lượng interface hay số nhánh if bị xóa."
+      ],
+      "tables": []
+    },
+    {
+      "id": "structure",
+      "title": "Đặt file ở đâu và bắt đầu thế nào?",
+      "group": "Bắt đầu từ thư mục trống",
+      "paragraphs": [
+        "Mỗi khối ví dụ hiển thị Demo.csproj, Program.cs và ConsoleEncoding.cs khi cần cố định output. Đặt chúng vào cùng một thư mục trống, cài SDK nêu ở đầu bài, rồi chạy đúng lệnh terminal. Nút tải bộ project ở trang OOP bao gồm các thư mục ví dụ độc lập; project cố ý lỗi có nhãn riêng và không được đưa vào solution cần build thành công.",
+        "Trong dự án nhiều file, tên thư mục Domain, Contracts, Infrastructure chỉ là gợi ý theo trách nhiệm. Không tạo thêm layer vì tên gọi; trước hết phải nhìn thấy state, hành vi, dependency và đường gọi của ví dụ đang học."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "debug",
+      "title": "Debug: quan sát điều gì để hiểu vì sao?",
+      "group": "Theo dấu thay vì đoán",
+      "paragraphs": [
+        "Dừng trước lời gọi, xem kiểu khai báo trong source và GetType của receiver trong Watch. Sau đó xác định overload đã được compiler chọn bằng chữ ký/Quick Info trước khi Step Into. Với new/hiding, thử cùng object qua hai kiểu reference để quan sát khác biệt.",
+        "Với struct/interface, theo dõi riêng original, boxed và copy; không gộp chúng trong suy luận chỉ vì được tạo từ cùng một biến ban đầu. Với lỗi contract, dùng cùng input và cùng kỳ vọng chung cho mọi implementation, xem cả state/tác dụng phụ khi cần."
+      ]
+    },
+    {
+      "id": "questions",
+      "title": "Hỏi đáp junior và middle có giải thích",
+      "group": "Tự đối chiếu cách hiểu",
+      "paragraphs": [
+        "Có 3 câu junior và 2 câu middle. Thử giải thích cơ chế trước, sau đó mở đáp án để so lý do và giới hạn. Đây là phần đọc mở rộng, không có điểm số hoặc nộp bài."
+      ],
+      "questions": [
+        {
+          "level": "junior",
+          "prompt": "Base x = new Derived(); x.Draw() luôn chạy Draw của Derived không?",
+          "answer": "Chỉ khi member được chọn có cơ chế dispatch dẫn tới implementation đó, chẳng hạn virtual được override phù hợp.",
+          "explanation": "Method thường bị giấu bằng new không có cùng quy tắc chọn với virtual override; phải đọc khai báo member.",
+          "misconception": "Object runtime là Derived nên mọi method cùng tên đều chọn Derived.",
+          "followUp": "Nếu Draw ở base không virtual thì đổi new có tạo cùng hành vi không?",
+          "id": "q1"
+        },
+        {
+          "level": "junior",
+          "prompt": "Biến object giữ một string có làm overload Show(string) tự được chọn ở runtime không?",
+          "answer": "Không trong lời gọi overload tĩnh thông thường. Show(object) được chọn theo kiểu tĩnh object.",
+          "explanation": "Runtime không tự chọn lại overload chỉ vì giá trị thực là string. dynamic là cơ chế binding khác, không phải lời gọi mẫu.",
+          "misconception": "Kiểu runtime của đối số luôn quyết định mọi overload.",
+          "followUp": "Cast biến sang string trước lời gọi làm thay đổi bước nào?",
+          "id": "q2"
+        },
+        {
+          "level": "junior",
+          "prompt": "new và override có tạo object mới trong khai báo method không?",
+          "answer": "Không. new ở vị trí khai báo member thể hiện hiding; override thay implementation của member virtual phù hợp.",
+          "explanation": "Từ khóa new tạo instance là một cú pháp/ngữ cảnh khác. Cần đọc vị trí từ khóa trước khi suy luận.",
+          "misconception": "Có new trong class nghĩa là mỗi lời gọi tạo thêm một instance.",
+          "followUp": "Một object được nhìn qua Base và Derived trong mẫu có phải hai object không?",
+          "id": "q3"
+        },
+        {
+          "level": "middle",
+          "prompt": "Thêm strategy mới mà phải sửa registry có mâu thuẫn với việc consumer được mở rộng ổn định không?",
+          "answer": "Không. Chọn/lắp ghép implementation vẫn là trách nhiệm cần tồn tại ở một nơi.",
+          "explanation": "Điểm quan trọng là consumer phụ thuộc contract và không phải biết mọi công thức hoặc concrete type mới.",
+          "misconception": "Open/closed nghĩa là toàn repository không được sửa một dòng nào.",
+          "followUp": "Dấu hiệu nào cho thấy nhiều consumer vẫn đang phụ thuộc concrete type?",
+          "id": "q4"
+        },
+        {
+          "level": "middle",
+          "prompt": "Vì sao Increment qua ICounter không đổi Counter original trong ví dụ?",
+          "answer": "Vì phép chuyển struct sang biến interface đã boxing một bản sao; method sửa state trong box.",
+          "explanation": "Unbox sang biến copy lại tạo giá trị struct copy; generic nhận ref original ở bước cuối mới sửa biến gốc đó.",
+          "misconception": "Interface dispatch bị lỗi hoặc mọi interface đều chia sẻ cùng một instance state.",
+          "followUp": "Với class thay struct, phần nào trong lập luận copy sẽ khác?",
+          "id": "q5"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu C# chính thức và cộng đồng",
+      "group": "Đọc tiếp có nguồn",
+      "paragraphs": [
+        "Nội dung dùng các cơ chế có trong C# 14/.NET 10. Tài liệu Microsoft Learn có thể cập nhật thêm cú pháp phiên bản mới; các file project của bài cố định LangVersion để tránh vô tình dùng tính năng preview."
+      ],
+      "links": [
+        {
+          "title": "Đa hình trong C#: virtual, override và interface",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/polymorphism"
+        },
+        {
+          "title": "Phiên bản hóa method: override khác new",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/versioning-with-the-override-and-new-keywords"
+        },
+        {
+          "title": "Method và overload trong C#",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/methods"
+        },
+        {
+          "title": "Boxing và unboxing value type qua object/interface",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing"
+        },
+        {
+          "title": "Thiết kế CoreCLR: virtual stub dispatch",
+          "url": "https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/virtual-stub-dispatch.md"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23+oop"
+    }
+  ]
+}

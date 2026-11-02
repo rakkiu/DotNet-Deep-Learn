@@ -8,6 +8,7 @@ import "@fontsource/be-vietnam-pro/600.css";
 import "@fontsource/be-vietnam-pro/700.css";
 import "./styles.css";
 import "./upgrade.css";
+import "./oop.css";
 class Boundary extends React.Component<
   { children: React.ReactNode },
   { failed: boolean }

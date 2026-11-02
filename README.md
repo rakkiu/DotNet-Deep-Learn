@@ -1,10 +1,14 @@
 # DotNet Deep Learn — thư viện lý thuyết
 
-Ứng dụng đọc C#/.NET bằng tiếng Việt: **47 bài từ 41 phần bài giảng + 12 bài mở rộng phỏng vấn**, chia 6 chủ đề. Bài mới có nhãn **Mở rộng để ôn phỏng vấn**, không gán số phần thầy đã dạy. Website cung cấp lý thuyết, ví dụ và đáp án để đọc đối chiếu; không có trắc nghiệm, chấm điểm, nộp bài hay tiến độ.
+Ứng dụng đọc C#/.NET bằng tiếng Việt: **47 bài từ 41 phần bài giảng + 12 bài mở rộng phỏng vấn + 4 bài OOP chuyên sâu**, chia 6 chủ đề. Bài mới có nhãn **Mở rộng để ôn phỏng vấn**, không gán số phần thầy đã dạy. Website cung cấp lý thuyết, ví dụ và đáp án để đọc đối chiếu; không có trắc nghiệm, chấm điểm, nộp bài hay tiến độ.
 
-Mỗi bài gốc giữ 11 mục và anchor cũ, thêm phần junior, middle, ví dụ mở rộng và hỏi đáp. Bài mới có 7 mục theo nhu cầu. Tổng cộng **124 ví dụ và 295 câu hỏi**: mỗi bài 3 câu junior, 2 câu middle với đáp án, giải thích, hiểu nhầm và hỏi tiếp. Không quảng cáo bảo đảm đỗ phỏng vấn.
+Mỗi bài gốc giữ 11 mục và anchor cũ, thêm phần junior, middle, ví dụ mở rộng và hỏi đáp. Nhóm phỏng vấn có 7 mục; bốn bài OOP có 15 mục đào sâu. Tổng cộng **140 ví dụ và 315 câu hỏi**: mỗi bài 3 câu junior, 2 câu middle với đáp án, giải thích, hiểu nhầm và hỏi tiếp. Không quảng cáo bảo đảm đỗ phỏng vấn.
 
-Hai lộ trình **Học nền tảng** và **Ôn phỏng vấn** dùng cùng kho 59 bài; có tiền đề, đầu ra quan sát được và nhãn thứ tự bài trước/sau. Tìm kiếm toàn văn không dấu gồm cả code/đáp án; có lọc chủ đề/nguồn, theme sáng/tối, tăng chữ, mục lục, copy code, dark mode, mobile và bản in. Thời gian đọc tính từ lượng văn bản và code, không cố định.
+Hai lộ trình **Học nền tảng** và **Ôn phỏng vấn** dùng cùng kho 63 bài; có tiền đề, đầu ra quan sát được và nhãn thứ tự bài trước/sau. Tìm kiếm toàn văn không dấu gồm cả code/đáp án; có lọc chủ đề/nguồn, theme sáng/tối, tăng chữ, mục lục, copy code, dark mode, mobile và bản in. Thời gian đọc tính từ lượng văn bản và code, không cố định.
+
+## OOP chuyên sâu — bốn tính chất, hai mức đọc
+
+Mở `/#/oop` để chọn junior/middle và đọc theo bốn câu hỏi: ai được thay đổi state (đóng gói), caller được tin điều gì (trừu tượng), subtype có giữ contract không (kế thừa), implementation nào được gọi (đa hình). Mỗi bài có định nghĩa, cơ chế, bảng phân biệt, case trước/sau, 3 mẫu chạy + 1 mẫu cố ý lỗi và 5 hỏi đáp có giải thích. Có 16 project OOP độc lập trong ZIP tải từ website, được tạo từ JSON nguồn để tránh code trên bài khác code tải về. Xem [kiểm chứng OOP](docs/oop-validation.md).
 
 ## Chạy website
 
@@ -45,7 +49,7 @@ node scripts/sync-upgrade-verification.mjs
 
 - [Ma trận A01–A47/N01–N12 và đối chiếu từng yêu cầu](docs/upgrade-coverage.md).
 - [Kiểm chứng giao diện, phiên bản, triển khai và giới hạn](docs/upgrade-validation.md).
-- [Kết quả 124 ví dụ](docs/upgrade-example-results.json), [lab/HTTP/SQL/migration/publish](docs/upgrade-lab-results.json), [130 URL nguồn](docs/upgrade-sources.json).
+- [Kết quả 140 ví dụ](docs/upgrade-example-results.json), [lab/HTTP/SQL/migration/publish](docs/upgrade-lab-results.json), [145 URL nguồn](docs/upgrade-sources.json).
 
 Kết quả SQLite không chứng minh semantics SQL Server. Chưa chạy Docker, self-contained mọi RID hay live vulnerability advisory audit. Hai mẫu mở đầu chỉ được build, không được gọi là đã chạy. Identity dùng ephemeral keys cho lab local, chưa là cấu hình production.
 

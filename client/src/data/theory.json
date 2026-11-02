@@ -2,7 +2,7 @@
   "version": 3,
   "title": "DotNet Deep Learn — Thư viện lý thuyết",
   "sourceDocument": "tech_thầy_đã_dạy.docx",
-  "sourceNote": "47 bài gốc giữ ánh xạ 41 phần từ tài liệu bài giảng đã cung cấp; 12 bài bổ sung được đánh dấu Mở rộng để ôn phỏng vấn. Bản nâng cấp được biên soạn theo yêu cầu rà soát ngày 01/11/2026, dùng .NET10/C#14 và nguồn chính thức theo từng bài. Không tuyên bố đã xem trực tiếp video hay bảo đảm kết quả tuyển dụng.",
+  "sourceNote": "47 bài gốc giữ ánh xạ 41 phần bài giảng; 12 bài mở rộng phỏng vấn và 4 bài OOP chuyên sâu được đánh dấu riêng, không gán phần thầy đã dạy. Nguồn chính thức, phiên bản và ngày rà soát nằm trong từng bài; không bảo đảm kết quả tuyển dụng.",
   "categories": [
     {
       "id": "foundation",
@@ -902,6 +902,38 @@
       "origin": "extension",
       "auditCode": "N12",
       "resourceCount": 4
+    },
+    {
+      "id": "oop-encapsulation-deep",
+      "title": "Đóng gói chuyên sâu: bảo vệ trạng thái và quyền thay đổi",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "OOP01",
+      "resourceCount": 6
+    },
+    {
+      "id": "oop-abstraction-deep",
+      "title": "Trừu tượng chuyên sâu: mô hình, hợp đồng và ranh giới phụ thuộc",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "OOP02",
+      "resourceCount": 6
+    },
+    {
+      "id": "oop-inheritance-deep",
+      "title": "Kế thừa chuyên sâu: is-a, LSP và lựa chọn composition",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "OOP03",
+      "resourceCount": 6
+    },
+    {
+      "id": "oop-polymorphism-deep",
+      "title": "Đa hình chuyên sâu: dispatch, hợp đồng và mở rộng hành vi",
+      "sourceParts": [],
+      "origin": "extension",
+      "auditCode": "OOP04",
+      "resourceCount": 6
     }
   ],
   "review": {

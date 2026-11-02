@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-11-01",
+  "reviewedAt": "2026-11-02",
   "sdk": "10.0.403",
   "runtime": "10.0.14",
   "results": [
@@ -682,6 +682,30 @@
       }
     },
     {
+      "key": "oop-abstraction-deep/abstract-template",
+      "hash": "cc94566e9d6bb92f347cd5f8fc1b97037d0dbbe3a88c9ed914e471bff0086722",
+      "status": "ran",
+      "observed": "people:An;Binh\npeople:AN;BINH"
+    },
+    {
+      "key": "oop-abstraction-deep/checkout-contract",
+      "hash": "b933c5a016345bf7748a3e04d42163251fefc688b19dc5cc99b83d9a5c3f1805",
+      "status": "ran",
+      "observed": "Accepted:paid=True\nDeclined:paid=False"
+    },
+    {
+      "key": "oop-abstraction-deep/instantiate-abstract",
+      "hash": "c37f080a4a2257b7cb2091e0b44cf3e5810958872aaba7a3f872c29da9e955c3",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\oop-abstraction-deep\\instantiate-abstract\\Program.cs(1,14): error CS0144: Cannot create an instance of the abstract type or interface 'Report' [$REPO\\.tools\\upgrade-examples\\oop-abstraction-deep\\instantiate-abstract\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\oop-abstraction-deep\\instantiate-abstract\\Program.cs(1,14): error CS0144: Cannot create an instance of the abstract type or interface 'Report' [$REPO\\.tools\\upgrade-examples\\oop-abstraction-deep\\instantiate-abstract\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:01.98"
+    },
+    {
+      "key": "oop-abstraction-deep/notifier-contract",
+      "hash": "e61a9c9b6b2b2019aac7539555d99a951a3658e0974abee1afca83456e1e7302",
+      "status": "ran",
+      "observed": "mail:An:Welcome\nsms:Binh:Welcome"
+    },
+    {
       "key": "oop-classes/account-boundaries",
       "hash": "860e43639b74607f2008f4ba5e971c6d7989669a2f1d07a5da473c50c835ada6",
       "status": "ran",
@@ -692,6 +716,54 @@
       "hash": "3a3405071508c3220ad0c1a730bc279c2f0a07491b5d8c17b6d9121b5ab38fb1",
       "status": "ran",
       "observed": "True\n150"
+    },
+    {
+      "key": "oop-encapsulation-deep/order-state",
+      "hash": "641f4a3d02c0eb6f76f109a5eecae1663d301ae52d92a101c1779f5f965f771c",
+      "status": "ran",
+      "observed": "empty:False/Draft\nconfirm:True/Confirmed/60\nlocked\nfinal:Confirmed/60"
+    },
+    {
+      "key": "oop-encapsulation-deep/private-setter",
+      "hash": "bbf5fb31b2c43657d47bfa2ae9a4e946de9742ec016216033f2457bc3f62ae1b",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\oop-encapsulation-deep\\private-setter\\Program.cs(2,1): error CS0272: The property or indexer 'Wallet.Balance' cannot be used in this context because the set accessor is inaccessible [$REPO\\.tools\\upgrade-examples\\oop-encapsulation-deep\\private-setter\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\oop-encapsulation-deep\\private-setter\\Program.cs(2,1): error CS0272: The property or indexer 'Wallet.Balance' cannot be used in this context because the set accessor is inaccessible [$REPO\\.tools\\upgrade-examples\\oop-encapsulation-deep\\private-setter\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:01.99"
+    },
+    {
+      "key": "oop-encapsulation-deep/readonly-ownership",
+      "hash": "9f19c9187717229ffec0a79b5ea9cc48a07e7e8909f2060c46a0f6ccd5cf4c63",
+      "status": "ran",
+      "observed": "leaked:0\nsnapshot:1/caller change\nowner:2/A"
+    },
+    {
+      "key": "oop-encapsulation-deep/wallet-invariants",
+      "hash": "a79baf5b4e1f1fe27c3a784ef08a92ca46a9e944d40c7f6fd205f4f74fff3ec3",
+      "status": "ran",
+      "observed": "balance:70\ninsufficient\ninvalid amount\ninvalid initial\noverflow\nunchanged:70/2147483647"
+    },
+    {
+      "key": "oop-inheritance-deep/constructor-chain",
+      "hash": "ccc69788f33e902e00d8e49d3a31ba07c528b9cb4a6e5c82c92f329d710b8145",
+      "status": "ran",
+      "observed": "base:An\nderived:ready\nlabel:An/320"
+    },
+    {
+      "key": "oop-inheritance-deep/lsp-rectangle",
+      "hash": "26311fb6a2409a7234720adc09566b8098c5f3dbdb3fd88b1ee98117f01fc832",
+      "status": "ran",
+      "observed": "rectangle:20\nsquare:16\nread-only area:20\nread-only area:16"
+    },
+    {
+      "key": "oop-inheritance-deep/sealed-parent",
+      "hash": "4556b8a15efb5aa35907d82b80a6190c62a4b0c36e8f39491506d57025d6d604",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\oop-inheritance-deep\\sealed-parent\\Program.cs(3,22): error CS0509: 'ChildService': cannot derive from sealed type 'ClosedService' [$REPO\\.tools\\upgrade-examples\\oop-inheritance-deep\\sealed-parent\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\oop-inheritance-deep\\sealed-parent\\Program.cs(3,22): error CS0509: 'ChildService': cannot derive from sealed type 'ClosedService' [$REPO\\.tools\\upgrade-examples\\oop-inheritance-deep\\sealed-parent\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:01.99"
+    },
+    {
+      "key": "oop-inheritance-deep/virtual-constructor",
+      "hash": "bb62fe0b863e21a07616e99ffe8c38e9febbfadc0a448a8e377f13c03e1cb7fc",
+      "status": "ran",
+      "observed": "count:0\ncount:42"
     },
     {
       "key": "oop-interfaces/explicit-error",
@@ -710,6 +782,30 @@
       "hash": "5ff033bbbe82b69a9bfa541d6ccf5c42478dcdd143d8389d9b8d7aa394823c93",
       "status": "ran",
       "observed": "An"
+    },
+    {
+      "key": "oop-polymorphism-deep/dispatch-matrix",
+      "hash": "fc773644c9f4283c75b61fc9247ce23cf7460ed5b27eb7b348b438efa65630da",
+      "status": "ran",
+      "observed": "derived.draw\nbase.name\nderived.name\nderived.object\nderived.string\noverload.object\noverload.string"
+    },
+    {
+      "key": "oop-polymorphism-deep/interface-boxing",
+      "hash": "0593d311d1cb0caf3f7675dbb25dfb378df83d882a143c5fe4c2ddb8b55e7282",
+      "status": "ran",
+      "observed": "original:0;boxed:1;copy:2\nafter ref:1;boxed:1"
+    },
+    {
+      "key": "oop-polymorphism-deep/override-nonvirtual",
+      "hash": "707038879f32372db5c854e4050436d66b98c8233e748160b7b3160e4448daaf",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\oop-polymorphism-deep\\override-nonvirtual\\Program.cs(3,45): error CS0506: 'Derived.Draw()': cannot override inherited member 'Base.Draw()' because it is not marked virtual, abstract, or override [$REPO\\.tools\\upgrade-examples\\oop-polymorphism-deep\\override-nonvirtual\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\oop-polymorphism-deep\\override-nonvirtual\\Program.cs(3,45): error CS0506: 'Derived.Draw()': cannot override inherited member 'Base.Draw()' because it is not marked virtual, abstract, or override [$REPO\\.tools\\upgrade-examples\\oop-polymorphism-deep\\override-nonvirtual\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:02.24"
+    },
+    {
+      "key": "oop-polymorphism-deep/strategy-contract",
+      "hash": "7f05171771bff39dcfa3d5f48b42971ca4d4619e0df0ede5a8f374b30992fa50",
+      "status": "ran",
+      "observed": "RegularPrice:100\nVipPrice:90\nCampaignPrice:80\ncontract checks:15"
     },
     {
       "key": "oop-polymorphism/dispatch-matrix",
@@ -835,5 +931,6 @@
       "status": "cli-verified",
       "observed": "$ dotnet --info\n.NET SDK:\n Version:           10.0.403\n Commit:            5a2162bea6\n Workload version:  10.0.400-manifests.a00bebb6\n MSBuild version:   18.9.15+5a2162bea\n\nRuntime Environment:\n OS Name:     Windows\n OS Version:  10.0.26200\n OS Platform: Windows\n RID:         win-x64\n Base Path:   C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk\\10.0.403\\\n\n.NET workloads installed:\n [wasm-tools-net8]\n   Installation Source: VS 18.8.12023.21\n   Manifest Version:    10.0.114/10.0.100\n   Manifest Path:       C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk-manifests\\10.0.100\\microsoft.net.workload.mono.toolchain.net8\\10.0.114\\WorkloadManifest.json\n   Install Type:        FileBased\n\nConfigured to use workload sets when installing new manifests.\nNo workload sets are installed. Run \"dotnet workload restore\" to install a workload set.\n\nHost:\n  Version:      10.0.14\n  Architecture: x64\n  Commit:       0427b9abbe\n\n.NET SDKs installed:\n  10.0.403 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk]\n\n.NET runtimes installed:\n  Microsoft.AspNetCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.AspNetCore.App]\n  Microsoft.NETCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.NETCore.App]\n  Microsoft.WindowsDesktop.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.WindowsDesktop.App]\n\nOther architectures found:\n  x86   [C:\\Program Files (x86)\\dotnet]\n    registered at [HKLM\\SOFTWARE\\dotnet\\Setup\\InstalledVersions\\x86\\InstallLocation]\n\nEnvironment variables:\n  DOTNET_CLI_HOME                          [$REPO\\.tools\\upgrade-examples\\cli-home]\n  DOTNET_CLI_TELEMETRY_OPTOUT              [1]\n  DOTNET_CLI_UI_LANGUAGE                   [en-US]\n  DOTNET_GENERATE_ASPNET_CERTIFICATE       [false]\n  DOTNET_NOLOGO                            [1]\n  DOTNET_ROOT                              [C:/Users/Darween/Documents/Codex/2026-11-01/hi/work/dotnet-current/sdk]\n  DOTNET_SKIP_FIRST_TIME_EXPERIENCE        [1]\n\nglobal.json file:\n  $REPO\\global.json\n\nLearn more:\n  https://aka.ms/dotnet/info\n\nDownload .NET:\n  https://aka.ms/dotnet/download\n$ dotnet --list-sdks\n10.0.403 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\sdk]\n$ dotnet --list-runtimes\nMicrosoft.AspNetCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.AspNetCore.App]\nMicrosoft.NETCore.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.NETCore.App]\nMicrosoft.WindowsDesktop.App 10.0.14 [C:\\Users\\Darween\\Documents\\Codex\\2026-11-01\\hi\\work\\dotnet-current\\sdk\\shared\\Microsoft.WindowsDesktop.App]\n$ dotnet run --no-build --project Demo.csproj\nHello, World!\n$ dotnet package list --project Demo.csproj --include-transitive --no-restore\nProject 'Demo' has the following package references\n   [net10.0]: No packages were found for this framework.\n$ dotnet publish Demo.csproj -c Release --self-contained false --no-restore\nDemo -> $REPO\\.tools\\upgrade-examples\\visual-studio\\first\\bin\\Release\\net10.0\\Demo.dll\n  Demo -> $REPO\\.tools\\upgrade-examples\\visual-studio\\first\\bin\\Release\\net10.0\\publish\\\nVulnerability audit was not executed; its output depends on the live advisory source. IDE breakpoint keys are manual guidance, not automated verification."
     }
-  ]
+  ],
+  "cacheNote": "Các ví dụ không đổi giữ kết quả theo SHA-256 của files/kind/expected/requests; 16 mẫu OOP mới được build/chạy hoặc kiểm tra diagnostic trong đợt 2026-11-02."
 }

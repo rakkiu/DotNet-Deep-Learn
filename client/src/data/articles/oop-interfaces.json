@@ -304,5 +304,8 @@
     "csharp-methods",
     "oop-classes"
   ],
-  "relatedIds": []
+  "relatedIds": [
+    "oop-abstraction-deep",
+    "oop-polymorphism-deep"
+  ]
 }

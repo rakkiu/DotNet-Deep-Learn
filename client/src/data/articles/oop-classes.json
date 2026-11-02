@@ -261,6 +261,8 @@
   ],
   "relatedIds": [
     "csharp-value-modeling",
-    "dotnet-dates-numbers-culture"
+    "dotnet-dates-numbers-culture",
+    "oop-encapsulation-deep",
+    "oop-abstraction-deep"
   ]
 }

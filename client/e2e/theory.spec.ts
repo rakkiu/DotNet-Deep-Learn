@@ -8,7 +8,7 @@ test("library, body search, accents, filters and clear state", async ({
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "Hiểu công nghệ",
   );
-  await expect(page.locator(".article-card")).toHaveCount(59);
+  await expect(page.locator(".article-card")).toHaveCount(63);
   const search = page.getByRole("textbox", {
     name: "Tìm trong nội dung bài viết",
   });
@@ -24,7 +24,7 @@ test("library, body search, accents, filters and clear state", async ({
     page.getByRole("heading", { name: "Chưa tìm thấy nội dung phù hợp" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Xóa bộ lọc" }).click();
-  await expect(page.locator(".article-card")).toHaveCount(59);
+  await expect(page.locator(".article-card")).toHaveCount(63);
   await page
     .getByRole("button", { name: "Đồng thời & bất đồng bộ", exact: true })
     .click();
@@ -32,7 +32,7 @@ test("library, body search, accents, filters and clear state", async ({
   await page.reload();
   await expect(page.locator(".article-card")).toHaveCount(8);
 });
-test("all 59 deep links render theory, examples and explanatory disclosures", async ({
+test("all 63 deep links render theory, examples and explanatory disclosures", async ({
   page,
 }) => {
   test.setTimeout(120000);
@@ -42,7 +42,7 @@ test("all 59 deep links render theory, examples and explanatory disclosures", as
     await page.goto(`/#/read/${l.id}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(l.title);
     await expect(page.locator(".article-section")).toHaveCount(
-      l.origin === "lecture" ? 15 : 7,
+      l.origin === "lecture" || l.auditCode.startsWith("OOP") ? 15 : 7,
     );
     await expect(page.locator(".code-block").first()).toBeVisible();
     await expect(page.locator(".qa")).toHaveCount(5);
@@ -103,7 +103,7 @@ test("reading paths, extension origin, disclosure answers and labelled order", a
 }) => {
   await page.goto("/#/paths/foundation");
   await expect(page.locator(".path-module")).toHaveCount(6);
-  await expect(page.locator(".path-module li")).toHaveCount(59);
+  await expect(page.locator(".path-module li")).toHaveCount(63);
   await page
     .locator(".path-switch")
     .getByRole("link", { name: "Ôn phỏng vấn", exact: true })
@@ -129,9 +129,9 @@ test("reading paths, extension origin, disclosure answers and labelled order", a
     page.locator('#reading-order option[value="lecture"]'),
   ).toHaveCount(0);
   await page.goto("/#/sources");
-  await expect(page.locator(".extension-list>a")).toHaveCount(12);
+  await expect(page.locator(".extension-list>a")).toHaveCount(16);
   await page.goto("/#/?origin=extension");
-  await expect(page.locator(".article-card")).toHaveCount(12);
+  await expect(page.locator(".article-card")).toHaveCount(16);
   const download = await page.request.get("/examples/dotnet-labs.zip");
   expect(download.status()).toBe(200);
   expect((await download.body()).subarray(0, 2).toString()).toBe("PK");
