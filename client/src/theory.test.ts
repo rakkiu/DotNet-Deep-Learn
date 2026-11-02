@@ -10,17 +10,17 @@ import {
   readingMinutes,
 } from "./theory";
 describe("Theory curriculum integrity", () => {
-  it("preserves all 41 lecture mappings and marks 12 additions separately", () => {
+  it("preserves all 41 lecture mappings and marks interview and OOP additions separately", () => {
     expect(curriculum.parts.map((p) => p.number)).toEqual(
       Array.from({ length: 41 }, (_, i) => i + 1),
     );
-    expect(new Set(curriculum.lessons.map((l) => l.id)).size).toBe(59);
+    expect(new Set(curriculum.lessons.map((l) => l.id)).size).toBe(63);
     expect(
       curriculum.lessons.filter((l) => l.origin === "lecture"),
     ).toHaveLength(47);
     expect(
       curriculum.lessons.filter((l) => l.origin === "extension"),
-    ).toHaveLength(12);
+    ).toHaveLength(16);
     for (const part of curriculum.parts)
       for (const id of part.lessons) {
         expect(byId.get(id)?.origin).toBe("lecture");
@@ -29,7 +29,7 @@ describe("Theory curriculum integrity", () => {
     for (const l of curriculum.lessons) {
       if (l.origin === "extension") {
         expect(l.sourceParts).toEqual([]);
-        expect(l.auditCode).toMatch(/^N\d{2}$/);
+        expect(l.auditCode).toMatch(/^(N\d{2}|OOP0[1-4])$/);
       } else
         for (const p of l.sourceParts)
           expect(
@@ -152,11 +152,11 @@ describe("Theory curriculum integrity", () => {
       visited.add(id);
     }
     curriculum.lessons.forEach((l) => visit(l.id));
-    expect(new Set(pathModules.flatMap((m) => m.ids)).size).toBe(59);
+    expect(new Set(pathModules.flatMap((m) => m.ids)).size).toBe(63);
     for (const order of ["foundation", "interview"] as const) {
       const path = orderedLessons(curriculum.lessons[0], order);
-      expect(path).toHaveLength(59);
-      expect(new Set(path.map((l) => l.id)).size).toBe(59);
+      expect(path).toHaveLength(63);
+      expect(new Set(path.map((l) => l.id)).size).toBe(63);
     }
     const foundation = orderedLessons(curriculum.lessons[0], "foundation").map(
       (l) => l.id,

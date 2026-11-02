@@ -1,3 +1,5 @@
+> Biên bản của đợt 01/11/2026, trước khi thêm bốn bài OOP. Xem [đợt OOP ngày 02/11](oop-validation.md) cho số liệu và kiểm chứng mới.
+
 # Kiểm chứng đợt nâng cấp junior/middle
 
 Ngày thực hiện: 2026-11-01, Windows, múi giờ Asia/Saigon. Mã nguồn và số liệu bên dưới thuộc nhánh nâng cấp, không phải bằng chứng production đã nhận nhánh này.

@@ -286,5 +286,8 @@
     "csharp-methods",
     "oop-classes"
   ],
-  "relatedIds": []
+  "relatedIds": [
+    "oop-inheritance-deep",
+    "oop-polymorphism-deep"
+  ]
 }

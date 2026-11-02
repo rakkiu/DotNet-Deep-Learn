@@ -1,6 +1,12 @@
 {
-  "checkedAt": "2026-11-01T10:00:14.935Z",
+  "checkedAt": "2026-11-02T00:26:36.749Z",
   "results": [
+    {
+      "url": "https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/virtual-stub-dispatch.md",
+      "status": 200,
+      "finalUrl": "https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/virtual-stub-dispatch.md",
+      "title": "virtual-stub-dispatch.md"
+    },
     {
       "url": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/?view=aspnetcore-10.0",
       "status": 200,
@@ -212,6 +218,12 @@
       "title": "System.Threading.Channels library"
     },
     {
+      "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview",
+      "title": ".NET dependency injection"
+    },
+    {
       "url": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines",
       "status": 200,
       "finalUrl": "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines",
@@ -320,6 +332,12 @@
       "title": "Overview of object oriented techniques in C#"
     },
     {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/inheritance",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/inheritance",
+      "title": "Inheritance - derive types to create more specialized behavior"
+    },
+    {
       "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/polymorphism",
       "status": 200,
       "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/polymorphism",
@@ -374,10 +392,40 @@
       "title": "Arrays"
     },
     {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/abstract",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/abstract",
+      "title": "abstract (C# Reference)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/access-modifiers",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/access-modifiers",
+      "title": "Access modifiers (C# reference)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface",
+      "title": "interface (C# Reference)"
+    },
+    {
       "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier",
       "status": 200,
       "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier",
       "title": "new modifier (C# Reference)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/readonly",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/readonly",
+      "title": "readonly (C# reference)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/sealed",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/sealed",
+      "title": "sealed (C# Reference)"
     },
     {
       "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/static",
@@ -428,10 +476,28 @@
       "title": "Nullable reference types"
     },
     {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/constructors",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/constructors",
+      "title": "Constructors (C# programming guide)"
+    },
+    {
       "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods",
       "status": 200,
       "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods",
       "title": "Extension members (C# Programming Guide)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties",
+      "title": "Properties (C# Programming Guide)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/versioning-with-the-override-and-new-keywords",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/versioning-with-the-override-and-new-keywords",
+      "title": "Versioning with the Override and New Keywords (C# Programming Guide)"
     },
     {
       "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/events/",
@@ -452,10 +518,28 @@
       "title": "C# Equality comparisons"
     },
     {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing",
+      "title": "Boxing and Unboxing (C# Programming Guide)"
+    },
+    {
       "url": "https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/",
       "status": 200,
       "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/",
       "title": "C# documentation"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/primary-constructors",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/primary-constructors",
+      "title": "Declare primary constructors for classes and structs"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2214",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2214",
+      "title": "CA2214: Do not call overridable methods in constructors"
     },
     {
       "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines",
@@ -522,6 +606,12 @@
       "status": 200,
       "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/choosing-between-class-and-struct",
       "title": "Choosing Between Class and Struct"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/guidelines-for-collections",
+      "status": 200,
+      "finalUrl": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/guidelines-for-collections",
+      "title": "Guidelines for Collections"
     },
     {
       "url": "https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals",

@@ -1,3 +1,4 @@
+import { OopHub } from "./OopHub";
 import { SectionBody } from "./Content";
 import { Paths, Guide } from "./Paths";
 import { useEffect, useRef, useState } from "react";
@@ -36,6 +37,7 @@ import {
   orderedLessons,
   orderLabels,
   type ReadOrder,
+  isOopLesson,
 } from "./theory";
 const { categories, lessons, parts } = curriculum;
 const categoryOf = (id: string) => categories.find((c) => c.id === id)!;
@@ -105,7 +107,9 @@ export default function App() {
     setMenu(false);
     document.title = activeLesson
       ? `${activeLesson.title} · DotNet Deep Learn`
-      : "DotNet Deep Learn · Thư viện lý thuyết";
+      : location.pathname === "/oop"
+        ? "OOP chuyên sâu · DotNet Deep Learn"
+        : "DotNet Deep Learn · Thư viện lý thuyết";
     if (location.hash)
       requestAnimationFrame(() => {
         const h = document.getElementById(location.hash.slice(1));
@@ -204,6 +208,13 @@ export default function App() {
             <Code2 size={17} />
             Chạy mẫu & debug
           </Link>
+          <Link
+            className={`side-top oop-side ${location.pathname === "/oop" || (activeLesson && isOopLesson(activeLesson)) ? "selected" : ""}`}
+            to="/oop"
+          >
+            <BookOpen size={17} />
+            OOP chuyên sâu<span>4</span>
+          </Link>
           <div className="sidebar-label syllabus-label">CHỦ ĐỀ</div>
           <nav aria-label="Chủ đề kiến thức">
             {categories.map((c) => (
@@ -268,13 +279,15 @@ export default function App() {
             <span>
               {activeLesson
                 ? categoryOf(activeLesson.category).title
-                : location.pathname === "/sources"
-                  ? "Theo bài giảng"
-                  : location.pathname.includes("/paths/")
-                    ? "Lộ trình đọc"
-                    : location.pathname === "/guide"
-                      ? "Chạy mẫu & debug"
-                      : "Tổng quan"}
+                : location.pathname === "/oop"
+                  ? "OOP chuyên sâu"
+                  : location.pathname === "/sources"
+                    ? "Theo bài giảng"
+                    : location.pathname.includes("/paths/")
+                      ? "Lộ trình đọc"
+                      : location.pathname === "/guide"
+                        ? "Chạy mẫu & debug"
+                        : "Tổng quan"}
             </span>
           </div>
           <form
@@ -310,6 +323,7 @@ export default function App() {
             <Route path="/sources" element={<Sources />} />
             <Route path="/paths/:mode" element={<Paths />} />
             <Route path="/guide" element={<Guide />} />
+            <Route path="/oop" element={<OopHub />} />
             <Route path="/lessons/:id/:section?" element={<LegacyLink />} />
             <Route path="/lessons" element={<Navigate to="/" replace />} />
             {["review", "progress", "data", "bookmarks"].map((p) => (
@@ -429,6 +443,22 @@ function Library() {
           </span>
         </div>
       </div>
+      {!query && !category && !origin && (
+        <section className="oop-callout">
+          <div>
+            <div className="eyebrow">CHUYÊN ĐỀ MỚI · JUNIOR / MIDDLE</div>
+            <h2>Hiểu sâu bốn tính chất OOP</h2>
+            <p>
+              Đóng gói, trừu tượng, kế thừa và đa hình: từ cơ chế C# đến hợp
+              đồng và đánh đổi thiết kế.
+            </p>
+          </div>
+          <Link to="/oop">
+            Mở chuyên đề
+            <ArrowRight size={17} />
+          </Link>
+        </section>
+      )}
       <section id="catalog" className="catalog">
         <div className="section-heading">
           <div>
@@ -617,11 +647,14 @@ function Reader() {
   const requested = params.get("order") as ReadOrder;
   const order: ReadOrder =
     requested in orderLabels &&
-    !(requested === "lecture" && l.origin === "extension")
+    !(requested === "lecture" && l.origin === "extension") &&
+    !(requested === "oop" && !isOopLesson(l))
       ? requested
-      : l.origin === "lecture"
-        ? "lecture"
-        : "topic";
+      : isOopLesson(l)
+        ? "oop"
+        : l.origin === "lecture"
+          ? "lecture"
+          : "topic";
   const sequence = orderedLessons(l, order),
     index = sequence.findIndex((x) => x.id === l.id),
     cat = categoryOf(l.category);
@@ -630,10 +663,22 @@ function Reader() {
   return (
     <div className={`reader-layout page-pad ${large ? "large-type" : ""}`}>
       <article className="reader-article">
-        <Link className="back-link" to={`/?category=${l.category}`}>
+        <Link
+          className="back-link"
+          to={isOopLesson(l) ? "/oop" : `/?category=${l.category}`}
+        >
           <ArrowLeft size={15} />
-          {cat.title}
+          {isOopLesson(l) ? "OOP chuyên sâu" : cat.title}
         </Link>
+        {isOopLesson(l) && (
+          <nav className="oop-reader-nav" aria-label="Độ sâu trong bài OOP">
+            <Link to={`/read/${l.id}?order=${order}#junior`}>Đọc junior</Link>
+            <Link to={`/read/${l.id}?order=${order}#middle`}>Đọc middle</Link>
+            <Link to={`/read/${l.id}?order=${order}#examples`}>
+              Đến ví dụ C#
+            </Link>
+          </nav>
+        )}
         <header className="article-header">
           <div className="eyebrow">
             <span />
@@ -707,7 +752,11 @@ function Reader() {
             }}
           >
             {Object.entries(orderLabels)
-              .filter(([key]) => key !== "lecture" || l.origin === "lecture")
+              .filter(
+                ([key]) =>
+                  (key !== "lecture" || l.origin === "lecture") &&
+                  (key !== "oop" || isOopLesson(l)),
+              )
               .map(([key, label]) => (
                 <option value={key} key={key}>
                   {label}
@@ -867,8 +916,8 @@ function Sources() {
       </div>
       <h2 className="coverage-heading">Mở rộng để ôn phỏng vấn</h2>
       <p>
-        Các bài N01–N12 bổ sung kiến thức theo yêu cầu rà soát; không được coi
-        là phần thầy đã dạy.
+        Các bài N01–N12 và OOP01–OOP04 bổ sung kiến thức phỏng vấn/chuyên sâu;
+        không được coi là phần thầy đã dạy.
       </p>
       <div className="extension-list">
         {lessons

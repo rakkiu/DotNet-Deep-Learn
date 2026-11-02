@@ -48,3 +48,8 @@ dotnet WebLab.dll --urls http://127.0.0.1:5091
 Run the published DLL from its output directory so `appsettings.json` and static content are found. Check `/` and `/health/ready`; stop with Ctrl+C. Framework-dependent output needs a compatible runtime. Publishing successfully is not evidence of a production deployment or a vulnerability audit.
 
 See `scripts/verify-upgrade.mjs`, `scripts/verify-upgrade-labs.mjs` and `docs/upgrade-coverage.md` for exact assertions, observed outcomes and remaining limits. The reading app executes no C# in the browser and provides no scores or submission system.
+
+
+## OOP theory projects
+
+Build the reading app (`npm --prefix client run build`) to generate the downloadable ZIP. Its `examples/OopLab/` directory contains 16 independent projects generated directly from the four OOP articles. Each has source/configuration, expected output and a README. Twelve run without external services. Four are intentional compile-error projects, isolated from `Labs.slnx`. They demonstrate CS0272, CS0144, CS0509 and CS0506; they must not be mixed into a build that expects success. The canonical source remains the article JSON, so changing article code changes the packaged project on the next build.

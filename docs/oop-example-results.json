@@ -1,0 +1,103 @@
+{
+  "reviewedAt": "2026-11-02",
+  "sdk": "10.0.403",
+  "runtime": "10.0.14",
+  "results": [
+    {
+      "key": "oop-abstraction-deep/abstract-template",
+      "hash": "cc94566e9d6bb92f347cd5f8fc1b97037d0dbbe3a88c9ed914e471bff0086722",
+      "status": "ran",
+      "observed": "people:An;Binh\npeople:AN;BINH"
+    },
+    {
+      "key": "oop-abstraction-deep/checkout-contract",
+      "hash": "b933c5a016345bf7748a3e04d42163251fefc688b19dc5cc99b83d9a5c3f1805",
+      "status": "ran",
+      "observed": "Accepted:paid=True\nDeclined:paid=False"
+    },
+    {
+      "key": "oop-abstraction-deep/instantiate-abstract",
+      "hash": "c37f080a4a2257b7cb2091e0b44cf3e5810958872aaba7a3f872c29da9e955c3",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\oop-abstraction-deep\\instantiate-abstract\\Program.cs(1,14): error CS0144: Cannot create an instance of the abstract type or interface 'Report' [$REPO\\.tools\\upgrade-examples\\oop-abstraction-deep\\instantiate-abstract\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\oop-abstraction-deep\\instantiate-abstract\\Program.cs(1,14): error CS0144: Cannot create an instance of the abstract type or interface 'Report' [$REPO\\.tools\\upgrade-examples\\oop-abstraction-deep\\instantiate-abstract\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:01.98"
+    },
+    {
+      "key": "oop-abstraction-deep/notifier-contract",
+      "hash": "e61a9c9b6b2b2019aac7539555d99a951a3658e0974abee1afca83456e1e7302",
+      "status": "ran",
+      "observed": "mail:An:Welcome\nsms:Binh:Welcome"
+    },
+    {
+      "key": "oop-encapsulation-deep/order-state",
+      "hash": "641f4a3d02c0eb6f76f109a5eecae1663d301ae52d92a101c1779f5f965f771c",
+      "status": "ran",
+      "observed": "empty:False/Draft\nconfirm:True/Confirmed/60\nlocked\nfinal:Confirmed/60"
+    },
+    {
+      "key": "oop-encapsulation-deep/private-setter",
+      "hash": "bbf5fb31b2c43657d47bfa2ae9a4e946de9742ec016216033f2457bc3f62ae1b",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\oop-encapsulation-deep\\private-setter\\Program.cs(2,1): error CS0272: The property or indexer 'Wallet.Balance' cannot be used in this context because the set accessor is inaccessible [$REPO\\.tools\\upgrade-examples\\oop-encapsulation-deep\\private-setter\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\oop-encapsulation-deep\\private-setter\\Program.cs(2,1): error CS0272: The property or indexer 'Wallet.Balance' cannot be used in this context because the set accessor is inaccessible [$REPO\\.tools\\upgrade-examples\\oop-encapsulation-deep\\private-setter\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:01.99"
+    },
+    {
+      "key": "oop-encapsulation-deep/readonly-ownership",
+      "hash": "9f19c9187717229ffec0a79b5ea9cc48a07e7e8909f2060c46a0f6ccd5cf4c63",
+      "status": "ran",
+      "observed": "leaked:0\nsnapshot:1/caller change\nowner:2/A"
+    },
+    {
+      "key": "oop-encapsulation-deep/wallet-invariants",
+      "hash": "a79baf5b4e1f1fe27c3a784ef08a92ca46a9e944d40c7f6fd205f4f74fff3ec3",
+      "status": "ran",
+      "observed": "balance:70\ninsufficient\ninvalid amount\ninvalid initial\noverflow\nunchanged:70/2147483647"
+    },
+    {
+      "key": "oop-inheritance-deep/constructor-chain",
+      "hash": "ccc69788f33e902e00d8e49d3a31ba07c528b9cb4a6e5c82c92f329d710b8145",
+      "status": "ran",
+      "observed": "base:An\nderived:ready\nlabel:An/320"
+    },
+    {
+      "key": "oop-inheritance-deep/lsp-rectangle",
+      "hash": "26311fb6a2409a7234720adc09566b8098c5f3dbdb3fd88b1ee98117f01fc832",
+      "status": "ran",
+      "observed": "rectangle:20\nsquare:16\nread-only area:20\nread-only area:16"
+    },
+    {
+      "key": "oop-inheritance-deep/sealed-parent",
+      "hash": "4556b8a15efb5aa35907d82b80a6190c62a4b0c36e8f39491506d57025d6d604",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\oop-inheritance-deep\\sealed-parent\\Program.cs(3,22): error CS0509: 'ChildService': cannot derive from sealed type 'ClosedService' [$REPO\\.tools\\upgrade-examples\\oop-inheritance-deep\\sealed-parent\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\oop-inheritance-deep\\sealed-parent\\Program.cs(3,22): error CS0509: 'ChildService': cannot derive from sealed type 'ClosedService' [$REPO\\.tools\\upgrade-examples\\oop-inheritance-deep\\sealed-parent\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:01.99"
+    },
+    {
+      "key": "oop-inheritance-deep/virtual-constructor",
+      "hash": "bb62fe0b863e21a07616e99ffe8c38e9febbfadc0a448a8e377f13c03e1cb7fc",
+      "status": "ran",
+      "observed": "count:0\ncount:42"
+    },
+    {
+      "key": "oop-polymorphism-deep/dispatch-matrix",
+      "hash": "fc773644c9f4283c75b61fc9247ce23cf7460ed5b27eb7b348b438efa65630da",
+      "status": "ran",
+      "observed": "derived.draw\nbase.name\nderived.name\nderived.object\nderived.string\noverload.object\noverload.string"
+    },
+    {
+      "key": "oop-polymorphism-deep/interface-boxing",
+      "hash": "0593d311d1cb0caf3f7675dbb25dfb378df83d882a143c5fe4c2ddb8b55e7282",
+      "status": "ran",
+      "observed": "original:0;boxed:1;copy:2\nafter ref:1;boxed:1"
+    },
+    {
+      "key": "oop-polymorphism-deep/override-nonvirtual",
+      "hash": "707038879f32372db5c854e4050436d66b98c8233e748160b7b3160e4448daaf",
+      "status": "expected-diagnostic",
+      "observed": "$REPO\\.tools\\upgrade-examples\\oop-polymorphism-deep\\override-nonvirtual\\Program.cs(3,45): error CS0506: 'Derived.Draw()': cannot override inherited member 'Base.Draw()' because it is not marked virtual, abstract, or override [$REPO\\.tools\\upgrade-examples\\oop-polymorphism-deep\\override-nonvirtual\\Demo.csproj]\n\nBuild FAILED.\n\n$REPO\\.tools\\upgrade-examples\\oop-polymorphism-deep\\override-nonvirtual\\Program.cs(3,45): error CS0506: 'Derived.Draw()': cannot override inherited member 'Base.Draw()' because it is not marked virtual, abstract, or override [$REPO\\.tools\\upgrade-examples\\oop-polymorphism-deep\\override-nonvirtual\\Demo.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:02.24"
+    },
+    {
+      "key": "oop-polymorphism-deep/strategy-contract",
+      "hash": "7f05171771bff39dcfa3d5f48b42971ca4d4619e0df0ede5a8f374b30992fa50",
+      "status": "ran",
+      "observed": "RegularPrice:100\nVipPrice:90\nCampaignPrice:80\ncontract checks:15"
+    }
+  ]
+}

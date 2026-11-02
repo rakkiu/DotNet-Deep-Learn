@@ -1,6 +1,6 @@
 # Ma trận nâng cấp DotNet Deep Learn
 
-Rà soát 2026-11-01. **47 bài gốc + 12 bài mở rộng = 59 bài; 295 câu hỏi có đáp án; 124 ví dụ.** Giữ mapping 41 phần, ID/URL bài cũ và 11 anchor gốc. Các mục được giữ đúng không bị gọi là lỗi; phần mở rộng là đề xuất học junior/middle, không chứng nhận tuyển dụng.
+Rà soát 2026-11-02. **47 bài gốc + 16 bài mở rộng = 63 bài; 315 câu hỏi có đáp án; 140 ví dụ.** Giữ mapping 41 phần, ID/URL bài cũ và 11 anchor gốc. Các mục được giữ đúng không bị gọi là lỗi; phần mở rộng là đề xuất học junior/middle, không chứng nhận tuyển dụng.
 
 SDK 10.0.403, net10.0, C# 14; runtime/ASP.NET Core/EF Core/dotnet-ef 10.0.14; xUnit v2 2.9.3, Test SDK 17.14.1, runner 3.1.5. Windows, Node 24.19.0, npm 11.17.0, Chrome.
 
@@ -67,12 +67,16 @@ Mỗi mã bên dưới liên kết một bản đối chiếu chi tiết gồm U
 | [N10](upgrade-coverage/N10.md) | [Kiểm thử tích hợp ASP.NET Core và EF Core](https://client-ifz4.vercel.app/#/read/aspnet-integration-testing) | 7 | 2 | 5 | 3 |
 | [N11](upgrade-coverage/N11.md) | [BackgroundService, Channel và shutdown](https://client-ifz4.vercel.app/#/read/dotnet-background-workers) | 7 | 2 | 5 | 4 |
 | [N12](upgrade-coverage/N12.md) | [Build, publish và triển khai .NET](https://client-ifz4.vercel.app/#/read/dotnet-delivery-basics) | 7 | 2 | 5 | 4 |
+| [OOP01](upgrade-coverage/OOP01.md) | [Đóng gói chuyên sâu: bảo vệ trạng thái và quyền thay đổi](https://client-ifz4.vercel.app/#/read/oop-encapsulation-deep) | 15 | 4 | 5 | 5 |
+| [OOP02](upgrade-coverage/OOP02.md) | [Trừu tượng chuyên sâu: mô hình, hợp đồng và ranh giới phụ thuộc](https://client-ifz4.vercel.app/#/read/oop-abstraction-deep) | 15 | 4 | 5 | 5 |
+| [OOP03](upgrade-coverage/OOP03.md) | [Kế thừa chuyên sâu: is-a, LSP và lựa chọn composition](https://client-ifz4.vercel.app/#/read/oop-inheritance-deep) | 15 | 4 | 5 | 5 |
+| [OOP04](upgrade-coverage/OOP04.md) | [Đa hình chuyên sâu: dispatch, hợp đồng và mở rộng hành vi](https://client-ifz4.vercel.app/#/read/oop-polymorphism-deep) | 15 | 4 | 5 | 5 |
 
 ## Bằng chứng và giới hạn
 
-Kết quả ví dụ: 22 lab dùng chung; 83 chạy + so stdout; 5 HTTP thật; 6 lỗi compiler dự kiến; 1 minh họa, chưa chạy; 3 CLI build/run/publish (chưa audit advisory); 2 chỉ biên dịch; 1 SQL SQLite; 1 test + mutation. [Kết quả máy đọc được](upgrade-example-results.json). Lab Web/API có 9 ca xUnit, thêm hai lượt filter auth/form chạy độc lập; DataLab có assertion SQL/state/conflict/rollback; MigrationLab chạy hai migration và giữ An; Release publish được khởi động và GET /, /health/ready thành công. [Log lab thật](upgrade-lab-results.json).
+Kết quả ví dụ: 22 lab dùng chung; 95 chạy + so stdout; 5 HTTP thật; 10 lỗi compiler dự kiến; 1 minh họa, chưa chạy; 3 CLI build/run/publish (chưa audit advisory); 2 chỉ biên dịch; 1 SQL SQLite; 1 test + mutation. [Kết quả máy đọc được](upgrade-example-results.json). Lab Web/API có 9 ca xUnit, thêm hai lượt filter auth/form chạy độc lập; DataLab có assertion SQL/state/conflict/rollback; MigrationLab chạy hai migration và giữ An; Release publish được khởi động và GET /, /health/ready thành công. [Log lab thật](upgrade-lab-results.json).
 
-130 URL tài liệu duy nhất đều trả 200 tại lần audit; [kết quả nguồn](upgrade-sources.json). Điều này chỉ xác nhận truy cập, không thay đánh giá nội dung.
+Các URL trong audit nguồn có trạng thái HTTP được ghi tại lần kiểm tra; [kết quả nguồn](upgrade-sources.json). Điều này chỉ xác nhận truy cập, không thay đánh giá nội dung.
 
 - Hai mẫu mở đầu chỉ biên dịch, không được tính là đã chạy. Một mẫu tùy chọn container/deploy là minh họa, chưa chạy Docker.
 - CLI kiểm tra info/SDK/runtime, package list, build/run/publish; chưa gọi live vulnerability advisory audit. Các phím debugger là hướng dẫn thao tác thủ công.

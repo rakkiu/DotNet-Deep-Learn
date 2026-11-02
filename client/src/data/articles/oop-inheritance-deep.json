@@ -1,0 +1,426 @@
+{
+  "id": "oop-inheritance-deep",
+  "title": "Kế thừa chuyên sâu: is-a, LSP và lựa chọn composition",
+  "description": "Kế thừa tạo quan hệ giữa lớp cha và lớp con, nhưng thiết kế đúng còn đòi lớp con giữ hợp đồng mà caller của lớp cha tin cậy. Đào sâu constructor, protected, virtual, sealed, bẫy hình vuông–hình chữ nhật và khi nên thay cây kế thừa bằng composition.",
+  "category": "architecture",
+  "kind": "Nguyên lý thiết kế OOP",
+  "sourceParts": [],
+  "origin": "extension",
+  "auditCode": "OOP03",
+  "prerequisites": [
+    "Hiểu class/object, đóng gói và hợp đồng của interface/abstract class."
+  ],
+  "prerequisiteIds": [
+    "oop-abstraction-deep",
+    "oop-classes"
+  ],
+  "relatedIds": [
+    "oop-encapsulation-deep",
+    "oop-polymorphism-deep",
+    "oop-polymorphism",
+    "decorator-pattern",
+    "design-testing-patterns"
+  ],
+  "goals": [
+    "Theo dấu constructor và phân biệt truy cập member với phần state lớp cha trong object.",
+    "Đánh giá thay thế hành vi bằng precondition, postcondition và invariant thay vì chỉ câu “is-a”.",
+    "Nhận ra virtual trong constructor, protected mutable state và cây lớp con phình to; chọn composition có lý do."
+  ],
+  "reviewedAt": "2026-11-02",
+  "version": {
+    "reviewedAt": "2026-11-02",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất: hiểu đúng tính chất này",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Kế thừa (inheritance) cho phép một class được định nghĩa dựa trên một base class. Lớp con là một kiểu mới trong quan hệ subtype; instance của lớp con có thể được dùng ở nhiều vị trí nhận kiểu lớp cha. Trong C#, một class có một base class trực tiếp và có thể thực hiện nhiều interface. Đây là cơ chế ngôn ngữ phục vụ mô hình OOP, không phải một công nghệ cài thêm.",
+        "Câu “SalariedEmployee là Employee” có ích để bắt đầu, nhưng chưa đủ quyết định thiết kế. Caller nhận Employee thường tin một số điều về kết quả, lỗi và trạng thái. Nếu lớp con đổi các điều đó ngoài hợp đồng, code vẫn có thể compile mà chương trình trở nên sai. Vì vậy cần xét cả quan hệ về type lẫn khả năng thay thế về hành vi.",
+        "Kế thừa có thể giúp chia sẻ triển khai, nhưng “có vài đoạn code giống nhau” không phải lý do đầy đủ. Khi hai lớp chỉ cần cùng một thuật toán hoặc công cụ, một helper, delegate hoặc object được chứa bên trong có thể ít ràng buộc hơn."
+      ]
+    },
+    {
+      "id": "problem",
+      "title": "Vấn đề nào khiến ta cần nó?",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Khi có một họ đối tượng chung hợp đồng và một phần triển khai ổn định, copy toàn bộ logic cho từng loại làm quy tắc chung dễ lệch nhau. Một base class được thiết kế cẩn thận có thể giữ phần chung và mở đúng phần cần khác biệt.",
+        "Ngược lại, nếu cố tái sử dụng code bằng kế thừa trong mọi trường hợp, lớp con phụ thuộc vào state, thứ tự gọi và các chi tiết lớp cha không hứa ổn định. Thay một method cha có thể làm hỏng nhiều lớp con. Bài học là lựa chọn ranh giới mở rộng, không phải mặc định kế thừa luôn tốt hơn copy hoặc luôn phải bị loại bỏ."
+      ]
+    },
+    {
+      "id": "benefits",
+      "title": "Lợi ích khi thiết kế đúng",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Một contract chung cho phép caller làm việc với nhiều kiểu liên quan mà không tách từng nhánh concrete. Base class có thể giữ một quy trình kiểm tra chung và chỉ cho override các bước đã được dự kiến. Tác dụng này rõ nhất khi quan hệ subtype thật sự ổn định.",
+        "Một hệ thống plugin/framework có thể công bố extension point để lớp con thực hiện phần riêng. Tuy nhiên, càng công bố nhiều virtual/protected member thì càng phải duy trì nhiều cam kết với lớp con. Lợi ích tái sử dụng cần được cân với chi phí tương thích khi base class thay đổi."
+      ]
+    },
+    {
+      "id": "limits",
+      "title": "Khi nào không nên dùng hoặc dễ lạm dụng?",
+      "group": "Giới hạn và hiểu nhầm",
+      "paragraphs": [
+        "Không kế thừa chỉ để dùng một hàm tiện ích hoặc lấy một dependency. Ví dụ EmailService “có một” logger không có nghĩa EmailService “là một” logger. Truyền logger vào constructor diễn đạt đúng quan hệ và giữ được quyền thay riêng dependency.",
+        "Nếu lớp con thường xuyên phải throw NotSupportedException cho các thao tác mà lớp cha hứa luôn hỗ trợ, cần xem lại hợp đồng. Tách capability hoặc đổi mô hình có thể phù hợp hơn. Exception không tự là vi phạm LSP: chỉ là vi phạm khi nó phá những cam kết caller được phép dựa vào.",
+        "Đừng mở mọi method thành virtual hoặc mọi field thành protected để “dễ mở rộng sau này”. Điều đó làm lớp con có nhiều đường can thiệp invariant hơn. Một class sealed có thể là lựa chọn chủ đích khi chưa thiết kế hợp đồng kế thừa; sealed không tự chứng minh tính đúng đắn hoặc làm mọi code nhanh hơn."
+      ]
+    },
+    {
+      "id": "mechanism",
+      "title": "Cơ chế hoạt động trong C# và .NET",
+      "group": "Bên trong lời gọi",
+      "paragraphs": [
+        "Object lớp con chứa phần state cần cho cả base và derived theo mô hình runtime. Member private của base không được truy cập trực tiếp từ source của derived, nhưng các method base vẫn có thể sử dụng state private đó. “Không truy cập được” không đồng nghĩa phần dữ liệu lớp cha không tồn tại trong instance.",
+        "Constructor không được kế thừa như method thường. Constructor lớp con phải gọi constructor lớp cha thích hợp, bằng base(...) hoặc quy tắc gọi mặc định của C#. Với mẫu đầu, thân constructor base chạy trước thân constructor derived. Không suy từ đó rằng mọi field initializer luôn chạy theo thứ tự base rồi derived; C# có quy tắc khởi tạo riêng.",
+        "Member virtual/abstract cung cấp điểm cho override; method thường không được biến thành override chỉ vì cùng tên. sealed class chặn kế thừa tiếp; sealed override chặn override tiếp member đó trong lớp con, trong khi lời gọi qua base vẫn dùng override đã có. Cơ chế chọn implementation được đào sâu ở bài đa hình.",
+        "Một lời gọi virtual từ constructor base có thể đi vào override của derived khi thân constructor derived chưa chạy. Override lúc đó có thể đọc state chưa được constructor derived thiết lập. Bẫy này là lý do không nên gọi member có thể bị override trong constructor; ví dụ bên dưới cố ý cho thấy hành vi đáng tránh."
+      ],
+      "diagrams": [
+        {
+          "caption": "Hai loại quan hệ cần kiểm tra trước khi thêm dấu :",
+          "steps": [
+            "Có phải một subtype hợp lý về nghiệp vụ?",
+            "Caller của base đang dựa vào hợp đồng nào?",
+            "Derived có giữ điều kiện và kết quả đó?",
+            "Extension point có bảo vệ state chung?",
+            "Nếu chỉ cần tái sử dụng: cân nhắc composition"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "concepts",
+      "title": "Từ vựng cần hiểu trước khi đọc code",
+      "group": "Giải thích từng khái niệm",
+      "paragraphs": [],
+      "definitions": [
+        {
+          "term": "Base / derived và is-a",
+          "meaning": "Base là kiểu cha; derived là kiểu con. is-a diễn tả quan hệ loại, chưa đủ chứng minh thay thế hành vi.",
+          "example": "Square toán học là rectangle, nhưng API mutable độc lập Width/Height có thể không phù hợp với một Square subtype."
+        },
+        {
+          "term": "Precondition và postcondition",
+          "meaning": "Precondition là điều caller phải đáp ứng trước lời gọi; postcondition là điều implementation phải giữ khi hoàn tất theo hợp đồng.",
+          "example": "SetHeight trong contract mẫu không được đổi Width đang có."
+        },
+        {
+          "term": "LSP — nguyên lý thay thế Liskov",
+          "meaning": "Đặt object subtype vào vị trí nhận base không được làm mất những cam kết của hợp đồng base.",
+          "example": "Lớp con không được đòi điều kiện mạnh hơn hoặc trả bảo đảm yếu hơn mà contract base không cho phép."
+        },
+        {
+          "term": "Composition — có một",
+          "meaning": "Một object giữ/tham chiếu các object khác và ủy quyền hành vi qua hợp đồng.",
+          "example": "NotificationService có một formatter và một sender, thay vì tạo subclass cho từng tổ hợp."
+        },
+        {
+          "term": "Fragile base class",
+          "meaning": "Một thay đổi ở lớp cha vô tình làm hỏng lớp con vì dependency nội bộ hoặc extension point mong manh.",
+          "example": "Base đổi thứ tự gọi hai virtual hook mà subclass đã ngầm dựa vào."
+        }
+      ]
+    },
+    {
+      "id": "integration",
+      "title": "Nó kết hợp với ba tính chất còn lại thế nào?",
+      "group": "Bức tranh OOP",
+      "paragraphs": [
+        "Đóng gói bảo vệ state; kế thừa cho lớp con tham gia cùng object nên ranh giới protected cần được kiểm soát. Trừu tượng xác định hợp đồng base hoặc interface. Đa hình thực hiện lời gọi qua hợp đồng chung để chọn hành vi phù hợp. Kế thừa class và đa hình không phải cùng một khái niệm: interface cũng cho phép nhiều implementation độc lập được gọi thống nhất.",
+        "Base class của domain không nhất thiết trùng với base class của ORM/framework. Nếu kế thừa chỉ để lấy mapping hoặc một hàm hạ tầng mà làm sai mô hình nghiệp vụ, hãy xét composition và mapping riêng. Quan hệ dữ liệu trong database cũng không tự bắt buộc một cây class tương ứng."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Junior: hiểu cơ chế và viết đúng",
+      "group": "Từ khái niệm tới code",
+      "paragraphs": [
+        "Khi đọc class Derived : Base, tìm constructor của Derived và lời gọi base trước. Xem base yêu cầu input nào; việc derived không khai báo lại toàn bộ field không có nghĩa object thiếu phần state base. Constructor base vẫn chịu trách nhiệm khởi tạo phần nó sở hữu.",
+        "Phân biệt public, protected, internal và private theo miền truy cập. protected không có nghĩa “mọi code trong project”; internal nói về assembly. protected internal dùng điều kiện hoặc; private protected dùng quan hệ dẫn xuất trong cùng assembly. Với người mới, hiểu đúng public/private/protected trước rồi tra các mức phối hợp khi cần.",
+        "Muốn thay hành vi qua reference base, phải có extension point virtual/abstract và khai báo override đúng. new giấu member tạo lựa chọn khác theo kiểu tham chiếu tĩnh trong các lời gọi thông thường; nó không phải cách sửa một override không hợp lệ.",
+        "Constructor là nơi tạo trạng thái hợp lệ, không nên là nơi chạy callback tùy lớp con khi lớp con chưa sẵn sàng. Nếu cần một bước khởi động sau khi tạo, hãy thiết kế vòng đời rõ và tránh để object bị dùng trước bước đó, thay vì chuyển rủi ro sang một lời gọi Initialize ngầm định."
+      ],
+      "tables": [
+        {
+          "caption": "Đọc các từ khóa theo tác dụng",
+          "headers": [
+            "Cú pháp",
+            "Tác dụng",
+            "Không nên hiểu thành"
+          ],
+          "rows": [
+            [
+              ": Base",
+              "Tạo quan hệ kế thừa class",
+              "Chỉ mượn vài method rồi không cần giữ contract"
+            ],
+            [
+              "base(args)",
+              "Gọi constructor base thích hợp",
+              "Constructor base được kế thừa để caller new trực tiếp"
+            ],
+            [
+              "protected",
+              "Mở truy cập cho type và lớp dẫn xuất theo quy tắc C#",
+              "Mở state cho cả ứng dụng sửa"
+            ],
+            [
+              "sealed",
+              "Ngăn kế thừa tiếp class hoặc override tiếp member tùy vị trí",
+              "Tự làm class bất biến hoặc thread-safe"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Middle: thiết kế hợp đồng và xử lý đánh đổi",
+      "group": "Đào sâu thiết kế",
+      "paragraphs": [
+        "Dùng LSP như một công cụ review contract, không như khẩu hiệu về ví dụ hình học. Hãy viết điều mà consumer đang tin: đầu vào nào được nhận, kết quả nào được trả, state nào còn nguyên, loại lỗi nào được phép. Derived không được yêu cầu điều kiện chặt hơn hoặc làm yếu cam kết của base trong cùng phạm vi contract.",
+        "Trong ví dụ Rectangle mutable, hợp đồng ta đặt là sửa Height không đổi Width. Square buộc hai chiều bằng nhau nên không giữ được cam kết đó. Vấn đề không phủ nhận quan hệ hình học; nó cho thấy API mutable đã chọn không phù hợp với quan hệ subtype này. Một hợp đồng chỉ đọc Area cho cả hai kiểu có thể tránh đúng xung đột đó.",
+        "Một invariant của lớp con có thể chặt hơn nhưng không được xung đột với các hành vi hợp lệ mà base cho phép caller yêu cầu. Đừng chỉ thêm guard trong override để “giữ invariant” nếu guard đó từ chối những input base vốn hứa chấp nhận. Khi hai contract không dung hòa, tách type/capability thường rõ hơn.",
+        "Protected mutable state và lời gọi self qua virtual hook làm lớp con phụ thuộc mạnh vào thứ tự/chi tiết lớp cha. Base thay nội bộ có thể vẫn giữ contract public nhưng phá lớp con đang dựa vào một contract protected chưa được xác định. Thiết kế base class để người khác kế thừa là công việc duy trì API lâu dài.",
+        "Composition đặc biệt hữu ích khi có nhiều trục thay đổi độc lập: định dạng nội dung, kênh gửi và retry policy. Tạo subclass cho mọi tổ hợp khiến cây phình to; giữ các dependency theo interface cho phép lắp ghép từng phần. Composition cũng có chi phí phối hợp/lifetime; không tự tốt hơn nếu chỉ làm vòng gọi khó theo dấu."
+      ],
+      "tables": [
+        {
+          "caption": "Kiểm tra khả năng thay thế bằng hợp đồng",
+          "headers": [
+            "Khía cạnh",
+            "Lớp con phải giữ gì?",
+            "Dấu hiệu cần xem lại"
+          ],
+          "rows": [
+            [
+              "Điều kiện đầu vào",
+              "Không buộc caller đáp ứng điều kiện mạnh hơn contract base",
+              "Base nhận mọi số dương, derived chỉ nhận số > 100"
+            ],
+            [
+              "Cam kết đầu ra",
+              "Không làm yếu những bảo đảm base đã hứa",
+              "Base hứa dữ liệu đầy đủ, derived trả thiếu mà không báo"
+            ],
+            [
+              "State / invariant",
+              "Không phá cam kết trạng thái sau thao tác",
+              "SetHeight âm thầm sửa Width trái contract mẫu"
+            ],
+            [
+              "Lỗi / capability",
+              "Giữ những hành vi và lỗi contract cho phép",
+              "Read-only subtype luôn từ chối Write vốn được base hứa hỗ trợ"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ C#: từ đúng cơ bản tới bẫy thiết kế",
+      "group": "Đọc, chạy và theo dấu",
+      "paragraphs": [
+        "Các mẫu là minh họa lý thuyết có kết quả và giải thích sẵn. Mỗi mẫu có đầy đủ file project; các project cố ý lỗi được tách riêng. Không ghép các Program.cs vào cùng một project."
+      ],
+      "examples": [
+        {
+          "id": "constructor-chain",
+          "title": "Junior · Constructor và state của base trong object derived",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "Employee employee = new SalariedEmployee(\"An\", 320);\nConsole.WriteLine($\"label:{employee.Label()}/{employee.Points}\");\nabstract class Employee\n{\n    protected string Name { get; }\n    protected Employee(string name)\n    {\n        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(nameof(name));\n        Name = name; Console.WriteLine($\"base:{name}\");\n    }\n    public string Label() => Name;\n    public abstract int Points { get; }\n}\nsealed class SalariedEmployee : Employee\n{\n    public override int Points { get; }\n    public SalariedEmployee(string name, int points) : base(name)\n    {\n        if (points <= 0) throw new ArgumentOutOfRangeException(nameof(points));\n        Points = points; Console.WriteLine(\"derived:ready\");\n    }\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "base:An\nderived:ready\nlabel:An/320",
+          "explanation": "Mẫu theo dấu thân hai constructor: base trước derived. Label dùng phần state Name do base sở hữu; Points là override của concrete class. Không có gọi virtual từ constructor, không có field initializer để suy diễn thứ tự rộng hơn mẫu.",
+          "verification": "ran"
+        },
+        {
+          "id": "lsp-rectangle",
+          "title": "Middle · Code compile nhưng phá contract thay thế, rồi đổi mô hình",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "Console.WriteLine($\"rectangle:{Configure(new Rectangle())}\");\nConsole.WriteLine($\"square:{Configure(new Square())}\");\nIShape[] shapes = { new FixedRectangle(5, 4), new FixedSquare(4) };\nforeach (var shape in shapes) Console.WriteLine($\"read-only area:{shape.Area}\");\nstatic int Configure(Rectangle rectangle)\n{\n    rectangle.Width = 5;\n    rectangle.Height = 4; // Contract của ví dụ: không thay Width.\n    return rectangle.Area; // Caller dựa vào 5 * 4.\n}\nclass Rectangle\n{\n    public virtual int Width { get; set; }\n    public virtual int Height { get; set; }\n    public int Area => Width * Height;\n}\nsealed class Square : Rectangle\n{\n    private int side;\n    public override int Width { get => side; set => side = value; }\n    public override int Height { get => side; set => side = value; }\n}\ninterface IShape { int Area { get; } }\nsealed record FixedRectangle(int Width, int Height) : IShape { public int Area => Width * Height; }\nsealed record FixedSquare(int Side) : IShape { public int Area => Side * Side; }",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "rectangle:20\nsquare:16\nread-only area:20\nread-only area:16",
+          "explanation": "Counterexample cố ý: SetHeight của Square làm Width thành 4 nên consumer nhận 16 thay 20 mà contract Rectangle của mẫu hứa. Sau đó IShape chỉ hứa đọc Area, không hứa sửa hai chiều độc lập. Input mẫu là kích thước dương nhỏ; không tuyên bố các record là mô hình hình học production có validation đầy đủ.",
+          "verification": "ran"
+        },
+        {
+          "id": "virtual-constructor",
+          "title": "Middle · Bẫy gọi virtual khi constructor derived chưa chạy",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "var report = new BadReport();\nreport.Show();\nclass BaseReport\n{\n    public BaseReport() { Show(); } // Cố ý thiết kế xấu để quan sát.\n    public virtual void Show() => Console.WriteLine(\"base\");\n}\nsealed class BadReport : BaseReport\n{\n    private int count;\n    public BadReport() { count = 42; }\n    public override void Show() => Console.WriteLine($\"count:{count}\");\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "count:0\ncount:42",
+          "explanation": "Lời gọi từ constructor base đã dispatch tới BadReport.Show nhưng thân constructor BadReport chưa gán count = 42. Sau khi new hoàn tất, gọi lại mới thấy 42. Đây là counterexample có thể chạy, không là cách khởi tạo được khuyến nghị; sửa bằng thiết kế không gọi member overridable trong constructor.",
+          "verification": "ran"
+        },
+        {
+          "id": "sealed-parent",
+          "title": "Lỗi riêng · Lớp sealed không cho kế thừa tiếp",
+          "kind": "compile-error",
+          "label": "Cố ý lỗi biên dịch · project riêng",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet build Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "Console.WriteLine(\"Không chạy tới dòng này vì build lỗi\");\nsealed class ClosedService { }\nclass ChildService : ClosedService { }"
+          },
+          "expected": "CS0509",
+          "explanation": "Compiler từ chối quan hệ kế thừa từ class sealed. Nếu chỉ cần dùng dịch vụ, giữ một ClosedService làm dependency thay vì gỡ sealed theo phản xạ. Thay đổi một hợp đồng kế thừa cần quyết định thiết kế rõ.",
+          "verification": "expected-diagnostic",
+          "diagnostic": "CS0509"
+        }
+      ]
+    },
+    {
+      "id": "case-study",
+      "title": "Đối chiếu thiết kế trước và sau",
+      "group": "Tình huống để suy luận",
+      "paragraphs": [
+        "Tình huống thông báo: bắt đầu có EmailNotification và SmsNotification. Sau đó mỗi loại cần Plain/Html và Retry/NoRetry. Nếu dùng subclass cho tất cả tổ hợp, số lớp tăng theo các trục biến đổi. Tách sender, formatter và retry policy thành các thành phần có hợp đồng phù hợp cho phép thay từng trục mà consumer không trở thành một cây lớp con.",
+        "Điều kiện để composition là bản sửa tốt: biết ai sở hữu dependency và vòng đời, thao tác nào được retry an toàn, lỗi nào đi qua từng lớp. Nếu thiếu những hợp đồng đó, đổi inheritance thành nhiều wrapper chỉ chuyển sự phức tạp sang chỗ khác. Kết nối với bài trừu tượng và decorator khi cần chi tiết implementation."
+      ],
+      "tables": []
+    },
+    {
+      "id": "structure",
+      "title": "Đặt file ở đâu và bắt đầu thế nào?",
+      "group": "Bắt đầu từ thư mục trống",
+      "paragraphs": [
+        "Mỗi khối ví dụ hiển thị Demo.csproj, Program.cs và ConsoleEncoding.cs khi cần cố định output. Đặt chúng vào cùng một thư mục trống, cài SDK nêu ở đầu bài, rồi chạy đúng lệnh terminal. Nút tải bộ project ở trang OOP bao gồm các thư mục ví dụ độc lập; project cố ý lỗi có nhãn riêng và không được đưa vào solution cần build thành công.",
+        "Trong dự án nhiều file, tên thư mục Domain, Contracts, Infrastructure chỉ là gợi ý theo trách nhiệm. Không tạo thêm layer vì tên gọi; trước hết phải nhìn thấy state, hành vi, dependency và đường gọi của ví dụ đang học."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "debug",
+      "title": "Debug: quan sát điều gì để hiểu vì sao?",
+      "group": "Theo dấu thay vì đoán",
+      "paragraphs": [
+        "Với lỗi khởi tạo, đặt breakpoint ở từng constructor và theo Call Stack, không chỉ nhìn thứ tự file. Trong mẫu BadReport, xem count ngay lần Show đầu tiên để tách “method override đã chạy” khỏi “constructor derived đã hoàn tất”.",
+        "Với lỗi hành vi sau khi thêm subclass, chạy cùng một tập contract checks cho base-compatible implementations. So input/output/state mà consumer dựa vào. Nếu implementation “pass” chỉ vì test đã đổi kỳ vọng theo từng concrete type thì test chưa xác minh khả năng thay thế chung."
+      ]
+    },
+    {
+      "id": "questions",
+      "title": "Hỏi đáp junior và middle có giải thích",
+      "group": "Tự đối chiếu cách hiểu",
+      "paragraphs": [
+        "Có 3 câu junior và 2 câu middle. Thử giải thích cơ chế trước, sau đó mở đáp án để so lý do và giới hạn. Đây là phần đọc mở rộng, không có điểm số hoặc nộp bài."
+      ],
+      "questions": [
+        {
+          "level": "junior",
+          "prompt": "Private member của base không truy cập được từ derived có nghĩa state đó không có trong object không?",
+          "answer": "Không. Base vẫn quản lý và sử dụng phần state của mình thông qua các method phù hợp.",
+          "explanation": "Accessibility là quyền truy cập trong source, không phải khẳng định object derived không có phần dữ liệu base.",
+          "misconception": "Không nhìn thấy field ở lớp con nghĩa là constructor base không cần chạy.",
+          "followUp": "Method Label của Employee đọc Name trong ví dụ theo cách nào?",
+          "id": "q1"
+        },
+        {
+          "level": "junior",
+          "prompt": "Constructor lớp con có tự kế thừa mọi constructor lớp cha không?",
+          "answer": "Không. Lớp con khai báo constructor của mình và gọi constructor base thích hợp theo quy tắc C#.",
+          "explanation": "Kế thừa member không đồng nghĩa constructor trở thành overload để new lớp con bằng mọi chữ ký base.",
+          "misconception": "Có : Base thì mọi cách new Base dùng nguyên cho Derived.",
+          "followUp": "Nếu base chỉ có constructor nhận name, constructor derived cần làm gì?",
+          "id": "q2"
+        },
+        {
+          "level": "junior",
+          "prompt": "sealed có làm object bất biến hoặc thread-safe không?",
+          "answer": "Không. Nó hạn chế khả năng kế thừa/override tùy vị trí sử dụng.",
+          "explanation": "Một sealed class vẫn có thể chứa public setter hoặc thao tác cạnh tranh sai.",
+          "misconception": "Ngăn subclass đồng nghĩa ngăn mọi thay đổi state.",
+          "followUp": "Bạn cần kiểm tra API nào để đánh giá tính bất biến của class đó?",
+          "id": "q3"
+        },
+        {
+          "level": "middle",
+          "prompt": "Vì sao Square trong ví dụ không thay thế được Rectangle mutable dù quan hệ hình học đúng?",
+          "answer": "Vì nó phá contract sửa Height mà giữ Width, là điều consumer Rectangle của mẫu dựa vào.",
+          "explanation": "LSP nói về cam kết hành vi của API đã chọn, không phủ nhận phân loại hình học. Hợp đồng chỉ đọc Area loại bỏ đúng xung đột setter đó.",
+          "misconception": "Chỉ cần đúng câu is-a là mọi API mutable đều thay thế được.",
+          "followUp": "Nếu base không hứa hai chiều độc lập, lập luận contract cần thay đổi ra sao?",
+          "id": "q4"
+        },
+        {
+          "level": "middle",
+          "prompt": "Gọi virtual trong constructor base nguy hiểm ở đâu?",
+          "answer": "Override của derived có thể chạy trước khi thân constructor derived thiết lập state mà override cần.",
+          "explanation": "Trong mẫu, count được gán ở constructor derived nên lần gọi sớm thấy 0. Không suy ra mọi field initializer đều có cùng thứ tự.",
+          "misconception": "Runtime luôn chờ constructor derived xong rồi mới dispatch virtual.",
+          "followUp": "Bạn sẽ thiết kế lại việc khởi tạo mà không tạo thêm bước Initialize ngầm định thế nào?",
+          "id": "q5"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu C# chính thức và cộng đồng",
+      "group": "Đọc tiếp có nguồn",
+      "paragraphs": [
+        "Nội dung dùng các cơ chế có trong C# 14/.NET 10. Tài liệu Microsoft Learn có thể cập nhật thêm cú pháp phiên bản mới; các file project của bài cố định LangVersion để tránh vô tình dùng tính năng preview."
+      ],
+      "links": [
+        {
+          "title": "C# inheritance: constructor, member và base class",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/inheritance"
+        },
+        {
+          "title": "Constructor và lời gọi base trong C#",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/constructors"
+        },
+        {
+          "title": "sealed class và sealed override",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/sealed"
+        },
+        {
+          "title": "CA2214: tránh gọi method overridable trong constructor",
+          "url": "https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2214"
+        },
+        {
+          "title": "Nguyên lý kiến trúc: contract, SOLID và dependency",
+          "url": "https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23+oop"
+    }
+  ]
+}

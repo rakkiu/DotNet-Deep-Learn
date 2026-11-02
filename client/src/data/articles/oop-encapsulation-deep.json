@@ -1,0 +1,389 @@
+{
+  "id": "oop-encapsulation-deep",
+  "title": "Đóng gói chuyên sâu: bảo vệ trạng thái và quyền thay đổi",
+  "description": "Đóng gói là thiết kế ranh giới để dữ liệu chỉ thay đổi qua những hành vi giữ đúng quy tắc. Đi từ private, property và constructor tới ownership, collection bị lộ, state machine và tính nhất quán khi thao tác thất bại.",
+  "category": "architecture",
+  "kind": "Nguyên lý thiết kế OOP",
+  "sourceParts": [],
+  "origin": "extension",
+  "auditCode": "OOP01",
+  "prerequisites": [
+    "Biết class/object, method, exception và copy tham chiếu."
+  ],
+  "prerequisiteIds": [
+    "oop-classes",
+    "csharp-types"
+  ],
+  "relatedIds": [
+    "oop-abstraction-deep",
+    "oop-inheritance-deep",
+    "oop-polymorphism-deep",
+    "csharp-value-modeling",
+    "thread-lock"
+  ],
+  "goals": [
+    "Giải thích vì sao private field cộng public setter vẫn có thể làm hỏng mô hình.",
+    "Thiết kế constructor và method giữ invariant, không để thao tác lỗi làm thay đổi một nửa trạng thái.",
+    "Phân biệt read-only view, snapshot và dữ liệu bất biến; biết giới hạn với concurrency và persistence."
+  ],
+  "reviewedAt": "2026-11-02",
+  "version": {
+    "reviewedAt": "2026-11-02",
+    "sdk": "10.0.403",
+    "framework": "net10.0",
+    "language": "C# 14",
+    "runtime": "10.0.14",
+    "efCore": "10.0.14",
+    "xunit": "2.9.3",
+    "testSdk": "17.14.1",
+    "xunitRunner": "3.1.5"
+  },
+  "sections": [
+    {
+      "id": "identity",
+      "title": "Bản chất: hiểu đúng tính chất này",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Đóng gói (encapsulation) gom trạng thái và những thao tác có quyền thay đổi trạng thái vào một ranh giới có chủ sở hữu. Trạng thái là dữ liệu object đang giữ; hành vi là các thao tác mà object cho phép. Điểm quan trọng là caller được làm gì để object vẫn có ý nghĩa, chứ không chỉ dữ liệu nằm trong một class. Đây là nguyên lý thiết kế OOP, không phải framework hoặc gói NuGet.",
+        "Ví dụ một ví điểm có số dư không âm. Nếu bên ngoài được gán Balance = -10, class không kiểm soát được chính quy tắc của mình. Nếu chỉ được gọi Deposit và Withdraw với điều kiện rõ ràng, ví có một nơi quyết định thao tác nào hợp lệ. Điều đó vẫn cần code kiểm tra; từ khóa private không tự biết nghiệp vụ số dư.",
+        "Invariant là điều kiện phải đúng tại những ranh giới mà object được quan sát theo hợp đồng. Trong ví dụ này là Balance >= 0 sau constructor thành công và sau mỗi thao tác công khai. Invariant không phải điều kiện luôn đúng cho mọi biến tạm trong từng dòng nội bộ; cách tổ chức thao tác phải không để trạng thái dở dang bị quan sát hoặc thoát ra ngoài."
+      ]
+    },
+    {
+      "id": "problem",
+      "title": "Vấn đề nào khiến ta cần nó?",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Khi nhiều màn hình, service và job cùng sửa field, quy tắc dễ bị sao chép ở nhiều nơi. Màn hình đã kiểm tra số dư nhưng job import quên; chỗ kiểm tra trước phép trừ lại khác chỗ thực hiện phép trừ. Lỗi không chỉ là code dài, mà là không biết ai có trách nhiệm giữ dữ liệu hợp lệ.",
+        "Cách làm ban đầu có thể là struct dữ liệu mở cộng các hàm rời, kiểm tra ở form hoặc đặt comment “không được âm”. Những cách đó có thể đủ cho dữ liệu thuần, nhưng trở nên mong manh khi object có quy tắc chuyển trạng thái. Đóng gói đưa quyết định về nơi sở hữu quy tắc; validation ở UI/API vẫn cần để trả thông báo phù hợp, nhưng không thay lớp bảo vệ của mô hình."
+      ]
+    },
+    {
+      "id": "benefits",
+      "title": "Lợi ích khi thiết kế đúng",
+      "group": "Hiểu từ gốc",
+      "paragraphs": [
+        "Caller diễn đạt ý định bằng Withdraw(30), không phải tự đọc rồi gán Balance -= 30. Bên trong có thể đổi cách lưu, thêm một kiểm tra hoặc tính toán khác mà vẫn giữ hợp đồng công khai. Đây là giảm phụ thuộc vào representation: cách dữ liệu được biểu diễn trong bộ nhớ.",
+        "Một API nhỏ giúp review và test theo hành vi: tạo với số âm phải bị từ chối, rút quá số dư không được làm mất điểm, nạp tràn số phải để số dư cũ nguyên vẹn. Không cần test private method chỉ vì nó tồn tại; cần kiểm tra những quy tắc caller có quyền dựa vào."
+      ]
+    },
+    {
+      "id": "limits",
+      "title": "Khi nào không nên dùng hoặc dễ lạm dụng?",
+      "group": "Giới hạn và hiểu nhầm",
+      "paragraphs": [
+        "DTO truyền dữ liệu đơn giản không nhất thiết cần hàng chục method nghiệp vụ. Một phép tính thuần có thể chỉ cần một hàm. Đóng gói tốt không đồng nghĩa phải tạo getter/setter cho mọi field hoặc tạo class cho mọi giá trị.",
+        "Private không là hàng rào chống người dùng độc hại, cơ chế phân quyền HTTP hay mã hóa dữ liệu. Nó hỗ trợ giới hạn truy cập trong mô hình ngôn ngữ. Reflection, serialization và ORM là những đường tương tác khác cần được thiết kế theo phạm vi ứng dụng. Không dùng private setter thay authentication/authorization.",
+        "Đóng gói cũng không tự bảo đảm thread safety. Hai thread cùng gọi một method đúng về logic tuần tự vẫn có thể tranh chấp. Nếu nghiệp vụ đòi nhất quán giữa nhiều object, nhiều request hoặc nhiều bản ghi, phải xác định thêm lock, transaction, concurrency token hoặc cơ chế phối hợp thích hợp; không suy ra từ việc field là private."
+      ]
+    },
+    {
+      "id": "mechanism",
+      "title": "Cơ chế hoạt động trong C# và .NET",
+      "group": "Bên trong lời gọi",
+      "paragraphs": [
+        "Compiler kiểm tra quyền truy cập khi biên dịch lời gọi. Một property thực chất có accessor đọc/ghi; nó có thể tính toán, kiểm tra điều kiện hoặc chỉ bọc field. Private set chặn caller gán property từ ngoài type, nhưng setter nội bộ vẫn có thể gán dữ liệu sai nếu code cho phép.",
+        "Constructor và factory là các cửa tạo object. Method thay đổi trạng thái là cửa cập nhật. Muốn giữ invariant phải xét tất cả các cửa đó, kể cả constructor overload, import, restore từ storage và đường mapping phù hợp. Constructor thất bại không trả một object đã tạo thành công cho caller theo lời gọi new đó.",
+        "Với dữ liệu tham chiếu, che biến không đồng nghĩa che object được trỏ tới. Nếu trả nguyên List nội bộ qua IReadOnlyList, caller có thể vẫn nhận đúng List đó và cast lại; ngay cả wrapper chỉ đọc cũng có thể phản ánh thay đổi của nguồn. Nếu phần tử mutable, cấm Add/Remove vẫn không cấm sửa phần tử. Vì vậy cần phân biệt quyền truy cập, ownership và độ sâu của bản sao."
+      ],
+      "diagrams": [
+        {
+          "caption": "Một thao tác thay đổi trạng thái có ranh giới rõ",
+          "steps": [
+            "Caller yêu cầu hành vi có ý nghĩa",
+            "Kiểm tra input và trạng thái hiện tại",
+            "Tính kết quả mới; xử lý lỗi trước khi commit",
+            "Cập nhật state theo hợp đồng",
+            "Trả kết quả, invariant vẫn đúng"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "concepts",
+      "title": "Từ vựng cần hiểu trước khi đọc code",
+      "group": "Giải thích từng khái niệm",
+      "paragraphs": [],
+      "definitions": [
+        {
+          "term": "State và invariant",
+          "meaning": "State là dữ liệu hiện tại; invariant là quy tắc phải được giữ tại ranh giới thao tác.",
+          "example": "Số dư 70 là state; “không âm sau thao tác thành công” là invariant."
+        },
+        {
+          "term": "Ownership",
+          "meaning": "Xác định thành phần nào chịu trách nhiệm quyết định thay đổi và vòng đời dữ liệu.",
+          "example": "Order sở hữu danh sách dòng hàng; caller yêu cầu Add chứ không tự Clear list."
+        },
+        {
+          "term": "Representation exposure",
+          "meaning": "Lộ cấu trúc hoặc tham chiếu nội bộ khiến caller thay đổi state mà không qua API dự kiến.",
+          "example": "Trả List nội bộ dưới kiểu IReadOnlyList rồi caller cast về List."
+        },
+        {
+          "term": "Read-only view và snapshot",
+          "meaning": "View giới hạn thao tác qua một cửa nhìn; snapshot là dữ liệu chụp tại một thời điểm. Cả hai không tự deep immutable.",
+          "example": "ToArray sao chép vùng phần tử; phần tử là object mutable vẫn có thể dùng chung reference."
+        }
+      ]
+    },
+    {
+      "id": "integration",
+      "title": "Nó kết hợp với ba tính chất còn lại thế nào?",
+      "group": "Bức tranh OOP",
+      "paragraphs": [
+        "Trừu tượng giúp caller nghĩ theo “rút điểm” thay vì phép gán field; đóng gói bảo vệ cách thao tác đó được thực hiện. Kế thừa mở thêm người có thể tham gia thay đổi state, nên protected mutable field có thể làm invariant khó giữ. Đa hình cho nhiều implementation cùng hợp đồng, nhưng mỗi implementation vẫn phải giữ quy tắc riêng và quy tắc chung.",
+        "Trong API, DTO nhận input rồi được kiểm tra trước khi gọi hành vi domain. Trong EF, mapping phải tương thích cách khởi tạo/lưu state của entity. Khi trả JSON cho client, tạo DTO đọc phù hợp thay vì công khai cả graph nội bộ. Không bắt tất cả các lớp này phải gộp vào cùng một class."
+      ]
+    },
+    {
+      "id": "junior",
+      "title": "Junior: hiểu cơ chế và viết đúng",
+      "group": "Từ khái niệm tới code",
+      "paragraphs": [
+        "Bắt đầu bằng câu hỏi “những trạng thái nào tuyệt đối không được phép xuất hiện?”. Sau đó liệt kê cách tạo và cách sửa object. Với Wallet, số âm ở constructor, amount <= 0 và rút quá số dư đều phải có kết quả rõ. Việc UI đã có kiểm tra không đủ vì Wallet có thể được gọi bởi code khác.",
+        "Không coi getter/setter là mục tiêu. Balance { get; set; } cho bên ngoài quyền gán trực tiếp. Balance { get; private set; } thu hẹp quyền gán nhưng chưa mô tả việc rút, chuyển hoặc nạp. Method có tên nghiệp vụ giúp gom các kiểm tra liên quan vào cùng thao tác.",
+        "readonly field chỉ hạn chế việc gán lại field ở các vị trí C# cho phép. Nếu field chứa List thì Add vẫn sửa object List. Tương tự, get-only property không tự biến giá trị trả về thành bất biến. Khi thấy chữ “read-only”, luôn hỏi: chỉ đọc qua biến nào, và phần tử bên trong có mutable không?",
+        "Khi thao tác không thành công, bài này chọn giữ nguyên state và báo lỗi bằng exception hoặc kết quả false theo từng hợp đồng. Đừng trừ số dư trước rồi mới kiểm tra quá hạn mức. Tính kết quả mới trước khi gán giúp tránh để lỗi overflow làm state mất hợp lệ trong mẫu tuần tự."
+      ],
+      "tables": [
+        {
+          "caption": "Quyền truy cập khác với quy tắc nghiệp vụ",
+          "headers": [
+            "Khai báo / thao tác",
+            "Caller được làm gì?",
+            "Điều chưa được bảo đảm"
+          ],
+          "rows": [
+            [
+              "public int Balance;",
+              "Đọc và gán trực tiếp",
+              "Không có nơi bắt buộc giữ Balance >= 0"
+            ],
+            [
+              "Balance { get; private set; }",
+              "Đọc công khai, gán hạn chế",
+              "Code nội bộ vẫn phải validate"
+            ],
+            [
+              "readonly List<T> field",
+              "Không tùy ý gán field sang list khác",
+              "List và phần tử có thể vẫn mutable"
+            ],
+            [
+              "Withdraw(amount)",
+              "Gửi yêu cầu qua hành vi",
+              "Phải viết đúng guard và hợp đồng khi thất bại"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "title": "Middle: thiết kế hợp đồng và xử lý đánh đổi",
+      "group": "Đào sâu thiết kế",
+      "paragraphs": [
+        "Mức middle cần nhìn rộng hơn một setter: invariant nằm trong một object hay cần nhiều object cùng nhất quán? Order có thể bảo vệ các dòng hàng khi sửa tuần tự, nhưng giữ “tồn kho không âm” giữa hai request thường cần database/transaction/concurrency policy. Không giấu vấn đề phân tán vào một method rồi gọi đó là đóng gói xong.",
+        "Ownership quyết định có cần defensive copy. Nếu caller chỉ cần dữ liệu để hiển thị, snapshot gồm value/immutable fields có thể rõ hơn trả entity graph. Nếu cần một live view có chủ đích, phải nói rõ dữ liệu sẽ phản ánh thay đổi và ai được ghi. Snapshot cũng có chi phí cấp phát; lựa chọn theo hợp đồng và tải thật, không mặc định copy sâu mọi thứ.",
+        "Tính nhất quán khi có exception là một phần thiết kế. Nếu Add vừa thay list vừa tăng tổng, hãy chuẩn bị/kiểm tra các giá trị có thể thất bại trước khi commit state cần nhất quán. Nếu bước tiếp theo là gửi email hoặc gọi HTTP ngoài, bộ nhớ rollback không tự hoàn tác tác dụng phụ đó. Cần phân biệt phạm vi giao dịch với phạm vi class.",
+        "Kế thừa làm ranh giới thay đổi phức tạp hơn: lớp con có thể gọi protected member trong những thứ tự lớp cha không dự kiến. Dùng protected field để “cho lớp con sửa cho tiện” thường tạo thêm đường phá invariant. Ưu tiên method được kiểm soát hoặc composition khi không thực sự cần extension point.",
+        "Test theo hành vi và biên: số 0, số âm, giới hạn int, thao tác bị từ chối và chuỗi chuyển trạng thái. Với concurrent access phải thêm test chiến lược phối hợp tương ứng; kết quả chạy tuần tự của ba mẫu bên dưới không chứng minh chúng thread-safe."
+      ],
+      "tables": []
+    },
+    {
+      "id": "examples",
+      "title": "Ví dụ C#: từ đúng cơ bản tới bẫy thiết kế",
+      "group": "Đọc, chạy và theo dấu",
+      "paragraphs": [
+        "Các mẫu là minh họa lý thuyết có kết quả và giải thích sẵn. Mỗi mẫu có đầy đủ file project; các project cố ý lỗi được tách riêng. Không ghép các Program.cs vào cùng một project."
+      ],
+      "examples": [
+        {
+          "id": "wallet-invariants",
+          "title": "Junior · Ví điểm giữ invariant kể cả khi thao tác lỗi",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "var wallet = new Wallet(100);\nwallet.Deposit(20);\nwallet.Withdraw(50);\nConsole.WriteLine($\"balance:{wallet.Balance}\");\ntry { wallet.Withdraw(100); } catch (InvalidOperationException) { Console.WriteLine(\"insufficient\"); }\ntry { wallet.Deposit(0); } catch (ArgumentOutOfRangeException) { Console.WriteLine(\"invalid amount\"); }\ntry { _ = new Wallet(-1); } catch (ArgumentOutOfRangeException) { Console.WriteLine(\"invalid initial\"); }\nvar full = new Wallet(int.MaxValue);\ntry { full.Deposit(1); } catch (OverflowException) { Console.WriteLine(\"overflow\"); }\nConsole.WriteLine($\"unchanged:{wallet.Balance}/{full.Balance}\");\nsealed class Wallet\n{\n    public int Balance { get; private set; }\n    public Wallet(int initial) { if (initial < 0) throw new ArgumentOutOfRangeException(nameof(initial)); Balance = initial; }\n    public void Deposit(int amount) { Positive(amount); int next = checked(Balance + amount); Balance = next; }\n    public void Withdraw(int amount) { Positive(amount); if (amount > Balance) throw new InvalidOperationException(\"Insufficient points\"); Balance -= amount; }\n    static void Positive(int amount) { if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount)); }\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "balance:70\ninsufficient\ninvalid amount\ninvalid initial\noverflow\nunchanged:70/2147483647",
+          "explanation": "100 + 20 - 50 = 70. Các lời gọi bị từ chối không làm đổi state. checked tính trước khi gán nên full vẫn int.MaxValue sau overflow. Đơn vị là điểm nguyên, không phải mô hình tiền tệ đa đơn vị; mẫu tuần tự không có bảo đảm concurrency.",
+          "verification": "ran"
+        },
+        {
+          "id": "readonly-ownership",
+          "title": "Middle · IReadOnlyList không phải cam kết không có ai sửa",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "var leaked = new LeakyCatalog();\n((List<string>)leaked.Items).Clear();\nConsole.WriteLine($\"leaked:{leaked.Items.Count}\");\nvar safe = new Catalog();\nvar snapshot = safe.Snapshot();\nsafe.Add(\"B\");\nsnapshot[0] = new Product(\"caller change\");\nConsole.WriteLine($\"snapshot:{snapshot.Length}/{snapshot[0].Name}\");\nConsole.WriteLine($\"owner:{safe.Snapshot().Length}/{safe.Snapshot()[0].Name}\");\nsealed class LeakyCatalog\n{\n    private readonly List<string> items = new() { \"A\" };\n    public IReadOnlyList<string> Items => items;\n}\nsealed record Product(string Name);\nsealed class Catalog\n{\n    private readonly List<Product> items = new() { new Product(\"A\") };\n    public void Add(string name) { if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(nameof(name)); items.Add(new Product(name)); }\n    public Product[] Snapshot() => items.ToArray();\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "leaked:0\nsnapshot:1/caller change\nowner:2/A",
+          "explanation": "Kiểu runtime của Items vẫn là List nên cast làm lộ mutation. Snapshot là array mới; thay phần tử của array do caller giữ không thay list gốc. Product ở đây chỉ gồm string bất biến; nếu record có List mutable thì ToArray/record vẫn không thành deep clone.",
+          "verification": "ran"
+        },
+        {
+          "id": "order-state",
+          "title": "Middle · Object kiểm soát cả chuyển trạng thái",
+          "kind": "console",
+          "label": "C# local · ví dụ giải thích",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet run --project Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "var order = new Order();\nConsole.WriteLine($\"empty:{order.TryConfirm()}/{order.State}\");\norder.Add(2, 30);\nConsole.WriteLine($\"confirm:{order.TryConfirm()}/{order.State}/{order.Total}\");\ntry { order.Add(1, 10); } catch (InvalidOperationException) { Console.WriteLine(\"locked\"); }\nConsole.WriteLine($\"final:{order.State}/{order.Total}\");\nenum OrderState { Draft, Confirmed }\nsealed class Order\n{\n    public OrderState State { get; private set; }\n    public int Total { get; private set; }\n    private int count;\n    public void Add(int quantity, int unitPoints)\n    {\n        if (State != OrderState.Draft) throw new InvalidOperationException(\"Only draft can change\");\n        if (quantity <= 0 || unitPoints <= 0) throw new ArgumentOutOfRangeException();\n        int nextTotal = checked(Total + checked(quantity * unitPoints));\n        int nextCount = checked(count + quantity);\n        Total = nextTotal; count = nextCount;\n    }\n    public bool TryConfirm() { if (State != OrderState.Draft || count == 0) return false; State = OrderState.Confirmed; return true; }\n}",
+            "ConsoleEncoding.cs": "using System.Runtime.CompilerServices;\ninternal static class ConsoleEncoding\n{\n    [ModuleInitializer]\n    internal static void Initialize()\n    {\n        Console.OutputEncoding = new System.Text.UTF8Encoding(false);\n        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;\n    }\n}\n"
+          },
+          "expected": "empty:False/Draft\nconfirm:True/Confirmed/60\nlocked\nfinal:Confirmed/60",
+          "explanation": "Xác nhận order rỗng trả false và giữ Draft. Sau khi có hai đơn vị giá 30 điểm, Confirmed không còn cho thêm. Hai phép tính checked được chuẩn bị trước khi gán state; đây là bảo vệ state trong bộ nhớ tuần tự, không thay transaction hoặc khóa liên request.",
+          "verification": "ran"
+        },
+        {
+          "id": "private-setter",
+          "title": "Lỗi riêng · Caller cố gán property có private setter",
+          "kind": "compile-error",
+          "label": "Cố ý lỗi biên dịch · project riêng",
+          "input": "Dữ liệu giả khai báo trong Program.cs; chạy mỗi mẫu trong thư mục riêng, không gọi Internet hay database.",
+          "shell": "PowerShell hoặc Bash",
+          "setup": "dotnet build Demo.csproj",
+          "files": {
+            "Demo.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <LangVersion>14.0</LangVersion>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n</Project>\n",
+            "Program.cs": "var wallet = new Wallet();\nwallet.Balance = -1;\nclass Wallet { public int Balance { get; private set; } }"
+          },
+          "expected": "CS0272",
+          "explanation": "Compiler từ chối vì set accessor không truy cập được ở vị trí gọi. Điều này chỉ chứng minh giới hạn truy cập; constructor/method của Wallet vẫn phải giữ quy tắc số dư. Không chép mẫu lỗi vào ba project cần chạy thành công.",
+          "verification": "expected-diagnostic",
+          "diagnostic": "CS0272"
+        }
+      ]
+    },
+    {
+      "id": "case-study",
+      "title": "Đối chiếu thiết kế trước và sau",
+      "group": "Tình huống để suy luận",
+      "paragraphs": [
+        "Thiết kế trước: controller nhận amount, tự đọc Balance rồi gán Balance mới. Mỗi caller phải nhớ cùng một bộ điều kiện; đổi quy tắc kéo theo tìm kiếm nhiều nơi. Thiết kế sau: controller chỉ chuyển input đã parse sang Wallet.Withdraw; Wallet quyết định theo state của nó. Controller vẫn chịu trách nhiệm ánh xạ kết quả ra HTTP phù hợp.",
+        "Điều kiện quan trọng của bản sửa là mọi đường thay đổi có liên quan đều tuân thủ ranh giới. Nếu cùng lúc mở public setter hoặc đưa List nội bộ ra ngoài thì method đẹp không còn là cửa duy nhất. Kiểm tra invariant bằng cách tìm tất cả đường ghi, không chỉ nhìn cú pháp private trong một file."
+      ],
+      "tables": []
+    },
+    {
+      "id": "structure",
+      "title": "Đặt file ở đâu và bắt đầu thế nào?",
+      "group": "Bắt đầu từ thư mục trống",
+      "paragraphs": [
+        "Mỗi khối ví dụ hiển thị Demo.csproj, Program.cs và ConsoleEncoding.cs khi cần cố định output. Đặt chúng vào cùng một thư mục trống, cài SDK nêu ở đầu bài, rồi chạy đúng lệnh terminal. Nút tải bộ project ở trang OOP bao gồm các thư mục ví dụ độc lập; project cố ý lỗi có nhãn riêng và không được đưa vào solution cần build thành công.",
+        "Trong dự án nhiều file, tên thư mục Domain, Contracts, Infrastructure chỉ là gợi ý theo trách nhiệm. Không tạo thêm layer vì tên gọi; trước hết phải nhìn thấy state, hành vi, dependency và đường gọi của ví dụ đang học."
+      ],
+      "relatedGuide": true
+    },
+    {
+      "id": "debug",
+      "title": "Debug: quan sát điều gì để hiểu vì sao?",
+      "group": "Theo dấu thay vì đoán",
+      "paragraphs": [
+        "Đặt breakpoint ở constructor, Deposit, Withdraw và trước dòng commit state; dùng Watch so Balance trước và sau exception. Với collection, xem cả kiểu khai báo lẫn GetType của object được trả về để nhận ra wrapper và List gốc.",
+        "Khi một order có trạng thái lạ, đọc Call Stack để tìm đường đổi state, sau đó kiểm tra constructor, mapper/serializer và các reference bị lộ. Không log toàn bộ object domain chứa dữ liệu riêng tư chỉ để tìm một field; log thông tin tối thiểu phù hợp ngữ cảnh."
+      ]
+    },
+    {
+      "id": "questions",
+      "title": "Hỏi đáp junior và middle có giải thích",
+      "group": "Tự đối chiếu cách hiểu",
+      "paragraphs": [
+        "Có 3 câu junior và 2 câu middle. Thử giải thích cơ chế trước, sau đó mở đáp án để so lý do và giới hạn. Đây là phần đọc mở rộng, không có điểm số hoặc nộp bài."
+      ],
+      "questions": [
+        {
+          "level": "junior",
+          "prompt": "Có private field và getter/setter là đã đóng gói tốt chưa?",
+          "answer": "Chưa. Cần biết những thao tác công khai có giữ đúng quy tắc của object hay không.",
+          "explanation": "Public setter có thể mở lại toàn bộ quyền ghi; private setter chỉ thu hẹp nơi được gán, không tự thêm validation.",
+          "misconception": "Đổi field thành property luôn giải quyết invariant.",
+          "followUp": "Số dư âm có thể đi vào qua những constructor hoặc method nào?",
+          "id": "q1"
+        },
+        {
+          "level": "junior",
+          "prompt": "readonly List có cấm Add hoặc Clear không?",
+          "answer": "Không. readonly áp vào việc gán field, không đóng băng object List.",
+          "explanation": "Tham chiếu có thể giữ nguyên trong khi nội dung object được sửa. Phần tử mutable còn có đường thay đổi riêng.",
+          "misconception": "readonly đồng nghĩa mọi dữ liệu bên trong đều bất biến.",
+          "followUp": "Trả list đó qua IReadOnlyList có làm mất mọi đường mutation không?",
+          "id": "q2"
+        },
+        {
+          "level": "junior",
+          "prompt": "Rút quá số dư thì state của Wallet trong mẫu thay đổi thế nào?",
+          "answer": "Không đổi: guard ném exception trước phép trừ.",
+          "explanation": "Hợp đồng mẫu là thao tác không hợp lệ bị từ chối và giữ nguyên số dư; test phải kiểm tra cả hai điều.",
+          "misconception": "Chỉ cần thấy exception là có thể bỏ qua state sau lỗi.",
+          "followUp": "Nếu trừ trước rồi mới kiểm tra thì hậu quả là gì?",
+          "id": "q3"
+        },
+        {
+          "level": "middle",
+          "prompt": "ToArray trên list các entity mutable có tạo snapshot deep immutable không?",
+          "answer": "Không. Array mới nhưng các reference phần tử vẫn có thể dùng chung object.",
+          "explanation": "Cần xét representation của phần tử và hợp đồng ownership. Có thể map sang DTO/value chỉ gồm dữ liệu cần đọc.",
+          "misconception": "Một lần copy collection đủ cô lập toàn bộ object graph.",
+          "followUp": "Trong ví dụ Product chỉ có string, điều gì thay đổi nếu Product có List<string>?",
+          "id": "q4"
+        },
+        {
+          "level": "middle",
+          "prompt": "Object giữ invariant tuần tự có đủ chống hai request tranh chấp không?",
+          "answer": "Không. Cần xác định và bảo vệ ranh giới cạnh tranh thực tế.",
+          "explanation": "Lock trong một process khác với transaction/concurrency token của database; hai request có thể dùng hai object khác nhau.",
+          "misconception": "Private setter tự làm mọi thao tác nguyên tử và thread-safe.",
+          "followUp": "Quy tắc tồn kho giữa hai process nên được bảo vệ ở ranh giới nào?",
+          "id": "q5"
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Tài liệu C# chính thức và cộng đồng",
+      "group": "Đọc tiếp có nguồn",
+      "paragraphs": [
+        "Nội dung dùng các cơ chế có trong C# 14/.NET 10. Tài liệu Microsoft Learn có thể cập nhật thêm cú pháp phiên bản mới; các file project của bài cố định LangVersion để tránh vô tình dùng tính năng preview."
+      ],
+      "links": [
+        {
+          "title": "Các nguyên lý OOP trong C#",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/"
+        },
+        {
+          "title": "Phạm vi truy cập: private, protected, internal và public",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/access-modifiers"
+        },
+        {
+          "title": "Property và accessor trong C#",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties"
+        },
+        {
+          "title": "readonly hạn chế gán field, không deep-freeze object",
+          "url": "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/readonly"
+        },
+        {
+          "title": "Thiết kế collection và hợp đồng trả dữ liệu",
+          "url": "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/guidelines-for-collections"
+        }
+      ],
+      "community": "https://stackoverflow.com/questions/tagged/c%23+oop"
+    }
+  ]
+}
